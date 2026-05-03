@@ -103,7 +103,7 @@ Create `package.json`:
     "prisma:studio": "prisma studio"
   },
   "dependencies": {
-    "@prisma/client": "latest",
+    "@prisma/client": "6.19.1",
     "ioredis": "latest",
     "next": "latest",
     "react": "latest",
@@ -114,7 +114,7 @@ Create `package.json`:
     "@types/node": "latest",
     "@types/react": "latest",
     "@types/react-dom": "latest",
-    "prisma": "latest",
+    "prisma": "6.19.1",
     "typescript": "latest",
     "vitest": "latest"
   }
