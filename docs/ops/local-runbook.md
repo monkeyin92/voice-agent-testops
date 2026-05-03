@@ -23,6 +23,7 @@ PUBLIC_APP_URL="http://localhost:3000"
 
 ```bash
 npm install
+docker compose up -d postgres
 npm run prisma:generate
 npm run prisma:migrate -- --name init
 npm run dev
