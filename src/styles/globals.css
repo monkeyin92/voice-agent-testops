@@ -134,11 +134,18 @@ button {
 }
 
 .admin-card input,
-.admin-card select {
+.admin-card select,
+.admin-card textarea {
   min-height: 40px;
   border: 1px solid var(--line);
   border-radius: 6px;
   padding: 0 10px;
+}
+
+.admin-card textarea {
+  min-height: 76px;
+  padding: 10px;
+  resize: vertical;
 }
 
 .lead-table {
