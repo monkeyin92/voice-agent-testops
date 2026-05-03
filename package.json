@@ -14,7 +14,7 @@
     "prisma:studio": "prisma studio"
   },
   "dependencies": {
-    "@prisma/client": "6.19.1",
+    "@prisma/client": "6.19.3",
     "ioredis": "latest",
     "next": "latest",
     "react": "latest",
@@ -25,7 +25,7 @@
     "@types/node": "latest",
     "@types/react": "latest",
     "@types/react-dom": "latest",
-    "prisma": "6.19.1",
+    "prisma": "6.19.3",
     "typescript": "latest",
     "vitest": "latest"
   }
