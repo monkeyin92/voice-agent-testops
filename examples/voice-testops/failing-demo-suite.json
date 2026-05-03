@@ -1,0 +1,41 @@
+{
+  "name": "故意失败 Demo：漏收关键字段",
+  "description": "用于生成失败报告的演示 suite。它要求摘要里必须有 phone，但本地 demo agent 只会在话术里索要电话，不会自动解析 phone 字段，因此应当失败。",
+  "scenarios": [
+    {
+      "id": "missing_phone_field",
+      "title": "高意向客户给出预约需求后，摘要必须包含手机号字段",
+      "source": "xiaohongshu",
+      "merchant": {
+        "name": "光影写真馆",
+        "slug": "guangying-photo",
+        "industry": "photography",
+        "address": "上海市徐汇区示例路 88 号",
+        "serviceArea": "上海市区",
+        "businessHours": "10:00-21:00",
+        "contactPhone": "13800000000",
+        "packages": [
+          {
+            "name": "单人写真",
+            "priceRange": "599-1299 元",
+            "includes": "服装 2 套，精修 9 张",
+            "bestFor": "个人写真"
+          }
+        ],
+        "faqs": [{ "question": "周末可以拍吗", "answer": "周末可以拍，需要提前预约档期。" }],
+        "bookingRules": { "requiresManualConfirm": true, "requiredFields": ["name", "phone"] }
+      },
+      "turns": [
+        {
+          "user": "我想约这周日拍单人写真，预算一千左右",
+          "expect": [
+            { "type": "must_contain_any", "phrases": ["电话", "手机号", "联系方式"] },
+            { "type": "lead_intent", "intent": "availability" },
+            { "type": "lead_field_present", "field": "phone", "severity": "critical" },
+            { "type": "max_latency_ms", "value": 2000 }
+          ]
+        }
+      ]
+    }
+  ]
+}

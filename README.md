@@ -59,6 +59,32 @@ npm run voice-test -- \
   --endpoint "https://your-agent.example.com/test-turn"
 ```
 
+## Generate A Failing Report
+
+推广和调试时，失败报告比全绿报告更有说服力。这个 suite 会故意失败，因为它要求摘要里必须出现 `phone` 字段，而本地 demo agent 只会在话术里索要电话，不会自动解析手机号字段。
+
+```bash
+npm run voice-test -- \
+  --suite examples/voice-testops/failing-demo-suite.json \
+  --json .voice-testops/failing-demo.json \
+  --html .voice-testops/failing-demo.html || true
+```
+
+打开 `.voice-testops/failing-demo.html` 可以看到失败原因，例如 `lead_field_missing`。
+
+## CI
+
+仓库包含 GitHub Actions 示例：`.github/workflows/voice-testops.yml`。
+
+CI 会执行：
+
+- `npm ci`
+- `npm test`
+- 本地通过型 suite
+- `npm run build`
+- `npm audit --audit-level=high`
+- 生成一个预期失败的 demo 报告并上传 `.voice-testops/*.json` 和 `.voice-testops/*.html`
+
 ## Suite Format
 
 ```json

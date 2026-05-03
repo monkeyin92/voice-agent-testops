@@ -41,6 +41,9 @@
 你如果正在做 voice agent，我想请你用自己的 agent 跑一次。试用只需要一个 POST endpoint，10 分钟内能接上。
 仓库命令：
 npm run voice-test -- --suite examples/voice-testops/openclaw-suite.json --agent openclaw --endpoint <your-url>
+
+如果想先看失败报告长什么样：
+npm run voice-test -- --suite examples/voice-testops/failing-demo-suite.json --json .voice-testops/failing-demo.json --html .voice-testops/failing-demo.html || true
 ```
 
 ## 试用记录表
@@ -72,3 +75,10 @@ npm run voice-test -- --suite examples/voice-testops/openclaw-suite.json --agent
 - 如果用户只认可报告但不愿意接入，优先做“从录音/转写生成 suite”。
 - 如果用户主要要线上监控，下一阶段做抽样监控和失败回归生成。
 - 如果 7 天内没有外部试用，暂停 dashboard 开发，回到用户访谈和定位调整。
+
+## 演示材料清单
+
+- 通过型报告：运行 `examples/voice-testops/chinese-risk-suite.json`。
+- 失败型报告：运行 `examples/voice-testops/failing-demo-suite.json`。
+- CI 示例：`.github/workflows/voice-testops.yml`。
+- 对外一句话：给语音 Agent 加一套上线前回归测试，自动抓乱承诺、漏留资、意图识别错误和延迟超标。

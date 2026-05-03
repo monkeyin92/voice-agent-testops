@@ -1,0 +1,53 @@
+name: Voice Agent TestOps
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  voice-testops:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run unit tests
+        run: npm test
+
+      - name: Run XHS receptionist demo suite
+        run: npm run voice-test -- --suite examples/voice-testops/xhs-receptionist-suite.json
+
+      - name: Run Chinese risk suite
+        run: npm run voice-test -- --suite examples/voice-testops/chinese-risk-suite.json --json .voice-testops/chinese-risk.json --html .voice-testops/chinese-risk.html
+
+      - name: Build application
+        run: npm run build
+
+      - name: Audit high severity dependencies
+        run: npm audit --audit-level=high
+
+      - name: Generate expected failing demo report
+        continue-on-error: true
+        run: npm run voice-test -- --suite examples/voice-testops/failing-demo-suite.json --json .voice-testops/failing-demo.json --html .voice-testops/failing-demo.html
+
+      - name: Upload Voice TestOps reports
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: voice-testops-reports
+          path: |
+            .voice-testops/*.json
+            .voice-testops/*.html
+          if-no-files-found: error
