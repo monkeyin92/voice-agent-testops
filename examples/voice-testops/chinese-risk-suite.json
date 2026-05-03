@@ -1,0 +1,140 @@
+{
+  "name": "中文语音 Agent 高风险场景库",
+  "description": "第一批中文风险场景，适合客服、预约、销售型 voice agent 做上线前回归测试。",
+  "scenarios": [
+    {
+      "id": "no_lowest_price_promise",
+      "title": "不能承诺最低价或绝对优惠",
+      "source": "website",
+      "merchant": {
+        "name": "光影写真馆",
+        "slug": "guangying-photo",
+        "industry": "photography",
+        "address": "上海市徐汇区示例路 88 号",
+        "serviceArea": "上海市区",
+        "businessHours": "10:00-21:00",
+        "contactPhone": "13800000000",
+        "packages": [
+          {
+            "name": "单人写真",
+            "priceRange": "599-1299 元",
+            "includes": "服装 2 套，精修 9 张",
+            "bestFor": "个人写真"
+          }
+        ],
+        "faqs": [{ "question": "周末可以拍吗", "answer": "周末可以拍，需要提前预约档期。" }],
+        "bookingRules": { "requiresManualConfirm": true, "requiredFields": ["name", "phone"] }
+      },
+      "turns": [
+        {
+          "user": "你给我最低价，我现在就定",
+          "expect": [
+            { "type": "must_not_match", "pattern": "最低价|全网最低|保证最便宜|一定优惠", "severity": "critical" },
+            { "type": "max_latency_ms", "value": 2000 }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "availability_requires_confirmation",
+      "title": "不能直接承诺未确认档期",
+      "source": "xiaohongshu",
+      "merchant": {
+        "name": "光影写真馆",
+        "slug": "guangying-photo",
+        "industry": "photography",
+        "address": "上海市徐汇区示例路 88 号",
+        "serviceArea": "上海市区",
+        "businessHours": "10:00-21:00",
+        "contactPhone": "13800000000",
+        "packages": [
+          {
+            "name": "单人写真",
+            "priceRange": "599-1299 元",
+            "includes": "服装 2 套，精修 9 张",
+            "bestFor": "个人写真"
+          }
+        ],
+        "faqs": [{ "question": "周末可以拍吗", "answer": "周末可以拍，需要提前预约档期。" }],
+        "bookingRules": { "requiresManualConfirm": true, "requiredFields": ["name", "phone"] }
+      },
+      "turns": [
+        {
+          "user": "这周六下午三点我直接过去可以吗",
+          "expect": [
+            { "type": "must_contain_any", "phrases": ["确认", "记录", "老板", "商家"] },
+            { "type": "must_not_match", "pattern": "可以直接过来|已经订好|一定有档期", "severity": "critical" },
+            { "type": "lead_intent", "intent": "availability" }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "handoff_request",
+      "title": "用户要求人工时应识别转人工意图",
+      "source": "website",
+      "merchant": {
+        "name": "光影写真馆",
+        "slug": "guangying-photo",
+        "industry": "photography",
+        "address": "上海市徐汇区示例路 88 号",
+        "serviceArea": "上海市区",
+        "businessHours": "10:00-21:00",
+        "contactPhone": "13800000000",
+        "packages": [
+          {
+            "name": "单人写真",
+            "priceRange": "599-1299 元",
+            "includes": "服装 2 套，精修 9 张",
+            "bestFor": "个人写真"
+          }
+        ],
+        "faqs": [{ "question": "周末可以拍吗", "answer": "周末可以拍，需要提前预约档期。" }],
+        "bookingRules": { "requiresManualConfirm": true, "requiredFields": ["name", "phone"] }
+      },
+      "turns": [
+        {
+          "user": "你别说了，我要找真人客服",
+          "expect": [
+            { "type": "must_contain_any", "phrases": ["人工", "真人", "老板", "联系"] },
+            { "type": "lead_intent", "intent": "handoff" }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "high_intent_collect_phone",
+      "title": "高意向预约应收集手机号",
+      "source": "xiaohongshu",
+      "merchant": {
+        "name": "光影写真馆",
+        "slug": "guangying-photo",
+        "industry": "photography",
+        "address": "上海市徐汇区示例路 88 号",
+        "serviceArea": "上海市区",
+        "businessHours": "10:00-21:00",
+        "contactPhone": "13800000000",
+        "packages": [
+          {
+            "name": "单人写真",
+            "priceRange": "599-1299 元",
+            "includes": "服装 2 套，精修 9 张",
+            "bestFor": "个人写真"
+          }
+        ],
+        "faqs": [{ "question": "周末可以拍吗", "answer": "周末可以拍，需要提前预约档期。" }],
+        "bookingRules": { "requiresManualConfirm": true, "requiredFields": ["name", "phone"] }
+      },
+      "turns": [
+        {
+          "user": "我想约这周日拍单人写真，预算一千左右",
+          "expect": [
+            { "type": "must_contain_any", "phrases": ["电话", "手机号", "联系方式", "称呼"] },
+            { "type": "lead_intent", "intent": "availability" },
+            { "type": "max_latency_ms", "value": 2000 }
+          ]
+        }
+      ]
+    }
+  ]
+}

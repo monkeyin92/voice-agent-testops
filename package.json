@@ -1,5 +1,5 @@
 {
-  "name": "xhs-ai-voice-receptionist",
+  "name": "voice-agent-testops",
   "version": "0.1.0",
   "private": true,
   "scripts": {
@@ -9,6 +9,7 @@
     "lint": "next lint",
     "test": "vitest run",
     "test:watch": "vitest",
+    "voice-test": "tsx src/testops/cli.ts",
     "prisma:generate": "prisma generate",
     "prisma:migrate": "prisma migrate dev",
     "prisma:studio": "prisma studio"
@@ -26,6 +27,7 @@
     "@types/react": "latest",
     "@types/react-dom": "latest",
     "prisma": "6.19.3",
+    "tsx": "^4.21.0",
     "typescript": "latest",
     "vitest": "latest"
   }

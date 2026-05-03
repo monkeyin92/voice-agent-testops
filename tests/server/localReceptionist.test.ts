@@ -30,4 +30,26 @@ describe("respondWithLocalReceptionist", () => {
     expect(response.summary.intent).toBe("pricing");
     expect(response.summary.level).toBe("medium");
   });
+
+  it("routes handoff requests to a human follow-up", async () => {
+    const response = await respondWithLocalReceptionist({
+      merchant,
+      source: "website",
+      messages: [{ role: "customer", text: "你别说了，我要找真人客服", at: "2026-05-03T10:00:00.000Z" }],
+    });
+
+    expect(response.spoken).toContain("人工");
+    expect(response.summary.intent).toBe("handoff");
+  });
+
+  it("asks for contact details when a customer asks for a concrete appointment time", async () => {
+    const response = await respondWithLocalReceptionist({
+      merchant,
+      source: "xiaohongshu",
+      messages: [{ role: "customer", text: "我想约这周日拍单人写真，预算一千左右", at: "2026-05-03T10:00:00.000Z" }],
+    });
+
+    expect(response.spoken).toMatch(/电话|手机号|联系方式/);
+    expect(response.summary.intent).toBe("availability");
+  });
 });

@@ -1,0 +1,76 @@
+{
+  "name": "小红书接待 Demo Agent 回归测试",
+  "description": "用现有本地接待员作为被测 Agent，演示 Voice Agent TestOps 的场景、断言和报告输出。",
+  "scenarios": [
+    {
+      "id": "photo_pricing",
+      "title": "摄影客户询价时只能引用配置价格",
+      "source": "xiaohongshu",
+      "merchant": {
+        "name": "光影写真馆",
+        "slug": "guangying-photo",
+        "industry": "photography",
+        "address": "上海市徐汇区示例路 88 号",
+        "serviceArea": "上海市区",
+        "businessHours": "10:00-21:00",
+        "contactPhone": "13800000000",
+        "packages": [
+          {
+            "name": "单人写真",
+            "priceRange": "599-1299 元",
+            "includes": "服装 2 套，精修 9 张",
+            "bestFor": "个人写真"
+          }
+        ],
+        "faqs": [{ "question": "周末可以拍吗", "answer": "周末可以拍，需要提前预约档期。" }],
+        "bookingRules": { "requiresManualConfirm": true, "requiredFields": ["name", "phone"] }
+      },
+      "turns": [
+        {
+          "user": "单人写真多少钱",
+          "expect": [
+            { "type": "must_contain_any", "phrases": ["599-1299 元", "599", "1299"] },
+            { "type": "must_not_match", "pattern": "最低价|保证|百分百" },
+            { "type": "lead_intent", "intent": "pricing" },
+            { "type": "max_latency_ms", "value": 2000 }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "photo_availability",
+      "title": "客户问档期时不得直接承诺",
+      "source": "xiaohongshu",
+      "merchant": {
+        "name": "光影写真馆",
+        "slug": "guangying-photo",
+        "industry": "photography",
+        "address": "上海市徐汇区示例路 88 号",
+        "serviceArea": "上海市区",
+        "businessHours": "10:00-21:00",
+        "contactPhone": "13800000000",
+        "packages": [
+          {
+            "name": "单人写真",
+            "priceRange": "599-1299 元",
+            "includes": "服装 2 套，精修 9 张",
+            "bestFor": "个人写真"
+          }
+        ],
+        "faqs": [{ "question": "周末可以拍吗", "answer": "周末可以拍，需要提前预约档期。" }],
+        "bookingRules": { "requiresManualConfirm": true, "requiredFields": ["name", "phone"] }
+      },
+      "turns": [
+        {
+          "user": "下周六还有档期吗",
+          "expect": [
+            { "type": "must_contain_any", "phrases": ["商家确认", "老板"] },
+            { "type": "must_not_match", "pattern": "一定有|保证有|已经订好" },
+            { "type": "lead_intent", "intent": "availability" },
+            { "type": "max_latency_ms", "value": 2000 }
+          ]
+        }
+      ]
+    }
+  ]
+}
