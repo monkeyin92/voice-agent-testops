@@ -1,0 +1,163 @@
+:root {
+  color-scheme: light;
+  --ink: #1d1d1f;
+  --muted: #686868;
+  --line: #dad8d0;
+  --paper: #fbfaf6;
+  --surface: #ffffff;
+  --accent: #0e6b5d;
+  --accent-strong: #07463d;
+  --danger: #b3261e;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  color: var(--ink);
+  background: var(--paper);
+  font-family: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+}
+
+a {
+  color: inherit;
+}
+
+button,
+input,
+textarea,
+select {
+  font: inherit;
+}
+
+.page-shell,
+.consult-page {
+  width: min(960px, calc(100% - 32px));
+  margin: 0 auto;
+  padding: 48px 0;
+}
+
+.hero,
+.merchant-header,
+.chat-panel {
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 24px;
+}
+
+.eyebrow {
+  margin: 0 0 8px;
+  color: var(--accent);
+  font-weight: 700;
+}
+
+.primary-link,
+button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: 0;
+  border-radius: 6px;
+  background: var(--accent);
+  color: white;
+  min-height: 40px;
+  padding: 0 16px;
+  text-decoration: none;
+  cursor: pointer;
+}
+
+.chat-panel {
+  min-height: 320px;
+  margin: 16px 0;
+}
+
+.empty-state {
+  color: var(--muted);
+}
+
+.bubble {
+  max-width: 76%;
+  margin: 8px 0;
+  padding: 12px 14px;
+  border-radius: 8px;
+  line-height: 1.6;
+}
+
+.bubble.customer {
+  margin-left: auto;
+  background: #e8f3ef;
+}
+
+.bubble.assistant {
+  background: #f0eee7;
+}
+
+.input-row {
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  gap: 8px;
+}
+
+.input-row input {
+  min-height: 40px;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  padding: 0 12px;
+}
+
+.lead-done {
+  color: var(--accent-strong);
+  font-weight: 700;
+}
+
+.admin-shell {
+  width: min(1080px, calc(100% - 32px));
+  margin: 0 auto;
+  padding: 40px 0;
+}
+
+.admin-card {
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  margin: 16px 0;
+  padding: 20px;
+}
+
+.admin-card label {
+  display: grid;
+  gap: 6px;
+  margin: 12px 0;
+}
+
+.admin-card input,
+.admin-card select,
+.admin-card textarea {
+  min-height: 40px;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  padding: 0 10px;
+}
+
+.admin-card textarea {
+  min-height: 76px;
+  padding: 10px;
+  resize: vertical;
+}
+
+.lead-table {
+  width: 100%;
+  border-collapse: collapse;
+  background: var(--surface);
+}
+
+.lead-table th,
+.lead-table td {
+  border-bottom: 1px solid var(--line);
+  padding: 10px;
+  text-align: left;
+  vertical-align: top;
+}

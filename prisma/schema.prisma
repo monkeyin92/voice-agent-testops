@@ -1,0 +1,47 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Merchant {
+  id               String   @id @default(cuid())
+  name             String
+  slug             String   @unique
+  industry         String
+  address          String
+  serviceArea      String
+  businessHours    String
+  contactPhone     String
+  feishuWebhookUrl String?
+  packagesJson     Json
+  faqsJson         Json
+  bookingRulesJson Json
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+  leads            Lead[]
+}
+
+model Lead {
+  id                String   @id @default(cuid())
+  merchantId        String
+  source            String
+  intent            String
+  level             String
+  customerName      String?
+  phone             String?
+  need              String
+  budget            String?
+  preferredTime     String?
+  location          String?
+  questionsJson     Json
+  transcriptJson    Json
+  nextAction        String
+  notifiedAt        DateTime?
+  notificationError String?
+  createdAt         DateTime @default(now())
+  merchant          Merchant @relation(fields: [merchantId], references: [id])
+}
