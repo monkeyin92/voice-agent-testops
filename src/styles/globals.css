@@ -31,3 +31,84 @@ textarea,
 select {
   font: inherit;
 }
+
+.page-shell,
+.consult-page {
+  width: min(960px, calc(100% - 32px));
+  margin: 0 auto;
+  padding: 48px 0;
+}
+
+.hero,
+.merchant-header,
+.chat-panel {
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 24px;
+}
+
+.eyebrow {
+  margin: 0 0 8px;
+  color: var(--accent);
+  font-weight: 700;
+}
+
+.primary-link,
+button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: 0;
+  border-radius: 6px;
+  background: var(--accent);
+  color: white;
+  min-height: 40px;
+  padding: 0 16px;
+  text-decoration: none;
+  cursor: pointer;
+}
+
+.chat-panel {
+  min-height: 320px;
+  margin: 16px 0;
+}
+
+.empty-state {
+  color: var(--muted);
+}
+
+.bubble {
+  max-width: 76%;
+  margin: 8px 0;
+  padding: 12px 14px;
+  border-radius: 8px;
+  line-height: 1.6;
+}
+
+.bubble.customer {
+  margin-left: auto;
+  background: #e8f3ef;
+}
+
+.bubble.assistant {
+  background: #f0eee7;
+}
+
+.input-row {
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  gap: 8px;
+}
+
+.input-row input {
+  min-height: 40px;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  padding: 0 12px;
+}
+
+.lead-done {
+  color: var(--accent-strong);
+  font-weight: 700;
+}
