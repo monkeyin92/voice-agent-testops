@@ -76,6 +76,43 @@ describe("createOpenClawAgent", () => {
     });
   });
 
+  it("can call an official OpenResponses endpoint and map output_text to spoken", async () => {
+    const fetchImpl = vi.fn().mockResolvedValue({
+      ok: true,
+      json: async () => ({
+        id: "resp_1",
+        output_text: "单人写真一般是 599-1299 元。",
+      }),
+    });
+    const agent = createOpenClawAgent({
+      endpoint: "http://localhost:18889/v1/responses",
+      apiKey: "test-key",
+      mode: "responses",
+      fetchImpl,
+    });
+
+    const output = await agent({
+      suiteName: "回归测试",
+      scenario,
+      merchant: { ...scenario.merchant, id: "merchant_1", createdAt: new Date(), updatedAt: new Date() },
+      messages: [{ role: "customer", text: "单人写真多少钱", at: "2026-05-03T10:00:00.000Z" }],
+      turnIndex: 0,
+      customerText: "单人写真多少钱",
+    });
+
+    expect(output.spoken).toBe("单人写真一般是 599-1299 元。");
+    const body = JSON.parse(fetchImpl.mock.calls[0][1].body);
+    expect(body).toMatchObject({
+      model: "openclaw",
+      input: expect.stringContaining("单人写真多少钱"),
+      metadata: {
+        suiteName: "回归测试",
+        scenarioId: "pricing",
+        turnIndex: "0",
+      },
+    });
+  });
+
   it("fails fast when OpenClaw returns a response without spoken text", async () => {
     const agent = createOpenClawAgent({
       endpoint: "https://openclaw.example.test/agents/voice",
@@ -92,5 +129,28 @@ describe("createOpenClawAgent", () => {
         customerText: "单人写真多少钱",
       }),
     ).rejects.toThrow("OpenClaw response must include non-empty spoken");
+  });
+
+  it("includes OpenClaw error bodies when requests fail", async () => {
+    const agent = createOpenClawAgent({
+      endpoint: "http://localhost:18889/v1/responses",
+      mode: "responses",
+      fetchImpl: vi.fn().mockResolvedValue({
+        ok: false,
+        status: 500,
+        text: async () => '{"error":{"message":"No API key found for provider \\"openai\\""}}',
+      }),
+    });
+
+    await expect(
+      agent({
+        suiteName: "回归测试",
+        scenario,
+        merchant: { ...scenario.merchant, id: "merchant_1", createdAt: new Date(), updatedAt: new Date() },
+        messages: [{ role: "customer", text: "单人写真多少钱", at: "2026-05-03T10:00:00.000Z" }],
+        turnIndex: 0,
+        customerText: "单人写真多少钱",
+      }),
+    ).rejects.toThrow('OpenClaw agent failed with 500: {"error":{"message":"No API key found');
   });
 });

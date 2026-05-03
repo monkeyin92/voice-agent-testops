@@ -3,6 +3,7 @@ export type VoiceTestCliArgs = {
   agent: "local-receptionist" | "http" | "openclaw";
   endpoint?: string;
   apiKey?: string;
+  openClawMode: "custom" | "responses";
   jsonPath: string;
   htmlPath: string;
 };
@@ -39,12 +40,17 @@ export function parseCliArgs(argv: string[]): VoiceTestCliArgs {
   if ((agent === "http" || agent === "openclaw") && !endpoint) {
     throw new Error(`--endpoint is required for --agent ${agent}`);
   }
+  const openClawMode = values.get("openclaw-mode") ?? "custom";
+  if (openClawMode !== "custom" && openClawMode !== "responses") {
+    throw new Error("--openclaw-mode must be custom or responses");
+  }
 
   return {
     suitePath,
     agent,
     endpoint,
     apiKey: values.get("api-key") ?? process.env.OPENCLAW_API_KEY,
+    openClawMode,
     jsonPath: values.get("json") ?? ".voice-testops/report.json",
     htmlPath: values.get("html") ?? ".voice-testops/report.html",
   };

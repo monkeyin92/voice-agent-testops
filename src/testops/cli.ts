@@ -35,7 +35,7 @@ function createAgentFromArgs(args: ReturnType<typeof parseCliArgs>) {
   }
 
   if (args.agent === "openclaw") {
-    return createOpenClawAgent({ endpoint: args.endpoint ?? "", apiKey: args.apiKey });
+    return createOpenClawAgent({ endpoint: args.endpoint ?? "", apiKey: args.apiKey, mode: args.openClawMode });
   }
 
   return createLocalReceptionistAgent();

@@ -1,4 +1,6 @@
 .worktrees/
+.vendor/
+.openclaw-docker/
 node_modules/
 .next/
 .env
