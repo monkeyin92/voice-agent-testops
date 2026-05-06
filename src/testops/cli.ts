@@ -8,6 +8,7 @@ import { createHttpAgent } from "./adapters/httpAgent";
 import { createLocalReceptionistAgent } from "./adapters/localReceptionist";
 import { createOpenClawAgent } from "./adapters/openClawAgent";
 import { parseCliArgs } from "./cliArgs";
+import { exampleCatalog, parseExampleLanguage, type ExampleCatalogEntry, type ExampleLanguage } from "./exampleCatalog";
 import { initializeVoiceTestOpsProject } from "./initProject";
 import { resolveReadablePath } from "./packagePaths";
 import { renderHtmlReport, renderJsonReport } from "./report";
@@ -35,6 +36,10 @@ async function main(argv: string[]): Promise<number> {
     return initProject(argv.slice(1));
   }
 
+  if (argv[0] === "list") {
+    return listExamples(argv.slice(1));
+  }
+
   if (argv[0] === "validate") {
     return validateSuite(argv.slice(1));
   }
@@ -58,6 +63,81 @@ async function initProject(argv: string[]): Promise<number> {
   }
 
   return 0;
+}
+
+function listExamples(argv: string[]): number {
+  const args = parseListArgs(argv);
+  const entries = exampleCatalog.filter(
+    (entry) => (!args.language || entry.language === args.language) && (!args.industry || entry.industry === args.industry),
+  );
+
+  console.log("Example suites");
+  console.log("Use these as references, or generate your own mock data with init.\n");
+
+  if (entries.length === 0) {
+    console.log("No examples matched the selected filters.");
+    return 0;
+  }
+
+  for (const [industryLabel, groupEntries] of groupExamplesByIndustry(entries)) {
+    console.log(`${industryLabel}`);
+    for (const entry of groupEntries) {
+      console.log(`  - [${entry.language}] ${entry.title}`);
+      console.log(`    ${entry.path}`);
+      console.log(`    risks: ${entry.risks}`);
+    }
+  }
+
+  console.log("\nCreate your own mock suite:");
+  console.log("npx voice-agent-testops init --industry restaurant --lang en --name \"Maple Bistro\"");
+  console.log("npx voice-agent-testops validate --suite voice-testops/suite.json");
+  console.log("npx voice-agent-testops run --suite voice-testops/suite.json");
+
+  return 0;
+}
+
+type ListExamplesArgs = {
+  language?: ExampleLanguage;
+  industry?: ExampleCatalogEntry["industry"];
+};
+
+function parseListArgs(argv: string[]): ListExamplesArgs {
+  const values = parseKeyValueArgs(argv);
+  const args: ListExamplesArgs = {};
+
+  for (const option of values.keys()) {
+    if (option !== "lang" && option !== "industry") {
+      throw new Error(`Unknown list option: --${option}`);
+    }
+  }
+
+  const language = values.get("lang");
+  if (language) {
+    args.language = parseExampleLanguage(language);
+  }
+
+  const industry = values.get("industry");
+  if (industry) {
+    const supportedIndustries = [...new Set(exampleCatalog.map((entry) => entry.industry))];
+    if (!supportedIndustries.includes(industry as ExampleCatalogEntry["industry"])) {
+      throw new Error(`--industry must be one of: ${supportedIndustries.join(", ")}`);
+    }
+    args.industry = industry as ExampleCatalogEntry["industry"];
+  }
+
+  return args;
+}
+
+function groupExamplesByIndustry(entries: ExampleCatalogEntry[]): Array<[string, ExampleCatalogEntry[]]> {
+  const groups = new Map<string, ExampleCatalogEntry[]>();
+
+  for (const entry of entries) {
+    const existing = groups.get(entry.industryLabel) ?? [];
+    existing.push(entry);
+    groups.set(entry.industryLabel, existing);
+  }
+
+  return [...groups.entries()];
 }
 
 async function validateSuite(argv: string[]): Promise<number> {

@@ -13,7 +13,7 @@ Voice Agent TestOps runs scripted customer conversations against your agent, the
 
 It is not another voice-agent framework. It is the safety harness you put around agents built with OpenClaw, Vapi, Retell, LiveKit, Pipecat, Twilio, or your own HTTP service.
 
-[Quick Start](#quick-start) · [Example Library](#example-library) · [Connect An Agent](#connect-an-agent) · [Turn A Real Failure Into A Regression Test](#turn-a-real-failure-into-a-regression-test) · [Suite Format](#suite-format)
+[Quick Start](#quick-start) · [Example Library](#example-library) · [Create Mock Data](#create-mock-data) · [Connect An Agent](#connect-an-agent) · [Turn A Real Failure Into A Regression Test](#turn-a-real-failure-into-a-regression-test) · [Suite Format](#suite-format)
 
 ![Voice Agent TestOps report preview](docs/assets/report-preview.png)
 
@@ -65,6 +65,13 @@ Connecting a real HTTP agent?
 npx voice-agent-testops init --stack http --name "Lumen Portrait Studio" --with-ci
 ```
 
+Want a different vertical or language?
+
+```bash
+npx voice-agent-testops list --lang en
+npx voice-agent-testops init --industry restaurant --lang en --name "Maple Bistro"
+```
+
 Generate a more polished merchant-facing report:
 
 ```bash
@@ -88,6 +95,28 @@ The public examples are bilingual. Each business vertical has a Chinese and Engl
 | Dental clinic | [chinese-dental-clinic-suite.json](examples/voice-testops/chinese-dental-clinic-suite.json) | [english-dental-clinic-suite.json](examples/voice-testops/english-dental-clinic-suite.json) | Treatment guarantees, dentist availability, phone capture |
 | Restaurant booking | [chinese-restaurant-booking-suite.json](examples/voice-testops/chinese-restaurant-booking-suite.json) | [english-restaurant-booking-suite.json](examples/voice-testops/english-restaurant-booking-suite.json) | Unconfirmed tables, minimum-spend claims, booking details |
 | Real estate agent | [chinese-real-estate-agent-suite.json](examples/voice-testops/chinese-real-estate-agent-suite.json) | [english-real-estate-agent-suite.json](examples/voice-testops/english-real-estate-agent-suite.json) | Investment promises, listing status, viewing lead capture |
+
+Explore the full catalog from your terminal:
+
+```bash
+npx voice-agent-testops list
+npx voice-agent-testops list --lang en
+npx voice-agent-testops list --industry restaurant
+```
+
+## Create Mock Data
+
+The examples are generated from a simple contract: merchant facts, risky customer questions, and assertions that encode what the agent must say, must not say, and must capture. You can start with a generated mock suite, then replace the sample facts with a real merchant profile.
+
+```bash
+npx voice-agent-testops init --industry restaurant --lang en --name "Maple Bistro"
+npx voice-agent-testops validate --suite voice-testops/suite.json
+npx voice-agent-testops run --suite voice-testops/suite.json
+```
+
+Supported starter verticals are `photography`, `dental_clinic`, `restaurant`, and `real_estate`. Supported languages are `en` and `zh-CN`.
+
+For the recipe behind the examples, see the [Mock data guide](docs/guides/mock-data.md). It shows how to turn a merchant fact sheet into reviewable suites without guessing, overfitting, or needing an LLM.
 
 ## Connect An Agent
 
@@ -300,6 +329,7 @@ If your team has ever watched a voice agent sound confident at exactly the wrong
 ## Docs
 
 - [Contributing](CONTRIBUTING.md)
+- [Mock data guide](docs/guides/mock-data.md)
 - [Market thesis](docs/strategy/voice-agent-testops-market.md)
 - [External validation checklist](docs/growth/voice-agent-testops-validation.md)
 - [Generic HTTP Agent](docs/integrations/http.md)

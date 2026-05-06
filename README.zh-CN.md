@@ -13,7 +13,7 @@
 
 它不是语音 Agent 框架，也不替代 OpenClaw、Vapi、Retell、LiveKit、Pipecat 或 Twilio。它更像一条上线前的安全绳：你的 Agent 可以自由变强，但每次变更都要先跑过高风险场景。
 
-[30 秒试跑](#30-秒试跑) · [场景库](#场景库) · [接入真实-agent](#接入真实-agent) · [把真实失败对话变成回归测试](#把真实失败对话变成回归测试) · [场景格式](#场景格式)
+[30 秒试跑](#30-秒试跑) · [场景库](#场景库) · [生成 Mock 数据](#生成-mock-数据) · [接入真实-agent](#接入真实-agent) · [把真实失败对话变成回归测试](#把真实失败对话变成回归测试) · [场景格式](#场景格式)
 
 ![Voice Agent TestOps 中文报告预览](docs/assets/report-preview-zh-CN.png)
 
@@ -55,6 +55,13 @@ npx voice-agent-testops run --suite voice-testops/suite.json
 npx voice-agent-testops init --stack http --name "Lumen Portrait Studio" --with-ci
 ```
 
+想换行业或语言，可以直接从 mock 模板开始：
+
+```bash
+npx voice-agent-testops list --lang zh-CN
+npx voice-agent-testops init --industry restaurant --lang zh-CN --name "云栖小馆"
+```
+
 生成面向商家演示的报告：
 
 ```bash
@@ -78,6 +85,28 @@ npm run report:export
 | 牙科诊所 | [chinese-dental-clinic-suite.json](examples/voice-testops/chinese-dental-clinic-suite.json) | [english-dental-clinic-suite.json](examples/voice-testops/english-dental-clinic-suite.json) | 疗效承诺、医生排班、手机号留资 |
 | 餐厅订位 | [chinese-restaurant-booking-suite.json](examples/voice-testops/chinese-restaurant-booking-suite.json) | [english-restaurant-booking-suite.json](examples/voice-testops/english-restaurant-booking-suite.json) | 未确认桌态、低消编造、订位信息 |
 | 房产经纪 | [chinese-real-estate-agent-suite.json](examples/voice-testops/chinese-real-estate-agent-suite.json) | [english-real-estate-agent-suite.json](examples/voice-testops/english-real-estate-agent-suite.json) | 收益承诺、房源状态、看房留资 |
+
+也可以在终端里直接浏览：
+
+```bash
+npx voice-agent-testops list
+npx voice-agent-testops list --lang zh-CN
+npx voice-agent-testops list --industry restaurant
+```
+
+## 生成 Mock 数据
+
+这些 examples 不是随手写的演示 JSON，而是从一套固定方法生成：先写商家事实，再写高风险客户问题，最后把“必须回答什么、不能承诺什么、必须收集什么线索”变成断言。这样 mock 数据可解释、可审核，也方便替换成真实商家的资料。
+
+```bash
+npx voice-agent-testops init --industry restaurant --lang zh-CN --name "云栖小馆"
+npx voice-agent-testops validate --suite voice-testops/suite.json
+npx voice-agent-testops run --suite voice-testops/suite.json
+```
+
+目前内置 starter 行业包括 `photography`、`dental_clinic`、`restaurant`、`real_estate`；语言支持 `en` 和 `zh-CN`。
+
+更完整的生成方法见 [Mock 数据指南](docs/guides/mock-data.zh-CN.md)：它会讲清楚如何从商家资料做出自己的 suite，而不是只能照抄仓库里有限的 examples。
 
 ## 接入真实 Agent
 
@@ -198,6 +227,7 @@ npm audit --audit-level=high
 ## 更多文档
 
 - [贡献指南](CONTRIBUTING.md)
+- [Mock 数据指南](docs/guides/mock-data.zh-CN.md)
 - [HTTP Agent 接入](docs/integrations/http.md)
 - [OpenClaw 接入](docs/integrations/openclaw.md)
 - [Vapi 接入](docs/integrations/vapi.md)

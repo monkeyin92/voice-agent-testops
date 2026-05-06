@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { createLocalReceptionistAgent } from "@/testops/adapters/localReceptionist";
+import { exampleCatalog } from "@/testops/exampleCatalog";
 import { runVoiceTestSuite } from "@/testops/runner";
 import { loadVoiceTestSuite } from "@/testops/suiteLoader";
 
@@ -49,6 +50,24 @@ describe("voice-testops example suites", () => {
       expect(chineseSuite.scenarios, chinesePath).toHaveLength(englishSuite.scenarios.length);
       expect(chineseSuite.scenarios[0].merchant.industry).toBe(englishSuite.scenarios[0].merchant.industry);
     }
+  });
+
+  it("keeps the example catalog aligned with public example files", () => {
+    expect(exampleCatalog.map((entry) => entry.path)).toEqual(expect.arrayContaining(exampleSuites));
+    expect(exampleCatalog).toContainEqual(
+      expect.objectContaining({
+        industry: "restaurant",
+        language: "en",
+        path: "examples/voice-testops/english-restaurant-booking-suite.json",
+      }),
+    );
+    expect(exampleCatalog).toContainEqual(
+      expect.objectContaining({
+        industry: "restaurant",
+        language: "zh-CN",
+        path: "examples/voice-testops/chinese-restaurant-booking-suite.json",
+      }),
+    );
   });
 
   it("keeps the failing demo suite intentionally red with an actionable field failure", async () => {

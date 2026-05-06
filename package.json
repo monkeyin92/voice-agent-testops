@@ -1,6 +1,6 @@
 {
   "name": "voice-agent-testops",
-  "version": "0.1.3",
+  "version": "0.1.4",
   "description": "Regression testing for voice agents: scripted conversations, safety assertions, CI-ready reports.",
   "license": "MIT",
   "homepage": "https://github.com/monkeyin92/voice-agent-testops#readme",
@@ -28,6 +28,7 @@
     "src/testops",
     "src/server/services/localReceptionist.ts",
     "examples/voice-testops",
+    "docs/guides",
     "README.md",
     "README.zh-CN.md"
   ],

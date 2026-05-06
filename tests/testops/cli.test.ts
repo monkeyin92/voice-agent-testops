@@ -112,6 +112,32 @@ describe("voice-test CLI", () => {
     expect(result.stdout).toContain("JSON report: .voice-testops/report.json");
   });
 
+  it("lists bundled examples and supports language and industry filters", async () => {
+    const allExamples = await runCli(["list"]);
+    const englishRestaurantExamples = await runCli(["list", "--lang", "en", "--industry", "restaurant"]);
+
+    expect(allExamples.code).toBe(0);
+    expect(allExamples.stdout).toContain("Example suites");
+    expect(allExamples.stdout).toContain("Dental clinic");
+    expect(allExamples.stdout).toContain("examples/voice-testops/english-dental-clinic-suite.json");
+    expect(allExamples.stdout).toContain("examples/voice-testops/chinese-dental-clinic-suite.json");
+    expect(allExamples.stdout).toContain("Create your own mock suite");
+    expect(allExamples.stdout).toContain("npx voice-agent-testops init --industry restaurant --lang en");
+
+    expect(englishRestaurantExamples.code).toBe(0);
+    expect(englishRestaurantExamples.stdout).toContain("Restaurant booking");
+    expect(englishRestaurantExamples.stdout).toContain("examples/voice-testops/english-restaurant-booking-suite.json");
+    expect(englishRestaurantExamples.stdout).not.toContain("examples/voice-testops/chinese-restaurant-booking-suite.json");
+    expect(englishRestaurantExamples.stdout).not.toContain("examples/voice-testops/english-dental-clinic-suite.json");
+  });
+
+  it("rejects unknown example list filters with a clear message", async () => {
+    const result = await runCli(["list", "--lang", "fr"]);
+
+    expect(result.code).toBe(1);
+    expect(result.stderr).toContain("--lang must be en or zh-CN");
+  });
+
   it("initializes a runnable suite and merchant config", async () => {
     const tempDir = await mkdtemp(path.join(tmpdir(), "voice-testops-cli-"));
     const outDir = path.join(tempDir, "voice-testops");
@@ -134,6 +160,26 @@ describe("voice-test CLI", () => {
     expect(rawSuite.scenarios[0].merchantRef).toBe("merchant.json");
     expect(suite.name).toBe("Lumen Portrait Studio Voice Agent TestOps");
     expect(suite.scenarios[0].merchant.name).toBe("Lumen Portrait Studio");
+  });
+
+  it("initializes bilingual industry mock data for a custom vertical", async () => {
+    const tempDir = await mkdtemp(path.join(tmpdir(), "voice-testops-cli-"));
+    const outDir = path.join(tempDir, "voice-testops");
+
+    const initResult = await runCli(["init", "--out", outDir, "--industry", "restaurant", "--lang", "zh-CN"]);
+    const generatedMerchant = JSON.parse(await readFile(path.join(outDir, "merchant.json"), "utf8")) as typeof merchant;
+    const suite = await loadVoiceTestSuite(path.join(outDir, "suite.json"));
+    const runResult = await runCli(["run", "--suite", path.join(outDir, "suite.json"), "--fail-on-severity", "critical"]);
+
+    expect(initResult.code).toBe(0);
+    expect(generatedMerchant.name).toBe("云栖小馆");
+    expect(generatedMerchant.industry).toBe("restaurant");
+    expect(generatedMerchant.packages[0].name).toBe("双人晚餐套餐");
+    expect(suite.name).toBe("云栖小馆 Voice Agent TestOps");
+    expect(suite.scenarios[0].title).toContain("餐厅");
+    expect(suite.scenarios[0].turns[0].user).toContain("双人晚餐");
+    expect(runResult.code).toBe(0);
+    expect(runResult.stdout).toContain("云栖小馆 Voice Agent TestOps: passed");
   });
 
   it("can initialize a CI workflow for the generated suite", async () => {

@@ -70,9 +70,11 @@ describe("integration documentation", () => {
     const chineseReadme = readFileSync("README.zh-CN.md", "utf8");
 
     expect(readme).toContain("npx voice-agent-testops init");
+    expect(readme).toContain("npx voice-agent-testops init --industry restaurant --lang en");
     expect(readme).toContain("npx voice-agent-testops validate --suite voice-testops/suite.json");
     expect(readme).toContain("npx voice-agent-testops run --suite voice-testops/suite.json");
     expect(chineseReadme).toContain("npx voice-agent-testops init");
+    expect(chineseReadme).toContain("npx voice-agent-testops init --industry restaurant --lang zh-CN");
     expect(chineseReadme).toContain("npx voice-agent-testops validate --suite voice-testops/suite.json");
     expect(chineseReadme).toContain("npx voice-agent-testops run --suite voice-testops/suite.json");
   });
@@ -92,6 +94,20 @@ describe("integration documentation", () => {
       expect(readme).toContain(suitePath);
       expect(chineseReadme).toContain(suitePath);
     }
+  });
+
+  it("documents how to generate mock example data in both languages", () => {
+    const readme = readFileSync("README.md", "utf8");
+    const chineseReadme = readFileSync("README.zh-CN.md", "utf8");
+
+    expect(existsSync("docs/guides/mock-data.md")).toBe(true);
+    expect(existsSync("docs/guides/mock-data.zh-CN.md")).toBe(true);
+    expect(readme).toContain("Create Mock Data");
+    expect(readme).toContain("[Mock data guide](docs/guides/mock-data.md)");
+    expect(readme).toContain("npx voice-agent-testops list --lang en");
+    expect(chineseReadme).toContain("生成 Mock 数据");
+    expect(chineseReadme).toContain("[Mock 数据指南](docs/guides/mock-data.zh-CN.md)");
+    expect(chineseReadme).toContain("npx voice-agent-testops list --lang zh-CN");
   });
 
   it("documents the setup contract and copy-paste commands for every supported stack", () => {

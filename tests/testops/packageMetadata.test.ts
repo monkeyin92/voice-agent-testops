@@ -29,6 +29,7 @@ describe("package metadata", () => {
         "src/testops",
         "src/server/services/localReceptionist.ts",
         "examples/voice-testops",
+        "docs/guides",
       ]),
     );
     expect(packageJson.dependencies).toHaveProperty("tsx");

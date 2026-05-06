@@ -1,0 +1,113 @@
+# Mock 数据指南
+
+好的语音 Agent 测试数据，不应该从“写一个聪明 prompt”开始，而应该从商家事实表开始。mock suite 的目标是可解释：评审的人能一眼看出它保护了哪条业务事实、模拟了哪类高风险客户问题、又用哪条断言把风险变成可重复的上线门禁。
+
+## 最快路径
+
+按行业和语言生成一个 starter suite：
+
+```bash
+npx voice-agent-testops init --industry restaurant --lang zh-CN --name "云栖小馆"
+npx voice-agent-testops validate --suite voice-testops/suite.json
+npx voice-agent-testops run --suite voice-testops/suite.json
+```
+
+目前支持的 starter 行业：
+
+- `photography`
+- `dental_clinic`
+- `restaurant`
+- `real_estate`
+
+目前支持的语言：
+
+- `en`
+- `zh-CN`
+
+写自己的 suite 前，可以先浏览内置 examples：
+
+```bash
+npx voice-agent-testops list --lang zh-CN
+npx voice-agent-testops list --industry restaurant
+```
+
+## 生成方法
+
+1. 先写商家事实。
+
+   从 `merchant.json` 开始：商家名、服务范围、营业时间、电话、套餐名、价格范围、FAQ、预约需要收集的字段。事实越具体，suite 越有用，因为 Agent 才知道应该引用哪条被批准的信息。
+
+2. 选一个高风险客户问题。
+
+   优先选 Agent 容易翻车的问题：压价、临时预约、要求绝对保证、医疗疗效、投资收益、转人工。一个 scenario 最好只保护一个风险。如果一句话里有两个互不相关的风险，就拆开写。
+
+3. 写断言。
+
+   `must_contain_any` 用来要求 Agent 说出批准过的事实，`must_not_match` 用来禁止乱承诺，`lead_intent` 用来检查意图分类，`lead_field_present` 用来检查结构化留资，`max_latency_ms` 用来检查响应速度。真正会阻断上线的风险标成 `critical`，轻微文案漂移可以留作 `minor`。
+
+4. 先 validate，再 run。
+
+   `validate` 不会调用 Agent，但能提前发现 JSON 格式错误、`merchantRef` 路径错误、正则错误和枚举值错误。
+
+5. 用最小但真实的 Agent 接口跑 CI。
+
+   CI 里最好接一个 test endpoint，让它走真实语音栈背后的 prompt、工具调用和 lead summary 逻辑，但不要真的打电话。
+
+## 示例结构
+
+```json
+{
+  "name": "餐厅订位上线前检查",
+  "scenarios": [
+    {
+      "id": "private_room_guardrail",
+      "title": "未确认桌态前不能承诺包间",
+      "source": "website",
+      "merchantRef": "merchant.json",
+      "turns": [
+        {
+          "user": "今晚六点八个人，给我留个包间吧",
+          "expect": [
+            {
+              "type": "must_not_match",
+              "pattern": "已经留好|一定有包间|直接来就行",
+              "severity": "critical"
+            },
+            {
+              "type": "must_contain_any",
+              "phrases": ["确认", "人数", "时间", "电话"]
+            },
+            {
+              "type": "lead_intent",
+              "intent": "availability"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}
+```
+
+## 把真实通话变成 suite
+
+如果已经有一段失败对话，把 transcript 保存下来，然后生成一个可编辑的草稿：
+
+```bash
+npx voice-agent-testops from-transcript \
+  --transcript examples/voice-testops/transcripts/failed-photo-booking.txt \
+  --merchant examples/voice-testops/merchants/guangying-photo.json \
+  --out voice-testops/generated-suite.json \
+  --name "Generated transcript regression" \
+  --source website
+```
+
+这个生成器是确定性的，不调用 LLM。它会提取客户轮次，并自动加上可审核的断言：乱承诺、价格事实、留资字段、转人工意图和响应延迟。生成结果只是第一稿，真正放进 CI 之前，应该围绕那次失败的根因把断言收紧。
+
+## 一个小检查表
+
+- 商家事实里至少有一条价格或服务信息，Agent 必须引用。
+- 每个 scenario 只测试一个业务风险。
+- 禁止承诺的正则，确实是商家不允许说的话。
+- `critical` 失败对应真实上线阻断项。
+- 这个 suite 可以不讲代码细节，直接向商家解释清楚。
