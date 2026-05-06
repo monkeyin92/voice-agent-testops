@@ -282,6 +282,7 @@ If your team has ever watched a voice agent sound confident at exactly the wrong
 
 ## Docs
 
+- [Contributing](CONTRIBUTING.md)
 - [Market thesis](docs/strategy/voice-agent-testops-market.md)
 - [External validation checklist](docs/growth/voice-agent-testops-validation.md)
 - [Generic HTTP Agent](docs/integrations/http.md)

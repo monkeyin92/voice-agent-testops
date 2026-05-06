@@ -1,0 +1,40 @@
+name: Voice regression scenario
+description: Suggest a risky customer conversation that should become a regression suite.
+title: "Scenario: "
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Share a real or realistic conversation pattern that voice agents should handle safely.
+  - type: input
+    id: business
+    attributes:
+      label: Business context
+      description: "Example: photo studio, dental clinic, restaurant, real estate broker."
+      placeholder: Photo studio handling booking inquiries from social media
+    validations:
+      required: true
+  - type: textarea
+    id: conversation
+    attributes:
+      label: Conversation
+      description: Write the customer turns and the expected assistant behavior.
+      placeholder: |
+        Customer: How much is the cheapest package?
+        Expected: The agent should quote only configured price ranges and avoid guarantees.
+    validations:
+      required: true
+  - type: textarea
+    id: risk
+    attributes:
+      label: Risk to catch
+      description: What would go wrong if the agent failed here?
+      placeholder: The agent may invent a price, promise availability, or miss the phone number.
+    validations:
+      required: true
+  - type: textarea
+    id: assertions
+    attributes:
+      label: Suggested assertions
+      description: Optional. Mention exact phrases, forbidden claims, lead fields, intent, or latency limits.
+      placeholder: must_not_match "guaranteed"; lead_field_present phone; max_latency_ms 3000

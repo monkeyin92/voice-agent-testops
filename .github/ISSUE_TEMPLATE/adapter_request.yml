@@ -1,0 +1,35 @@
+name: Voice stack adapter request
+description: Request or discuss an adapter for a voice-agent platform.
+title: "Adapter: "
+body:
+  - type: input
+    id: platform
+    attributes:
+      label: Platform
+      description: Which voice-agent stack should Voice Agent TestOps connect to?
+      placeholder: Vapi, Retell, LiveKit Agents, Pipecat, Twilio, OpenClaw, custom HTTP
+    validations:
+      required: true
+  - type: textarea
+    id: endpoint
+    attributes:
+      label: Test interface
+      description: Describe the API, local bridge, webhook, or transcript interface available for automated testing.
+      placeholder: The agent can be called through a local HTTP endpoint that accepts conversation turns.
+    validations:
+      required: true
+  - type: textarea
+    id: behavior
+    attributes:
+      label: Behavior to validate
+      description: What should the adapter help test?
+      placeholder: Pricing safety, lead extraction, handoff intent, tool-call results, latency, transcript import.
+    validations:
+      required: true
+  - type: textarea
+    id: constraints
+    attributes:
+      label: Constraints
+      description: Any auth, rate limit, cost, or privacy constraints?
+      placeholder: Calls are expensive, so CI should use a local bridge instead of placing real phone calls.
+

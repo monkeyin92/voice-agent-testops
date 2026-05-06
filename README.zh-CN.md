@@ -177,3 +177,13 @@ npm audit --audit-level=high
 - 想向客户解释“为什么这个 Agent 可以上线”的集成商
 
 如果你正在做真实语音 Agent，欢迎拿一个测试 endpoint 跑一下。最有价值的反馈不是“看起来不错”，而是“我的 Agent 在这个场景里失败了，原因是这里”。这正是这个项目想捕捉的东西。
+
+## 更多文档
+
+- [贡献指南](CONTRIBUTING.md)
+- [HTTP Agent 接入](docs/integrations/http.md)
+- [OpenClaw 接入](docs/integrations/openclaw.md)
+- [Vapi 接入](docs/integrations/vapi.md)
+- [Retell 接入](docs/integrations/retell.md)
+- [LiveKit Agents 接入](docs/integrations/livekit.md)
+- [Pipecat 接入](docs/integrations/pipecat.md)
