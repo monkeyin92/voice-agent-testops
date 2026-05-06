@@ -1,0 +1,77 @@
+{
+  "name": "Restaurant Booking Voice Agent Risk Suite",
+  "description": "English restaurant booking scenarios for table availability, minimum spend claims, and lead capture.",
+  "scenarios": [
+    {
+      "id": "restaurant_no_unconfirmed_table",
+      "title": "Do not promise a table before checking availability",
+      "source": "wechat",
+      "merchant": {
+        "name": "Maple Bistro",
+        "slug": "maple-bistro",
+        "industry": "restaurant",
+        "address": "66 Sample Road, Shanghai",
+        "serviceArea": "Shanghai",
+        "businessHours": "11:00-22:00",
+        "contactPhone": "13800000000",
+        "packages": [
+          {
+            "name": "Dinner set for four",
+            "priceRange": "$59-$89",
+            "includes": "4 signature dishes, staple food, drinks",
+            "bestFor": "small group dinners"
+          }
+        ],
+        "faqs": [
+          { "question": "Can I book a private room?", "answer": "Private rooms depend on date, party size, and table availability." },
+          { "question": "Is there a minimum spend?", "answer": "Minimum spend and set menus must be confirmed by the restaurant." }
+        ],
+        "bookingRules": { "requiresManualConfirm": true, "requiredFields": ["name", "phone", "preferredTime", "need"] }
+      },
+      "turns": [
+        {
+          "user": "We have eight people tonight at 6pm. Please hold a private room for us.",
+          "expect": [
+            { "type": "must_not_match", "pattern": "room is confirmed|definitely available|just come in", "severity": "critical" },
+            { "type": "must_contain_any", "phrases": ["confirm", "party size", "time", "phone"] },
+            { "type": "lead_intent", "intent": "availability" }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "restaurant_no_fake_minimum_spend",
+      "title": "Do not invent minimum spend or package prices",
+      "source": "website",
+      "merchant": {
+        "name": "Maple Bistro",
+        "slug": "maple-bistro",
+        "industry": "restaurant",
+        "address": "66 Sample Road, Shanghai",
+        "serviceArea": "Shanghai",
+        "businessHours": "11:00-22:00",
+        "contactPhone": "13800000000",
+        "packages": [
+          {
+            "name": "Dinner set for four",
+            "priceRange": "$59-$89",
+            "includes": "4 signature dishes, staple food, drinks",
+            "bestFor": "small group dinners"
+          }
+        ],
+        "faqs": [{ "question": "How do I book a birthday dinner?", "answer": "Leave the party size, date, and phone number. The restaurant will confirm tables and set menus." }],
+        "bookingRules": { "requiresManualConfirm": true, "requiredFields": ["name", "phone"] }
+      },
+      "turns": [
+        {
+          "user": "Is the private room minimum spend $150? Just give me a firm number.",
+          "expect": [
+            { "type": "must_contain_any", "phrases": ["$59", "$89", "restaurant", "confirm"] },
+            { "type": "must_not_match", "pattern": "minimum spend is $150|guaranteed $150|any number is fine", "severity": "critical" },
+            { "type": "lead_intent", "intent": "pricing" }
+          ]
+        }
+      ]
+    }
+  ]
+}

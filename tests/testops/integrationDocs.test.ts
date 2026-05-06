@@ -77,6 +77,23 @@ describe("integration documentation", () => {
     expect(chineseReadme).toContain("npx voice-agent-testops run --suite voice-testops/suite.json");
   });
 
+  it("documents the bilingual business example library", () => {
+    const readme = readFileSync("README.md", "utf8");
+    const chineseReadme = readFileSync("README.zh-CN.md", "utf8");
+
+    for (const suitePath of [
+      "examples/voice-testops/chinese-dental-clinic-suite.json",
+      "examples/voice-testops/english-dental-clinic-suite.json",
+      "examples/voice-testops/chinese-restaurant-booking-suite.json",
+      "examples/voice-testops/english-restaurant-booking-suite.json",
+      "examples/voice-testops/chinese-real-estate-agent-suite.json",
+      "examples/voice-testops/english-real-estate-agent-suite.json",
+    ]) {
+      expect(readme).toContain(suitePath);
+      expect(chineseReadme).toContain(suitePath);
+    }
+  });
+
   it("documents the setup contract and copy-paste commands for every supported stack", () => {
     for (const doc of integrationDocs) {
       expect(existsSync(doc.path), `${doc.path} should exist`).toBe(true);

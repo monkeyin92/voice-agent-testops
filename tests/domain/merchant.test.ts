@@ -35,6 +35,35 @@ describe("merchant domain", () => {
     expect(result.success).toBe(true);
   });
 
+  it("accepts the public example library industries", () => {
+    for (const industry of ["dental_clinic", "restaurant", "real_estate"]) {
+      const result = merchantConfigSchema.safeParse({
+        name: `${industry} demo`,
+        slug: `${industry.replace("_", "-")}-demo`,
+        industry,
+        address: "88 Sample Street",
+        serviceArea: "Sample City",
+        businessHours: "10:00-21:00",
+        contactPhone: "13800000000",
+        packages: [
+          {
+            name: "Starter package",
+            priceRange: "$99-$199",
+            includes: "Initial consultation",
+            bestFor: "new customers",
+          },
+        ],
+        faqs: [{ question: "Can I book today?", answer: "Availability must be confirmed by staff." }],
+        bookingRules: {
+          requiresManualConfirm: true,
+          requiredFields: ["name", "phone"],
+        },
+      });
+
+      expect(result.success, industry).toBe(true);
+    }
+  });
+
   it("rejects a merchant without packages", () => {
     const result = merchantConfigSchema.safeParse({
       name: "空配置商家",

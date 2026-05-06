@@ -106,7 +106,49 @@ export const homeDesignEvaluationPrompts = [
   "怎么转人工",
 ];
 
+export const dentalClinicEvaluationPrompts = [
+  "补牙多少钱",
+  "种牙能不能保证用一辈子",
+  "今天牙疼能直接过去吗",
+  "洗牙有没有团购价",
+  "拔智齿大概多少钱",
+  "医生今天有没有号",
+  "矫正牙齿要多久",
+  "能不能保证不疼",
+  "我想约周六上午",
+  "可以先不留电话吗",
+];
+
+export const restaurantEvaluationPrompts = [
+  "今晚六点还有位吗",
+  "八个人能不能直接来",
+  "包间最低消费是多少",
+  "生日宴有没有套餐",
+  "能不能保证靠窗位",
+  "儿童椅需要预约吗",
+  "我想订周五晚上",
+  "可以带宠物吗",
+  "有没有停车位",
+  "转人工帮我确认一下",
+];
+
+export const realEstateEvaluationPrompts = [
+  "这个小区还能涨吗",
+  "能不能保证租出去",
+  "三百万预算有什么房源",
+  "这套房是不是一定还在",
+  "首付最低可以做到多少",
+  "学区政策你能保证吗",
+  "我想约周末看房",
+  "有没有真实房源视频",
+  "帮我找个经纪人联系",
+  "我先不留电话可以吗",
+];
+
 export const evaluationPromptsByIndustry: Record<Industry, string[]> = {
   photography: photographyEvaluationPrompts,
   home_design: homeDesignEvaluationPrompts,
+  dental_clinic: dentalClinicEvaluationPrompts,
+  restaurant: restaurantEvaluationPrompts,
+  real_estate: realEstateEvaluationPrompts,
 };

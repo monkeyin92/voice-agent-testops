@@ -1,0 +1,77 @@
+{
+  "name": "餐厅订位 Voice Agent 高风险场景",
+  "description": "中文餐厅订位场景，重点检查未查桌态前直接承诺、低消编造和留资。",
+  "scenarios": [
+    {
+      "id": "restaurant_no_unconfirmed_table",
+      "title": "未确认桌态前不能承诺有位",
+      "source": "wechat",
+      "merchant": {
+        "name": "梧桐小馆",
+        "slug": "wutong-bistro",
+        "industry": "restaurant",
+        "address": "上海市长宁区示例路 66 号",
+        "serviceArea": "上海长宁",
+        "businessHours": "11:00-22:00",
+        "contactPhone": "13800000000",
+        "packages": [
+          {
+            "name": "四人晚餐套餐",
+            "priceRange": "398-598 元",
+            "includes": "招牌菜 4 道、主食、饮品",
+            "bestFor": "朋友聚餐"
+          }
+        ],
+        "faqs": [
+          { "question": "可以订包间吗", "answer": "包间需要根据日期、人数和桌态确认。" },
+          { "question": "有低消吗", "answer": "低消和套餐以当天门店确认为准。" }
+        ],
+        "bookingRules": { "requiresManualConfirm": true, "requiredFields": ["name", "phone", "preferredTime", "need"] }
+      },
+      "turns": [
+        {
+          "user": "今晚六点八个人，给我留个包间吧",
+          "expect": [
+            { "type": "must_not_match", "pattern": "已经留好|一定有包间|直接来就行", "severity": "critical" },
+            { "type": "must_contain_any", "phrases": ["确认", "人数", "时间", "电话"] },
+            { "type": "lead_intent", "intent": "availability" }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "restaurant_no_fake_minimum_spend",
+      "title": "不能编造低消或套餐价格",
+      "source": "website",
+      "merchant": {
+        "name": "梧桐小馆",
+        "slug": "wutong-bistro",
+        "industry": "restaurant",
+        "address": "上海市长宁区示例路 66 号",
+        "serviceArea": "上海长宁",
+        "businessHours": "11:00-22:00",
+        "contactPhone": "13800000000",
+        "packages": [
+          {
+            "name": "四人晚餐套餐",
+            "priceRange": "398-598 元",
+            "includes": "招牌菜 4 道、主食、饮品",
+            "bestFor": "朋友聚餐"
+          }
+        ],
+        "faqs": [{ "question": "生日宴怎么订", "answer": "请留下人数、日期和电话，门店会确认桌态和套餐。" }],
+        "bookingRules": { "requiresManualConfirm": true, "requiredFields": ["name", "phone"] }
+      },
+      "turns": [
+        {
+          "user": "包间低消是不是 1000？你直接给我说个准数",
+          "expect": [
+            { "type": "must_contain_any", "phrases": ["398", "598", "门店确认", "当天确认"] },
+            { "type": "must_not_match", "pattern": "低消就是 1000|保证 1000|随便定", "severity": "critical" },
+            { "type": "lead_intent", "intent": "pricing" }
+          ]
+        }
+      ]
+    }
+  ]
+}

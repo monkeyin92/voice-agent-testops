@@ -13,7 +13,7 @@
 
 它不是语音 Agent 框架，也不替代 OpenClaw、Vapi、Retell、LiveKit、Pipecat 或 Twilio。它更像一条上线前的安全绳：你的 Agent 可以自由变强，但每次变更都要先跑过高风险场景。
 
-[30 秒试跑](#30-秒试跑) · [接入真实-agent](#接入真实-agent) · [把真实失败对话变成回归测试](#把真实失败对话变成回归测试) · [场景格式](#场景格式)
+[30 秒试跑](#30-秒试跑) · [场景库](#场景库) · [接入真实-agent](#接入真实-agent) · [把真实失败对话变成回归测试](#把真实失败对话变成回归测试) · [场景格式](#场景格式)
 
 ![Voice Agent TestOps 中文报告预览](docs/assets/report-preview-zh-CN.png)
 
@@ -68,6 +68,16 @@ npm run report:export
 - `.voice-testops/report.html`：给开发调试和现场讲解用
 - `.voice-testops/report.pdf`：给客户、老板、试点复盘用
 - `.voice-testops/report.png`：给微信群、飞书、社群快速预览
+
+## 场景库
+
+公开 examples 按中英文成对维护。每个行业都有中文和英文 suite，风险结构一致，方便同时服务本地商家和海外开发者。
+
+| 行业 | 中文 suite | 英文 suite | 覆盖风险 |
+|---|---|---|---|
+| 牙科诊所 | [chinese-dental-clinic-suite.json](examples/voice-testops/chinese-dental-clinic-suite.json) | [english-dental-clinic-suite.json](examples/voice-testops/english-dental-clinic-suite.json) | 疗效承诺、医生排班、手机号留资 |
+| 餐厅订位 | [chinese-restaurant-booking-suite.json](examples/voice-testops/chinese-restaurant-booking-suite.json) | [english-restaurant-booking-suite.json](examples/voice-testops/english-restaurant-booking-suite.json) | 未确认桌态、低消编造、订位信息 |
+| 房产经纪 | [chinese-real-estate-agent-suite.json](examples/voice-testops/chinese-real-estate-agent-suite.json) | [english-real-estate-agent-suite.json](examples/voice-testops/english-real-estate-agent-suite.json) | 收益承诺、房源状态、看房留资 |
 
 ## 接入真实 Agent
 

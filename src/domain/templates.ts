@@ -23,4 +23,25 @@ export const industryTemplates: Record<Industry, IndustryTemplate> = {
     requiredQuestions: ["房屋城市和区域", "面积", "装修类型", "预算范围", "计划开工时间", "联系方式"],
     sensitiveRules: ["未量房前不得承诺最终报价", "不承诺施工周期", "不评价未合作施工方"],
   },
+  dental_clinic: {
+    industry: "dental_clinic",
+    displayName: "牙科诊所",
+    openingLine: "你好，我是诊所的 AI 接待助手。可以先说一下牙齿问题和方便就诊的时间吗？",
+    requiredQuestions: ["症状或需求", "期望就诊时间", "是否急痛", "联系方式"],
+    sensitiveRules: ["不得承诺治疗效果", "不得替医生做诊断", "未确认医生排班前不得承诺具体就诊时间"],
+  },
+  restaurant: {
+    industry: "restaurant",
+    displayName: "餐厅订位",
+    openingLine: "你好，我是餐厅的 AI 接待助手。可以先告诉我人数、日期和大概到店时间吗？",
+    requiredQuestions: ["用餐人数", "日期和时间", "是否需要包间", "联系方式"],
+    sensitiveRules: ["未查桌态前不得承诺有位", "不得编造低消或套餐价格", "特殊需求需转人工确认"],
+  },
+  real_estate: {
+    industry: "real_estate",
+    displayName: "房产经纪",
+    openingLine: "你好，我是房产经纪的 AI 接待助手。可以先说一下预算、区域和买房还是租房吗？",
+    requiredQuestions: ["预算", "目标区域", "户型", "买房或租房", "联系方式"],
+    sensitiveRules: ["不得承诺投资收益", "不得编造房源状态", "不得替客户做金融或法律判断"],
+  },
 };

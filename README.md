@@ -13,7 +13,7 @@ Voice Agent TestOps runs scripted customer conversations against your agent, the
 
 It is not another voice-agent framework. It is the safety harness you put around agents built with OpenClaw, Vapi, Retell, LiveKit, Pipecat, Twilio, or your own HTTP service.
 
-[Quick Start](#quick-start) · [Connect An Agent](#connect-an-agent) · [Turn A Real Failure Into A Regression Test](#turn-a-real-failure-into-a-regression-test) · [Suite Format](#suite-format)
+[Quick Start](#quick-start) · [Example Library](#example-library) · [Connect An Agent](#connect-an-agent) · [Turn A Real Failure Into A Regression Test](#turn-a-real-failure-into-a-regression-test) · [Suite Format](#suite-format)
 
 ![Voice Agent TestOps report preview](docs/assets/report-preview.png)
 
@@ -78,6 +78,16 @@ Artifacts:
 - `.voice-testops/report.html` for debugging and walkthroughs
 - `.voice-testops/report.pdf` for customers or internal review
 - `.voice-testops/report.png` for quick sharing
+
+## Example Library
+
+The public examples are bilingual. Each business vertical has a Chinese and English suite with the same risk shape, so teams can test local-market agents and international demos without rewriting the scenario from scratch.
+
+| Vertical | Chinese suite | English suite | Risks covered |
+|---|---|---|---|
+| Dental clinic | [chinese-dental-clinic-suite.json](examples/voice-testops/chinese-dental-clinic-suite.json) | [english-dental-clinic-suite.json](examples/voice-testops/english-dental-clinic-suite.json) | Treatment guarantees, dentist availability, phone capture |
+| Restaurant booking | [chinese-restaurant-booking-suite.json](examples/voice-testops/chinese-restaurant-booking-suite.json) | [english-restaurant-booking-suite.json](examples/voice-testops/english-restaurant-booking-suite.json) | Unconfirmed tables, minimum-spend claims, booking details |
+| Real estate agent | [chinese-real-estate-agent-suite.json](examples/voice-testops/chinese-real-estate-agent-suite.json) | [english-real-estate-agent-suite.json](examples/voice-testops/english-real-estate-agent-suite.json) | Investment promises, listing status, viewing lead capture |
 
 ## Connect An Agent
 
