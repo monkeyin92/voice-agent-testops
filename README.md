@@ -12,7 +12,7 @@ Voice Agent TestOps runs scripted customer conversations against your agent, the
 
 It is not another voice-agent framework. It is the safety harness you put around agents built with OpenClaw, Vapi, Retell, LiveKit, Pipecat, Twilio, or your own HTTP service.
 
-[Quick Start](#quick-start) · [Connect An Agent](#connect-an-agent) · [Suite Format](#suite-format)
+[Quick Start](#quick-start) · [Connect An Agent](#connect-an-agent) · [Integration Guides](#integration-guides) · [Suite Format](#suite-format)
 
 ![Voice Agent TestOps report preview](docs/assets/report-preview.png)
 
@@ -72,6 +72,8 @@ Artifacts:
 - `.voice-testops/report.png` for quick sharing
 
 ## Connect An Agent
+
+Start with HTTP if you want the shortest path. Use the OpenClaw adapter when you already have an OpenClaw-compatible `/v1/responses` endpoint. For hosted voice stacks, add a small test bridge so CI can test the same prompt, tool, and lead-summary logic without placing a real phone call.
 
 ### Generic HTTP Agent
 
@@ -148,6 +150,15 @@ npm run voice-test -- \
 ```
 
 For a local OpenClaw Gateway setup, see [docs/ops/openclaw-docker.md](docs/ops/openclaw-docker.md).
+
+## Integration Guides
+
+- [Generic HTTP Agent](docs/integrations/http.md)
+- [OpenClaw](docs/integrations/openclaw.md)
+- [Vapi](docs/integrations/vapi.md)
+- [Retell](docs/integrations/retell.md)
+- [LiveKit Agents](docs/integrations/livekit.md)
+- [Pipecat](docs/integrations/pipecat.md)
 
 ## Sales Demo
 
@@ -249,5 +260,11 @@ If your team has ever watched a voice agent sound confident at exactly the wrong
 
 - [Market thesis](docs/strategy/voice-agent-testops-market.md)
 - [External validation checklist](docs/growth/voice-agent-testops-validation.md)
+- [Generic HTTP Agent](docs/integrations/http.md)
+- [OpenClaw](docs/integrations/openclaw.md)
+- [Vapi](docs/integrations/vapi.md)
+- [Retell](docs/integrations/retell.md)
+- [LiveKit Agents](docs/integrations/livekit.md)
+- [Pipecat](docs/integrations/pipecat.md)
 - [OpenClaw local runbook](docs/ops/openclaw-docker.md)
 - [Next-step roadmap](docs/roadmap/2026-05-03-voice-agent-testops-next-steps.md)

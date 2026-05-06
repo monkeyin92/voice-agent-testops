@@ -1,0 +1,68 @@
+import { existsSync, readFileSync } from "node:fs";
+import { describe, expect, it } from "vitest";
+
+const integrationDocs = [
+  {
+    path: "docs/integrations/http.md",
+    title: "Generic HTTP Agent",
+    phrases: ["POST /test-turn", "npm run example:http-agent", "--agent http", "spoken", "summary"],
+  },
+  {
+    path: "docs/integrations/openclaw.md",
+    title: "OpenClaw",
+    phrases: ["/v1/responses", "--agent openclaw", "--openclaw-mode responses", "OPENCLAW_AGENT_URL"],
+  },
+  {
+    path: "docs/integrations/vapi.md",
+    title: "Vapi",
+    phrases: ["test-turn bridge", "--agent http", "VAPI_API_KEY", "spoken"],
+  },
+  {
+    path: "docs/integrations/retell.md",
+    title: "Retell",
+    phrases: ["custom LLM", "test-turn bridge", "--agent http", "RETELL_API_KEY"],
+  },
+  {
+    path: "docs/integrations/livekit.md",
+    title: "LiveKit Agents",
+    phrases: ["test-turn bridge", "--agent http", "LIVEKIT_URL", "summary"],
+  },
+  {
+    path: "docs/integrations/pipecat.md",
+    title: "Pipecat",
+    phrases: ["pipeline", "test-turn bridge", "--agent http", "PIPECAT_TEST_AGENT_URL"],
+  },
+];
+
+describe("integration documentation", () => {
+  it("links every integration guide from the default English README", () => {
+    const readme = readFileSync("README.md", "utf8");
+
+    for (const doc of integrationDocs) {
+      expect(readme).toContain(`[${doc.title}](${doc.path})`);
+    }
+  });
+
+  it("keeps a Chinese README entry to the integration guides", () => {
+    const readme = readFileSync("README.zh-CN.md", "utf8");
+
+    expect(readme).toContain("集成文档");
+    expect(readme).toContain("[HTTP](docs/integrations/http.md)");
+    expect(readme).toContain("[OpenClaw](docs/integrations/openclaw.md)");
+  });
+
+  it("documents the setup contract and copy-paste commands for every supported stack", () => {
+    for (const doc of integrationDocs) {
+      expect(existsSync(doc.path), `${doc.path} should exist`).toBe(true);
+
+      const content = readFileSync(doc.path, "utf8");
+      expect(content).toContain(`# ${doc.title}`);
+      expect(content).toContain("## Run it");
+      expect(content).toContain("## Return contract");
+
+      for (const phrase of doc.phrases) {
+        expect(content).toContain(phrase);
+      }
+    }
+  });
+});

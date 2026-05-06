@@ -12,7 +12,7 @@
 
 它不是语音 Agent 框架，也不替代 OpenClaw、Vapi、Retell、LiveKit、Pipecat 或 Twilio。它更像一条上线前的安全绳：你的 Agent 可以自由变强，但每次变更都要先跑过高风险场景。
 
-[30 秒试跑](#30-秒试跑) · [接入真实-agent](#接入真实-agent) · [场景格式](#场景格式)
+[30 秒试跑](#30-秒试跑) · [接入真实-agent](#接入真实-agent) · [集成文档](#集成文档) · [场景格式](#场景格式)
 
 ![Voice Agent TestOps 中文报告预览](docs/assets/report-preview-zh-CN.png)
 
@@ -96,6 +96,17 @@ npm run voice-test -- \
 ```
 
 本地 OpenClaw Gateway 的启动方式见 [docs/ops/openclaw-docker.md](docs/ops/openclaw-docker.md)。
+
+## 集成文档
+
+这些文档默认用英文，方便国外开发者直接阅读和转发；中文 README 保留入口，便于国内用户快速找到对应接入方式。
+
+- [HTTP](docs/integrations/http.md)：最通用的 `POST /test-turn` 接入方式
+- [OpenClaw](docs/integrations/openclaw.md)：直接测试 `/v1/responses` 兼容端点
+- [Vapi](docs/integrations/vapi.md)：用 test-turn bridge 覆盖 Vapi 背后的 prompt、工具和留资逻辑
+- [Retell](docs/integrations/retell.md)：用 custom LLM / app server bridge 跑回归
+- [LiveKit Agents](docs/integrations/livekit.md)：把实时房间背后的决策层接入 CI
+- [Pipecat](docs/integrations/pipecat.md)：把 pipeline 的业务回复层变成可重复测试的 HTTP bridge
 
 ## 场景格式
 
