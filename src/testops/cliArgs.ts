@@ -11,6 +11,8 @@ export type VoiceTestCliArgs = {
   failOnSeverity?: VoiceTestSeverity;
   jsonPath: string;
   htmlPath: string;
+  summaryPath?: string;
+  junitPath?: string;
 };
 
 export function parseCliArgs(argv: string[]): VoiceTestCliArgs {
@@ -73,5 +75,7 @@ export function parseCliArgs(argv: string[]): VoiceTestCliArgs {
     failOnSeverity,
     jsonPath: values.get("json") ?? ".voice-testops/report.json",
     htmlPath: values.get("html") ?? ".voice-testops/report.html",
+    summaryPath: values.get("summary"),
+    junitPath: values.get("junit"),
   };
 }

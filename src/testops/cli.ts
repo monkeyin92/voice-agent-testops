@@ -13,7 +13,7 @@ import { exampleCatalog, parseExampleLanguage, type ExampleCatalogEntry, type Ex
 import { initializeVoiceTestOpsProject } from "./initProject";
 import { buildVoiceTestSuiteJsonSchema } from "./jsonSchema";
 import { resolveReadablePath } from "./packagePaths";
-import { renderHtmlReport, renderJsonReport } from "./report";
+import { renderHtmlReport, renderJsonReport, renderJunitReport, renderMarkdownSummary } from "./report";
 import { runVoiceTestSuite, type VoiceTestRunResult } from "./runner";
 import type { VoiceTestSeverity } from "./schema";
 import { loadVoiceTestSuite } from "./suiteLoader";
@@ -296,6 +296,12 @@ async function runSuite(argv: string[]): Promise<number> {
 
   await writeReport(args.jsonPath, renderJsonReport(result));
   await writeReport(args.htmlPath, renderHtmlReport(result, { locale: args.reportLocale }));
+  if (args.summaryPath) {
+    await writeReport(args.summaryPath, renderMarkdownSummary(result));
+  }
+  if (args.junitPath) {
+    await writeReport(args.junitPath, renderJunitReport(result));
+  }
 
   const status = result.passed ? "passed" : "failed";
   console.log(
@@ -303,6 +309,12 @@ async function runSuite(argv: string[]): Promise<number> {
   );
   console.log(`JSON report: ${args.jsonPath}`);
   console.log(`HTML report: ${args.htmlPath}`);
+  if (args.summaryPath) {
+    console.log(`Markdown summary: ${args.summaryPath}`);
+  }
+  if (args.junitPath) {
+    console.log(`JUnit report: ${args.junitPath}`);
+  }
 
   if (args.failOnSeverity) {
     const gatedFailures = countFailuresAtOrAboveSeverity(result, args.failOnSeverity);

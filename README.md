@@ -84,6 +84,8 @@ Artifacts:
 
 - `.voice-testops/report.json` for CI and automation
 - `.voice-testops/report.html` for debugging and walkthroughs
+- `.voice-testops/summary.md` for GitHub Actions step summaries
+- `.voice-testops/junit.xml` for CI test dashboards
 - `.voice-testops/report.pdf` for customers or internal review
 - `.voice-testops/report.png` for quick sharing
 
@@ -352,7 +354,19 @@ npx voice-agent-testops init \
   --endpoint-env VOICE_AGENT_ENDPOINT
 ```
 
-Add `VOICE_AGENT_ENDPOINT` as a GitHub Secret, pointing at your test-turn bridge. The generated workflow validates the suite, runs `doctor --agent http` against `--suite voice-testops/suite.json`, runs the regression suite with `--fail-on-severity critical`, and uploads `.voice-testops/report.json` plus `.voice-testops/report.html` through `actions/upload-artifact`.
+Add `VOICE_AGENT_ENDPOINT` as a GitHub Secret, pointing at your test-turn bridge. The generated workflow validates the suite, runs `doctor --agent http` against `--suite voice-testops/suite.json`, then runs the regression suite with CI-friendly outputs:
+
+```bash
+npx voice-agent-testops run \
+  --agent http \
+  --endpoint "$VOICE_AGENT_ENDPOINT" \
+  --suite voice-testops/suite.json \
+  --summary .voice-testops/summary.md \
+  --junit .voice-testops/junit.xml \
+  --fail-on-severity critical
+```
+
+The workflow appends `.voice-testops/summary.md` to `GITHUB_STEP_SUMMARY`, so failures show up directly on the Actions run page. It also uploads `.voice-testops/report.json`, `.voice-testops/report.html`, `.voice-testops/summary.md`, and `.voice-testops/junit.xml` through `actions/upload-artifact`.
 
 Use `--fail-on-severity` when you want CI to block only the failures that matter for release. This keeps minor copy drift visible in the report without treating it like a production-stopping safety issue.
 

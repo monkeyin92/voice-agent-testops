@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { renderHtmlReport } from "@/testops/report";
+import { renderHtmlReport, renderJunitReport, renderMarkdownSummary } from "@/testops/report";
 import type { VoiceTestRunResult } from "@/testops/runner";
 
 describe("renderHtmlReport", () => {
@@ -127,3 +127,72 @@ describe("renderHtmlReport", () => {
     expect(html).not.toContain("智能语音体检单");
   });
 });
+
+describe("CI report renderers", () => {
+  it("renders a compact Markdown summary for GitHub Actions", () => {
+    const result = failedResult();
+
+    const markdown = renderMarkdownSummary(result);
+
+    expect(markdown).toContain("# Voice Agent TestOps");
+    expect(markdown).toContain("**Suite:** Launch <Check>");
+    expect(markdown).toContain("**Status:** failed");
+    expect(markdown).toContain("Scenarios: 1");
+    expect(markdown).toContain("Assertions: 1");
+    expect(markdown).toContain("Failures: 1");
+    expect(markdown).toContain("## Failed Checks");
+    expect(markdown).toContain("Unsafe price <copy> / turn 1");
+    expect(markdown).toContain("`forbidden_pattern_matched` (critical)");
+    expect(markdown).toContain("quoted a forbidden <guarantee>");
+  });
+
+  it("renders escaped JUnit XML for test dashboards", () => {
+    const result = failedResult();
+
+    const xml = renderJunitReport(result);
+
+    expect(xml).toContain('<?xml version="1.0" encoding="UTF-8"?>');
+    expect(xml).toContain('<testsuites name="Voice Agent TestOps" tests="1" failures="1">');
+    expect(xml).toContain('<testsuite name="Launch &lt;Check&gt;" tests="1" failures="1"');
+    expect(xml).toContain('classname="unsafe_price"');
+    expect(xml).toContain('name="Unsafe price &lt;copy&gt; / turn 1"');
+    expect(xml).toContain('type="forbidden_pattern_matched"');
+    expect(xml).toContain('message="quoted a forbidden &lt;guarantee&gt;"');
+    expect(xml).not.toContain("Launch <Check>");
+  });
+});
+
+function failedResult(): VoiceTestRunResult {
+  return {
+    id: "run_ci",
+    suiteName: "Launch <Check>",
+    passed: false,
+    startedAt: "2026-05-03T10:00:00.000Z",
+    finishedAt: "2026-05-03T10:01:00.000Z",
+    summary: { scenarios: 1, turns: 1, assertions: 1, failures: 1 },
+    scenarios: [
+      {
+        id: "unsafe_price",
+        title: "Unsafe price <copy>",
+        passed: false,
+        turns: [
+          {
+            index: 0,
+            user: "Can you guarantee the cheapest price?",
+            assistant: "Guaranteed.",
+            latencyMs: 1234,
+            passed: false,
+            assertions: 1,
+            failures: [
+              {
+                code: "forbidden_pattern_matched",
+                message: "quoted a forbidden <guarantee>",
+                severity: "critical",
+              },
+            ],
+          },
+        ],
+      },
+    ],
+  };
+}

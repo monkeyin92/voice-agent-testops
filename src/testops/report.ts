@@ -113,16 +113,70 @@ export function renderJsonReport(result: VoiceTestRunResult): string {
   return `${JSON.stringify(result, null, 2)}\n`;
 }
 
+export function renderMarkdownSummary(result: VoiceTestRunResult): string {
+  const failedTurns = collectFailedTurns(result);
+  const lines = [
+    "# Voice Agent TestOps",
+    "",
+    `**Suite:** ${result.suiteName}`,
+    `**Status:** ${result.passed ? "passed" : "failed"}`,
+    `**Run:** ${result.startedAt} - ${result.finishedAt}`,
+    "",
+    `Scenarios: ${result.summary.scenarios} · Turns: ${result.summary.turns} · Assertions: ${result.summary.assertions} · Failures: ${result.summary.failures}`,
+    "",
+  ];
+
+  if (failedTurns.length === 0) {
+    lines.push("## Result", "", "No failed checks in this run.", "");
+    return `${lines.join("\n")}\n`;
+  }
+
+  lines.push("## Failed Checks", "");
+  for (const { scenario, turn } of failedTurns) {
+    lines.push(`- ${scenario.title} / turn ${turn.index + 1}`);
+    for (const failure of turn.failures) {
+      lines.push(`  - \`${failure.code}\` (${failure.severity}): ${failure.message}`);
+    }
+  }
+
+  return `${lines.join("\n")}\n`;
+}
+
+export function renderJunitReport(result: VoiceTestRunResult): string {
+  const failureCount = result.summary.failures;
+  const lines = [
+    '<?xml version="1.0" encoding="UTF-8"?>',
+    `<testsuites name="Voice Agent TestOps" tests="${result.summary.turns}" failures="${failureCount}">`,
+    `  <testsuite name="${escapeXml(result.suiteName)}" tests="${result.summary.turns}" failures="${failureCount}" assertions="${result.summary.assertions}" timestamp="${escapeXml(result.startedAt)}" time="${runTimeSeconds(result)}">`,
+  ];
+
+  for (const scenario of result.scenarios) {
+    for (const turn of scenario.turns) {
+      lines.push(
+        `    <testcase classname="${escapeXml(scenario.id)}" name="${escapeXml(
+          `${scenario.title} / turn ${turn.index + 1}`,
+        )}" assertions="${turn.assertions}" time="${(turn.latencyMs / 1000).toFixed(3)}">`,
+      );
+
+      for (const failure of turn.failures) {
+        lines.push(
+          `      <failure type="${escapeXml(failure.code)}" message="${escapeXml(failure.message)}">${escapeXml(
+            `${failure.severity}: ${failure.message}`,
+          )}</failure>`,
+        );
+      }
+
+      lines.push("    </testcase>");
+    }
+  }
+
+  lines.push("  </testsuite>", "</testsuites>");
+  return `${lines.join("\n")}\n`;
+}
+
 export function renderHtmlReport(result: VoiceTestRunResult, options: { locale?: ReportLocale } = {}): string {
   const copy = copyFor(options.locale ?? "zh-CN");
-  const failedTurns = result.scenarios.flatMap((scenario) =>
-    scenario.turns
-      .filter((turn) => turn.failures.length > 0)
-      .map((turn) => ({
-        scenario,
-        turn,
-      })),
-  );
+  const failedTurns = collectFailedTurns(result);
   const scenarioRows = result.scenarios
     .map(
       (scenario) => `
@@ -262,6 +316,29 @@ function renderFailures(
     .join("");
 }
 
+function collectFailedTurns(result: VoiceTestRunResult): Array<{
+  scenario: VoiceTestRunResult["scenarios"][number];
+  turn: VoiceTestRunResult["scenarios"][number]["turns"][number];
+}> {
+  return result.scenarios.flatMap((scenario) =>
+    scenario.turns
+      .filter((turn) => turn.failures.length > 0)
+      .map((turn) => ({
+        scenario,
+        turn,
+      })),
+  );
+}
+
+function runTimeSeconds(result: VoiceTestRunResult): string {
+  const durationMs = Date.parse(result.finishedAt) - Date.parse(result.startedAt);
+  if (!Number.isFinite(durationMs) || durationMs < 0) {
+    return "0.000";
+  }
+
+  return (durationMs / 1000).toFixed(3);
+}
+
 function renderRiskSummary(
   failedTurns: Array<{
     scenario: VoiceTestRunResult["scenarios"][number];
@@ -335,4 +412,8 @@ function escapeHtml(value: string): string {
     .replaceAll(">", "&gt;")
     .replaceAll('"', "&quot;")
     .replaceAll("'", "&#39;");
+}
+
+function escapeXml(value: string): string {
+  return escapeHtml(value);
 }

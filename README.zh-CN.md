@@ -74,6 +74,8 @@ npm run report:export
 
 - `.voice-testops/report.json`：给 CI 和自动化流程用
 - `.voice-testops/report.html`：给开发调试和现场讲解用
+- `.voice-testops/summary.md`：给 GitHub Actions Summary 直接展示失败摘要
+- `.voice-testops/junit.xml`：给 CI 测试看板、JUnit 解析器和质量平台用
 - `.voice-testops/report.pdf`：给客户、老板、试点复盘用
 - `.voice-testops/report.png`：给微信群、飞书、社群快速预览
 
@@ -255,7 +257,19 @@ npx voice-agent-testops init \
   --endpoint-env VOICE_AGENT_ENDPOINT
 ```
 
-在仓库设置里添加名为 `VOICE_AGENT_ENDPOINT` 的 GitHub Secret，值指向你的 test-turn bridge。生成的 workflow 会先 validate suite，再用 `doctor --agent http --suite voice-testops/suite.json` 检查合同，然后用 `--fail-on-severity critical` 跑回归，并通过 `actions/upload-artifact` 上传 `.voice-testops/report.json` 和 `.voice-testops/report.html`。
+在仓库设置里添加名为 `VOICE_AGENT_ENDPOINT` 的 GitHub Secret，值指向你的 test-turn bridge。生成的 workflow 会先 validate suite，再用 `doctor --agent http --suite voice-testops/suite.json` 检查合同，然后用 CI 友好的产物跑回归：
+
+```bash
+npx voice-agent-testops run \
+  --agent http \
+  --endpoint "$VOICE_AGENT_ENDPOINT" \
+  --suite voice-testops/suite.json \
+  --summary .voice-testops/summary.md \
+  --junit .voice-testops/junit.xml \
+  --fail-on-severity critical
+```
+
+workflow 会把 `.voice-testops/summary.md` 追加到 `GITHUB_STEP_SUMMARY`，失败原因会直接显示在 Actions 页面里；同时通过 `actions/upload-artifact` 上传 `.voice-testops/report.json`、`.voice-testops/report.html`、`.voice-testops/summary.md` 和 `.voice-testops/junit.xml`。
 
 CI 里可以用 `--fail-on-severity critical` 只阻断高危失败。这样轻微文案漂移会留在报告里，但不会和乱报价、漏手机号、错误转人工这类上线事故混在一起。
 

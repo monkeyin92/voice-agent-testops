@@ -51,6 +51,39 @@ describe("voice-test CLI", () => {
     expect(result.stdout).toContain("Severity gate: passed");
   });
 
+  it("writes Markdown summary and JUnit reports for CI dashboards", async () => {
+    const tempDir = await mkdtemp(path.join(tmpdir(), "voice-testops-cli-"));
+    const suitePath = await writeMinorFailureSuite(tempDir);
+    const summaryPath = path.join(tempDir, "summary.md");
+    const junitPath = path.join(tempDir, "junit.xml");
+
+    const result = await runCli([
+      "--suite",
+      suitePath,
+      "--summary",
+      summaryPath,
+      "--junit",
+      junitPath,
+      "--fail-on-severity",
+      "major",
+    ]);
+
+    const markdown = await readFile(summaryPath, "utf8");
+    const junit = await readFile(junitPath, "utf8");
+
+    expect(result.code).toBe(0);
+    expect(result.stdout).toContain(`Markdown summary: ${summaryPath}`);
+    expect(result.stdout).toContain(`JUnit report: ${junitPath}`);
+    expect(markdown).toContain("Minor severity gate demo");
+    expect(markdown).toContain("Minor wording regression / turn 1");
+    expect(markdown).toContain("`expected_phrase_missing` (minor)");
+    expect(markdown).toContain("Failures: 1");
+    expect(junit).toContain('<testsuite name="Minor severity gate demo" tests="1" failures="1"');
+    expect(junit).toContain('name="Minor wording regression / turn 1"');
+    expect(junit).toContain('type="expected_phrase_missing"');
+    expect(junit).toContain("NEVER_MATCHING_PHRASE");
+  });
+
   it("generates a regression suite from a transcript file", async () => {
     const tempDir = await mkdtemp(path.join(tmpdir(), "voice-testops-cli-"));
     const transcriptPath = path.join(tempDir, "failed-call.txt");
@@ -402,12 +435,15 @@ describe("voice-test CLI", () => {
     expect(workflow).toContain("npx voice-agent-testops validate --suite voice-testops/suite.json");
     expect(workflow).toContain("npx voice-agent-testops doctor --agent http --endpoint \"$VOICE_AGENT_ENDPOINT\" --suite voice-testops/suite.json");
     expect(workflow).toContain(
-      "npx voice-agent-testops run --agent http --endpoint \"$VOICE_AGENT_ENDPOINT\" --suite voice-testops/suite.json --fail-on-severity critical",
+      "npx voice-agent-testops run --agent http --endpoint \"$VOICE_AGENT_ENDPOINT\" --suite voice-testops/suite.json --summary .voice-testops/summary.md --junit .voice-testops/junit.xml --fail-on-severity critical",
     );
+    expect(workflow).toContain("cat .voice-testops/summary.md >> \"$GITHUB_STEP_SUMMARY\"");
     expect(workflow).toContain("actions/upload-artifact@v7");
     expect(workflow).toContain("include-hidden-files: true");
     expect(workflow).toContain(".voice-testops/report.json");
     expect(workflow).toContain(".voice-testops/report.html");
+    expect(workflow).toContain(".voice-testops/summary.md");
+    expect(workflow).toContain(".voice-testops/junit.xml");
   });
 
   it("generates a default starter suite that runs immediately", async () => {

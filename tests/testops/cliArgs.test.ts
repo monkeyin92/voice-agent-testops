@@ -13,6 +13,8 @@ describe("parseCliArgs", () => {
       failOnSeverity: undefined,
       jsonPath: ".voice-testops/report.json",
       htmlPath: ".voice-testops/report.html",
+      summaryPath: undefined,
+      junitPath: undefined,
     });
   });
 
@@ -74,6 +76,22 @@ describe("parseCliArgs", () => {
   it("supports severity-gated process exits", () => {
     expect(parseCliArgs(["--suite", "suite.json", "--fail-on-severity", "major"])).toMatchObject({
       failOnSeverity: "major",
+    });
+  });
+
+  it("supports CI-friendly summary and JUnit report paths", () => {
+    expect(
+      parseCliArgs([
+        "--suite",
+        "suite.json",
+        "--summary",
+        ".voice-testops/summary.md",
+        "--junit",
+        ".voice-testops/junit.xml",
+      ]),
+    ).toMatchObject({
+      summaryPath: ".voice-testops/summary.md",
+      junitPath: ".voice-testops/junit.xml",
     });
   });
 

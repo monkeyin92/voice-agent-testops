@@ -519,6 +519,13 @@ ${doctorStep}
       - name: Run voice agent regression suite
         run: ${buildWorkflowRunCommand(options)}
 
+      - name: Add Voice TestOps summary
+        if: always()
+        run: |
+          if [ -f .voice-testops/summary.md ]; then
+            cat .voice-testops/summary.md >> "$GITHUB_STEP_SUMMARY"
+          fi
+
       - name: Upload Voice TestOps reports
         if: always()
         uses: actions/upload-artifact@v7
@@ -527,21 +534,25 @@ ${doctorStep}
           path: |
             .voice-testops/report.json
             .voice-testops/report.html
+            .voice-testops/summary.md
+            .voice-testops/junit.xml
           if-no-files-found: ignore
           include-hidden-files: true
 `;
 }
 
 function buildWorkflowRunCommand(options: { suitePath: string; stack: InitStack; endpoint: string; endpointEnv?: string }): string {
+  const reportOptions = "--summary .voice-testops/summary.md --junit .voice-testops/junit.xml --fail-on-severity critical";
+
   if (options.stack === "http") {
-    return `npx voice-agent-testops run --agent http --endpoint "${endpointForCommand(options)}" --suite ${options.suitePath} --fail-on-severity critical`;
+    return `npx voice-agent-testops run --agent http --endpoint "${endpointForCommand(options)}" --suite ${options.suitePath} ${reportOptions}`;
   }
 
   if (options.stack === "openclaw") {
-    return `npx voice-agent-testops run --agent openclaw --endpoint "${endpointForCommand(options)}" --suite ${options.suitePath} --fail-on-severity critical`;
+    return `npx voice-agent-testops run --agent openclaw --endpoint "${endpointForCommand(options)}" --suite ${options.suitePath} ${reportOptions}`;
   }
 
-  return `npx voice-agent-testops run --suite ${options.suitePath} --fail-on-severity critical`;
+  return `npx voice-agent-testops run --suite ${options.suitePath} ${reportOptions}`;
 }
 
 function endpointForCommand(options: { endpoint: string; endpointEnv?: string }): string {

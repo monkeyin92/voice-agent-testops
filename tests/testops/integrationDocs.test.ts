@@ -145,11 +145,17 @@ describe("integration documentation", () => {
     expect(readme).toContain("VOICE_AGENT_ENDPOINT");
     expect(readme).toContain("doctor --agent http");
     expect(readme).toContain("actions/upload-artifact");
+    expect(readme).toContain("--summary .voice-testops/summary.md");
+    expect(readme).toContain("--junit .voice-testops/junit.xml");
+    expect(readme).toContain("GITHUB_STEP_SUMMARY");
     expect(chineseReadme).toContain("--endpoint-env VOICE_AGENT_ENDPOINT");
     expect(chineseReadme).toContain("GitHub Secret");
     expect(chineseReadme).toContain("VOICE_AGENT_ENDPOINT");
     expect(chineseReadme).toContain("doctor --agent http");
     expect(chineseReadme).toContain("actions/upload-artifact");
+    expect(chineseReadme).toContain("--summary .voice-testops/summary.md");
+    expect(chineseReadme).toContain("--junit .voice-testops/junit.xml");
+    expect(chineseReadme).toContain("GITHUB_STEP_SUMMARY");
   });
 
   it("documents the setup contract and copy-paste commands for every supported stack", () => {
