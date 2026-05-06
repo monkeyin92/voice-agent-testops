@@ -52,4 +52,18 @@ describe("respondWithLocalReceptionist", () => {
     expect(response.spoken).toMatch(/电话|手机号|联系方式/);
     expect(response.summary.intent).toBe("availability");
   });
+
+  it("extracts contact fields from customer messages for handoff follow-up", async () => {
+    const response = await respondWithLocalReceptionist({
+      merchant,
+      source: "website",
+      messages: [{ role: "customer", text: "我叫小林，电话 13800001111，想约周日拍", at: "2026-05-03T10:00:00.000Z" }],
+    });
+
+    expect(response.summary.customerName).toBe("小林");
+    expect(response.summary.phone).toBe("13800001111");
+    expect(response.summary.preferredTime).toBe("周日");
+    expect(response.summary.intent).toBe("availability");
+    expect(response.summary.level).toBe("high");
+  });
 });

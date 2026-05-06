@@ -109,4 +109,46 @@ describe("runVoiceTestSuite", () => {
       "latency_exceeded",
     ]);
   });
+
+  it("reports per-turn progress while running a suite", async () => {
+    const suite = parseVoiceTestSuite({
+      name: "销售演示套件",
+      scenarios: [
+        {
+          id: "pricing",
+          title: "客户询价",
+          source: "xiaohongshu",
+          merchant,
+          turns: [
+            {
+              user: "单人写真多少钱",
+              expect: [{ type: "must_contain_any", phrases: ["599"] }],
+            },
+          ],
+        },
+      ],
+    });
+    const agent: VoiceAgentExecutor = async () => ({
+      spoken: "单人写真 599-1299 元，最终以商家确认为准。",
+      summary: {
+        source: "xiaohongshu",
+        intent: "pricing",
+        level: "medium",
+        need: "客户咨询价格",
+        questions: ["单人写真多少钱"],
+        nextAction: "请老板跟进",
+        transcript: [],
+      },
+    });
+    const events: string[] = [];
+
+    await runVoiceTestSuite(suite, agent, {
+      clock: scriptedClock([0, 120]),
+      onProgress: (event) => {
+        events.push(`${event.type}:${event.scenarioIndex + 1}:${event.turnIndex + 1}:${event.passed ?? "pending"}`);
+      },
+    });
+
+    expect(events).toEqual(["turn:start:1:1:pending", "turn:finish:1:1:true"]);
+  });
 });

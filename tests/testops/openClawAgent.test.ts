@@ -104,13 +104,62 @@ describe("createOpenClawAgent", () => {
     const body = JSON.parse(fetchImpl.mock.calls[0][1].body);
     expect(body).toMatchObject({
       model: "openclaw",
-      input: expect.stringContaining("单人写真多少钱"),
+      input: expect.stringContaining("只输出 JSON"),
       metadata: {
         suiteName: "回归测试",
         scenarioId: "pricing",
         turnIndex: "0",
       },
     });
+    expect(body.input).toContain("直接回答用户当前问题");
+    expect(body.input).toContain("不要先问称呼");
+  });
+
+  it("parses a JSON Responses output into spoken and summary", async () => {
+    const fetchImpl = vi.fn().mockResolvedValue({
+      ok: true,
+      json: async () => ({
+        output: [
+          {
+            type: "message",
+            content: [
+              {
+                type: "output_text",
+                text: JSON.stringify({
+                  spoken: "单人写真套餐是 599-1299 元，拍摄效果会认真沟通和引导，档期需要人工确认。",
+                  summary: {
+                    source: "website",
+                    intent: "pricing",
+                    level: "medium",
+                    need: "客户咨询单人写真价格和效果",
+                    questions: ["单人写真多少钱，能保证拍得好看吗"],
+                    nextAction: "请人工确认档期并跟进",
+                    transcript: [],
+                  },
+                }),
+              },
+            ],
+          },
+        ],
+      }),
+    });
+    const agent = createOpenClawAgent({
+      endpoint: "http://localhost:18889/v1/responses",
+      mode: "responses",
+      fetchImpl,
+    });
+
+    const output = await agent({
+      suiteName: "回归测试",
+      scenario,
+      merchant: { ...scenario.merchant, id: "merchant_1", createdAt: new Date(), updatedAt: new Date() },
+      messages: [{ role: "customer", text: "单人写真多少钱，能保证拍得好看吗", at: "2026-05-03T10:00:00.000Z" }],
+      turnIndex: 0,
+      customerText: "单人写真多少钱，能保证拍得好看吗",
+    });
+
+    expect(output.spoken).toContain("599-1299");
+    expect(output.summary?.intent).toBe("pricing");
   });
 
   it("fails fast when OpenClaw returns a response without spoken text", async () => {

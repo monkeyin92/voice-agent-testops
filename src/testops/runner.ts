@@ -46,6 +46,33 @@ export type VoiceTestRunResult = {
   scenarios: VoiceTestScenarioResult[];
 };
 
+export type VoiceTestProgressEvent =
+  | {
+      type: "turn:start";
+      scenarioIndex: number;
+      scenarioId: string;
+      scenarioTitle: string;
+      turnIndex: number;
+      turnTotal: number;
+      user: string;
+    }
+  | {
+      type: "turn:finish";
+      scenarioIndex: number;
+      scenarioId: string;
+      scenarioTitle: string;
+      turnIndex: number;
+      turnTotal: number;
+      passed: boolean;
+      failures: number;
+      latencyMs: number;
+    };
+
+export type VoiceTestRunOptions = {
+  clock?: VoiceTestClock;
+  onProgress?: (event: VoiceTestProgressEvent) => void;
+};
+
 const systemClock: VoiceTestClock = {
   now: () => Date.now(),
   iso: () => new Date().toISOString(),
@@ -54,14 +81,14 @@ const systemClock: VoiceTestClock = {
 export async function runVoiceTestSuite(
   suite: VoiceTestSuite,
   agent: VoiceAgentExecutor,
-  options: { clock?: VoiceTestClock } = {},
+  options: VoiceTestRunOptions = {},
 ): Promise<VoiceTestRunResult> {
   const clock = options.clock ?? systemClock;
   const startedAt = clock.iso();
   const scenarioResults: VoiceTestScenarioResult[] = [];
 
-  for (const scenario of suite.scenarios) {
-    scenarioResults.push(await runScenario(suite.name, scenario, agent, clock));
+  for (const [scenarioIndex, scenario] of suite.scenarios.entries()) {
+    scenarioResults.push(await runScenario(suite.name, scenario, agent, clock, scenarioIndex, options.onProgress));
   }
 
   const assertions = scenarioResults.reduce(
@@ -95,12 +122,24 @@ async function runScenario(
   scenario: VoiceTestScenario,
   agent: VoiceAgentExecutor,
   clock: VoiceTestClock,
+  scenarioIndex: number,
+  onProgress: VoiceTestRunOptions["onProgress"],
 ): Promise<VoiceTestScenarioResult> {
   const merchant = makeTestMerchant(scenario.merchant, `test_${scenario.id}`);
   const messages: ConversationMessage[] = [];
   const turnResults: VoiceTestTurnResult[] = [];
 
   for (const [index, turn] of scenario.turns.entries()) {
+    onProgress?.({
+      type: "turn:start",
+      scenarioIndex,
+      scenarioId: scenario.id,
+      scenarioTitle: scenario.title,
+      turnIndex: index,
+      turnTotal: scenario.turns.length,
+      user: turn.user,
+    });
+
     const customerMessage: ConversationMessage = {
       role: "customer",
       text: turn.user,
@@ -127,15 +166,28 @@ async function runScenario(
     messages.push(assistantMessage);
 
     const failures = turn.expect.flatMap((assertion) => evaluateAssertion(assertion, output.spoken, latencyMs, output.summary));
+    const passed = failures.length === 0;
 
     turnResults.push({
       index,
       user: turn.user,
       assistant: output.spoken,
       latencyMs,
-      passed: failures.length === 0,
+      passed,
       assertions: turn.expect.length,
       failures,
+    });
+
+    onProgress?.({
+      type: "turn:finish",
+      scenarioIndex,
+      scenarioId: scenario.id,
+      scenarioTitle: scenario.title,
+      turnIndex: index,
+      turnTotal: scenario.turns.length,
+      passed,
+      failures: failures.length,
+      latencyMs,
     });
   }
 

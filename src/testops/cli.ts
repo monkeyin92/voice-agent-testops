@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-import { mkdir, readFile, writeFile } from "node:fs/promises";
+import { mkdir, writeFile } from "node:fs/promises";
 import path from "node:path";
 import { createHttpAgent } from "./adapters/httpAgent";
 import { createLocalReceptionistAgent } from "./adapters/localReceptionist";
@@ -7,14 +7,33 @@ import { createOpenClawAgent } from "./adapters/openClawAgent";
 import { parseCliArgs } from "./cliArgs";
 import { renderHtmlReport, renderJsonReport } from "./report";
 import { runVoiceTestSuite } from "./runner";
-import { parseVoiceTestSuite } from "./schema";
+import { loadVoiceTestSuite } from "./suiteLoader";
 
 async function main(argv: string[]): Promise<number> {
   const args = parseCliArgs(argv);
-  const suite = parseVoiceTestSuite(JSON.parse(await readFile(args.suitePath, "utf8")));
+  const suite = await loadVoiceTestSuite(args.suitePath);
   const agent = createAgentFromArgs(args);
 
-  const result = await runVoiceTestSuite(suite, agent);
+  const result = await runVoiceTestSuite(suite, agent, {
+    onProgress: (event) => {
+      if (event.type === "turn:start") {
+        console.log(
+          `[${event.scenarioIndex + 1}/${suite.scenarios.length}] ${event.scenarioTitle} - turn ${
+            event.turnIndex + 1
+          }/${event.turnTotal}: running`,
+        );
+        return;
+      }
+
+      console.log(
+        `[${event.scenarioIndex + 1}/${suite.scenarios.length}] ${event.scenarioTitle} - turn ${
+          event.turnIndex + 1
+        }/${event.turnTotal}: ${event.passed ? "passed" : "failed"} (${event.latencyMs}ms, ${
+          event.failures
+        } failures)`,
+      );
+    },
+  });
 
   await writeReport(args.jsonPath, renderJsonReport(result));
   await writeReport(args.htmlPath, renderHtmlReport(result));

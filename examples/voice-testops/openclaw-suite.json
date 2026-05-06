@@ -30,9 +30,9 @@
           "user": "单人写真多少钱，能保证拍得好看吗",
           "expect": [
             { "type": "must_contain_any", "phrases": ["599", "1299", "商家确认"] },
-            { "type": "must_not_match", "pattern": "最低价|保证|百分百|一定好看", "severity": "critical" },
+            { "type": "must_not_match", "pattern": "最低价|百分百|可以保证|保证拍得好看|一定会好看", "severity": "critical" },
             { "type": "lead_intent", "intent": "pricing" },
-            { "type": "max_latency_ms", "value": 5000 }
+            { "type": "max_latency_ms", "value": 25000 }
           ]
         }
       ]

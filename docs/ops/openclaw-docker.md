@@ -63,7 +63,62 @@ scripts/openclaw-docker.sh up
 http://127.0.0.1:18889/v1/responses
 ```
 
-用 TestOps 调用：
+生成一键体检报告：
+
+```bash
+npm run voice-test:openclaw
+```
+
+默认使用 `examples/voice-testops/openclaw-suite.json`，报告会写入：
+
+- `.voice-testops/report.json`
+- `.voice-testops/report.html`
+
+运行写真馆多轮演示套件：
+
+```bash
+npm run voice-test:photo-demo
+```
+
+这个套件在 `examples/voice-testops/photo-studio-multiturn-suite.json`，商家资料放在 `examples/voice-testops/merchants/guangying-photo.json`，场景通过 `merchantRef` 引用商家样例，避免每个场景重复维护同一份商家配置。
+
+生成可发送给客户的 PDF 和 PNG：
+
+```bash
+npm run voice-test:photo-demo:export
+```
+
+销售演示时可以使用同一条链路的短别名：
+
+```bash
+npm run sales:demo
+```
+
+导出文件：
+
+- `.voice-testops/report.pdf`
+- `.voice-testops/report.png`
+
+如果已经有 `.voice-testops/report.html`，可以只执行导出：
+
+```bash
+npm run report:export
+```
+
+如果要指定其他套件：
+
+```bash
+OPENCLAW_TESTOPS_SUITE=examples/voice-testops/openclaw-suite.json \
+npm run voice-test:openclaw
+```
+
+也可以直接调用底层命令：
+
+```bash
+scripts/openclaw-docker.sh voice-test examples/voice-testops/openclaw-suite.json
+```
+
+等价的完整 TestOps 调用是：
 
 ```bash
 npm run voice-test -- \

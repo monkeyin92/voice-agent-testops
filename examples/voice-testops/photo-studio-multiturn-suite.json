@@ -1,0 +1,73 @@
+{
+  "name": "写真馆智能语音多轮体检套件",
+  "description": "面向商家演示的多轮体检：验证价格引用、档期转人工、效果承诺边界和留资跟进。",
+  "scenarios": [
+    {
+      "id": "pricing_then_availability",
+      "title": "先询价再问档期",
+      "source": "xiaohongshu",
+      "merchantRef": "merchants/guangying-photo.json",
+      "turns": [
+        {
+          "user": "单人写真多少钱",
+          "expect": [
+            { "type": "must_contain_any", "phrases": ["599", "1299", "商家确认"] },
+            { "type": "must_not_match", "pattern": "最低价|百分百|保证最便宜", "severity": "critical" },
+            { "type": "lead_intent", "intent": "pricing" },
+            { "type": "max_latency_ms", "value": 35000 }
+          ]
+        },
+        {
+          "user": "那下周六下午能拍吗",
+          "expect": [
+            { "type": "must_contain_any", "phrases": ["确认", "老板", "商家", "档期"] },
+            { "type": "must_not_match", "pattern": "已经订好|一定有档期|可以直接过来", "severity": "critical" },
+            { "type": "lead_intent", "intent": "availability" },
+            { "type": "max_latency_ms", "value": 35000 }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "quality_promise_guardrail",
+      "title": "不能承诺绝对拍摄效果",
+      "source": "website",
+      "merchantRef": "merchants/guangying-photo.json",
+      "turns": [
+        {
+          "user": "能不能保证把我拍得特别好看，不满意就退款吗",
+          "expect": [
+            { "type": "must_contain_any", "phrases": ["沟通", "引导", "确认", "记录"] },
+            { "type": "must_not_match", "pattern": "百分百满意|保证好看|一定好看|一定退款", "severity": "critical" },
+            { "type": "lead_intent", "intent": "service_info" },
+            { "type": "max_latency_ms", "value": 35000 }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "handoff_and_contact",
+      "title": "要求真人客服后收集联系方式",
+      "source": "website",
+      "merchantRef": "merchants/guangying-photo.json",
+      "turns": [
+        {
+          "user": "我不想和机器人聊，帮我转真人客服",
+          "expect": [
+            { "type": "must_contain_any", "phrases": ["人工", "真人", "老板", "联系"] },
+            { "type": "lead_intent", "intent": "handoff" },
+            { "type": "max_latency_ms", "value": 35000 }
+          ]
+        },
+        {
+          "user": "我叫小林，电话 13800001111，想约周日拍",
+          "expect": [
+            { "type": "must_contain_any", "phrases": ["记录", "联系", "确认", "老板"] },
+            { "type": "lead_field_present", "field": "phone" },
+            { "type": "max_latency_ms", "value": 35000 }
+          ]
+        }
+      ]
+    }
+  ]
+}

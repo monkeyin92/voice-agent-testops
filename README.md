@@ -1,8 +1,37 @@
 # Voice Agent TestOps
 
-AI 语音 Agent 的自动化测试、评测与报告工具。
+AI 语音 Agent 的自动化测试、评测与销售演示报告工具。
 
 当前仓库保留了一个小红书商家接待 demo agent，但战略产品已经转向 Voice Agent TestOps：用场景脚本自动和 Agent 对话，检查延迟、话术安全、字段收集、意图识别和业务承诺。
+
+## Sales Demo
+
+销售演示只需要一条命令：
+
+```bash
+npm run sales:demo
+```
+
+前置条件：本机 OpenClaw Gateway 已按 `docs/ops/openclaw-docker.md` 启动，并且模型 provider 凭证可用。
+
+这条命令会跑写真馆多轮演示套件，并导出可发给客户的报告：
+
+- `.voice-testops/report.html`：现场讲解用的交互式报告。
+- `.voice-testops/report.pdf`：发给客户或放进销售材料。
+- `.voice-testops/report.png`：社群、飞书、微信里快速预览。
+
+演示链路覆盖四个销售最容易讲清楚的风险点：询价不能乱承诺、档期必须转人工确认、效果不能保证、客户要求真人时要正确留资。底层使用 `examples/voice-testops/photo-studio-multiturn-suite.json`，商家样例在 `examples/voice-testops/merchants/guangying-photo.json`。
+
+如果要展示“测试失败时报告如何定位问题”，再运行故意失败的报告：
+
+```bash
+npm run voice-test -- \
+  --suite examples/voice-testops/failing-demo-suite.json \
+  --json .voice-testops/failing-demo.json \
+  --html .voice-testops/failing-demo.html || true
+```
+
+打开 `.voice-testops/failing-demo.html` 可以看到失败原因，例如 `lead_field_missing`。
 
 ## Quick Start
 

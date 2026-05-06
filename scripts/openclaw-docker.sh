@@ -10,6 +10,7 @@ OPENCLAW_DOCKER_BRIDGE_PORT="${OPENCLAW_DOCKER_BRIDGE_PORT:-18890}"
 OPENCLAW_DOCKER_HOME="${OPENCLAW_DOCKER_HOME:-$ROOT_DIR/.openclaw-docker}"
 OPENCLAW_CONFIG_DIR="${OPENCLAW_CONFIG_DIR:-$OPENCLAW_DOCKER_HOME/config}"
 OPENCLAW_WORKSPACE_DIR="${OPENCLAW_WORKSPACE_DIR:-$OPENCLAW_DOCKER_HOME/workspace}"
+OPENCLAW_TESTOPS_SUITE="${OPENCLAW_TESTOPS_SUITE:-examples/voice-testops/openclaw-suite.json}"
 OPENCLAW_ENV_FILE="$OPENCLAW_DOCKER_HOME/openclaw.env"
 OPENCLAW_TOKEN_FILE="$OPENCLAW_DOCKER_HOME/gateway-token"
 
@@ -39,6 +40,17 @@ check_port() {
     lsof -nP -iTCP:"$port" -sTCP:LISTEN >&2
     exit 1
   fi
+}
+
+check_openclaw_ready() {
+  local health_url="http://127.0.0.1:$OPENCLAW_DOCKER_GATEWAY_PORT/healthz"
+  echo "Checking OpenClaw Gateway: $health_url"
+  if ! curl -fsS --max-time 5 "$health_url" >/dev/null; then
+    echo "OpenClaw Gateway is not ready." >&2
+    echo "Run scripts/openclaw-docker.sh up, then retry npm run sales:demo." >&2
+    exit 1
+  fi
+  echo "OpenClaw Gateway is ready"
 }
 
 write_env() {
@@ -125,6 +137,23 @@ ensure_token() {
   chmod 600 "$OPENCLAW_TOKEN_FILE"
 }
 
+run_voice_test() {
+  local suite="${1:-$OPENCLAW_TESTOPS_SUITE}"
+
+  ensure_token
+  check_openclaw_ready
+  echo "Running OpenClaw TestOps health report with suite: $suite"
+  (
+    cd "$ROOT_DIR"
+    ./node_modules/.bin/tsx src/testops/cli.ts \
+      --suite "$suite" \
+      --agent openclaw \
+      --endpoint "http://127.0.0.1:$OPENCLAW_DOCKER_GATEWAY_PORT/v1/responses" \
+      --api-key "$(cat "$OPENCLAW_TOKEN_FILE")" \
+      --openclaw-mode responses
+  )
+}
+
 main() {
   local cmd="${1:-help}"
 
@@ -170,6 +199,9 @@ main() {
         -d '{"model":"openclaw","input":"Say hello in Chinese."}'
       printf "\n"
       ;;
+    voice-test)
+      run_voice_test "${2:-}"
+      ;;
     *)
       cat <<EOF
 Usage: scripts/openclaw-docker.sh <command>
@@ -183,12 +215,14 @@ Commands:
   health            Check /healthz
   token             Print the generated gateway token
   responses-smoke   POST a minimal request to /v1/responses
+  voice-test        Run Voice Agent TestOps and write .voice-testops reports
 
 Environment overrides:
   OPENCLAW_DIR
   OPENCLAW_DOCKER_PROJECT
   OPENCLAW_DOCKER_GATEWAY_PORT
   OPENCLAW_DOCKER_BRIDGE_PORT
+  OPENCLAW_TESTOPS_SUITE
   OPENCLAW_CONFIG_DIR
   OPENCLAW_WORKSPACE_DIR
 EOF

@@ -1,0 +1,32 @@
+{
+  "name": "光影写真馆",
+  "slug": "guangying-photo",
+  "industry": "photography",
+  "address": "上海市徐汇区示例路 88 号",
+  "serviceArea": "上海市区",
+  "businessHours": "10:00-21:00",
+  "contactPhone": "13800000000",
+  "packages": [
+    {
+      "name": "单人写真",
+      "priceRange": "599-1299 元",
+      "includes": "服装 2 套，精修 9 张",
+      "bestFor": "个人写真、生日照、职业头像"
+    },
+    {
+      "name": "情侣写真",
+      "priceRange": "999-1999 元",
+      "includes": "服装 3 套，精修 18 张，双人妆造",
+      "bestFor": "纪念日、订婚前记录"
+    }
+  ],
+  "faqs": [
+    { "question": "周末可以拍吗", "answer": "周末可以拍，需要提前预约档期。" },
+    { "question": "能保证拍得好看吗", "answer": "摄影师会提前沟通风格并现场引导，但不能承诺绝对效果。" },
+    { "question": "可以先看客片吗", "answer": "可以，客服会根据客户喜欢的风格发送客片参考。" }
+  ],
+  "bookingRules": {
+    "requiresManualConfirm": true,
+    "requiredFields": ["name", "phone", "preferredTime", "need"]
+  }
+}
