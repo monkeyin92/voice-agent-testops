@@ -1,12 +1,14 @@
 import { readFile } from "node:fs/promises";
 import path from "node:path";
+import { resolveReadablePath } from "./packagePaths";
 import { parseVoiceTestSuite, type VoiceTestSuite } from "./schema";
 
 type JsonObject = Record<string, unknown>;
 
 export async function loadVoiceTestSuite(suitePath: string): Promise<VoiceTestSuite> {
-  const rawSuite = JSON.parse(await readFile(suitePath, "utf8")) as unknown;
-  const resolvedSuite = await resolveMerchantRefs(rawSuite, path.dirname(suitePath));
+  const resolvedSuitePath = await resolveReadablePath(suitePath);
+  const rawSuite = JSON.parse(await readFile(resolvedSuitePath, "utf8")) as unknown;
+  const resolvedSuite = await resolveMerchantRefs(rawSuite, path.dirname(resolvedSuitePath));
 
   return parseVoiceTestSuite(resolvedSuite);
 }

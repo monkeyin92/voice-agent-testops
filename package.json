@@ -1,7 +1,39 @@
 {
   "name": "voice-agent-testops",
   "version": "0.1.0",
-  "private": true,
+  "description": "Regression testing for voice agents: scripted conversations, safety assertions, CI-ready reports.",
+  "license": "MIT",
+  "homepage": "https://github.com/monkeyin92/voice-agent-testops#readme",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/monkeyin92/voice-agent-testops.git"
+  },
+  "bugs": {
+    "url": "https://github.com/monkeyin92/voice-agent-testops/issues"
+  },
+  "keywords": [
+    "voice-agent",
+    "voice-ai",
+    "ai-agent",
+    "testops",
+    "llm-eval",
+    "ci"
+  ],
+  "bin": {
+    "voice-agent-testops": "bin/voice-agent-testops.mjs"
+  },
+  "files": [
+    "bin",
+    "src/domain",
+    "src/testops",
+    "src/server/services/localReceptionist.ts",
+    "examples/voice-testops",
+    "README.md",
+    "README.zh-CN.md"
+  ],
+  "engines": {
+    "node": ">=22"
+  },
   "scripts": {
     "dev": "next dev",
     "build": "next build",
@@ -22,20 +54,20 @@
     "prisma:studio": "prisma studio"
   },
   "dependencies": {
-    "@prisma/client": "6.19.3",
-    "ioredis": "latest",
-    "next": "latest",
-    "react": "latest",
-    "react-dom": "latest",
+    "tsx": "^4.21.0",
     "zod": "latest"
   },
   "devDependencies": {
+    "@prisma/client": "6.19.3",
     "@types/node": "latest",
     "@types/react": "latest",
     "@types/react-dom": "latest",
+    "ioredis": "latest",
+    "next": "latest",
     "playwright": "^1.59.1",
     "prisma": "6.19.3",
-    "tsx": "^4.21.0",
+    "react": "latest",
+    "react-dom": "latest",
     "typescript": "latest",
     "vitest": "latest"
   }

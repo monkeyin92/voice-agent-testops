@@ -8,6 +8,7 @@ import { createHttpAgent } from "./adapters/httpAgent";
 import { createLocalReceptionistAgent } from "./adapters/localReceptionist";
 import { createOpenClawAgent } from "./adapters/openClawAgent";
 import { parseCliArgs } from "./cliArgs";
+import { resolveReadablePath } from "./packagePaths";
 import { renderHtmlReport, renderJsonReport } from "./report";
 import { runVoiceTestSuite, type VoiceTestRunResult } from "./runner";
 import type { VoiceTestSeverity } from "./schema";
@@ -21,10 +22,22 @@ const severityRank: Record<VoiceTestSeverity, number> = {
 };
 
 async function main(argv: string[]): Promise<number> {
+  if (argv[0] === "run") {
+    return runSuite(argv.slice(1));
+  }
+
   if (argv[0] === "from-transcript") {
     return generateSuiteFromTranscript(argv.slice(1));
   }
 
+  if (argv[0] && !argv[0].startsWith("--")) {
+    throw new Error(`Unknown command: ${argv[0]}`);
+  }
+
+  return runSuite(argv);
+}
+
+async function runSuite(argv: string[]): Promise<number> {
   const args = parseCliArgs(argv);
   const suite = await loadVoiceTestSuite(args.suitePath);
   const agent = createAgentFromArgs(args);
@@ -92,8 +105,8 @@ async function writeReport(filePath: string, content: string): Promise<void> {
 
 async function generateSuiteFromTranscript(argv: string[]): Promise<number> {
   const args = parseFromTranscriptArgs(argv);
-  const transcript = await readFile(args.transcriptPath, "utf8");
-  const merchant = merchantConfigSchema.parse(JSON.parse(await readFile(args.merchantPath, "utf8")));
+  const transcript = await readFile(await resolveReadablePath(args.transcriptPath), "utf8");
+  const merchant = merchantConfigSchema.parse(JSON.parse(await readFile(await resolveReadablePath(args.merchantPath), "utf8")));
   const suite = buildVoiceTestSuiteFromTranscript({
     transcript,
     merchant,

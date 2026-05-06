@@ -60,9 +60,9 @@ describe("integration documentation", () => {
     expect(packageJson.scripts["suite:from-transcript"]).toContain("from-transcript");
     expect(existsSync("examples/voice-testops/transcripts/failed-photo-booking.txt")).toBe(true);
     expect(readme).toContain("Turn A Real Failure Into A Regression Test");
-    expect(readme).toContain("npm run suite:from-transcript");
+    expect(readme).toContain("npx voice-agent-testops from-transcript");
     expect(chineseReadme).toContain("把真实失败对话变成回归测试");
-    expect(chineseReadme).toContain("npm run suite:from-transcript");
+    expect(chineseReadme).toContain("npx voice-agent-testops from-transcript");
   });
 
   it("documents the setup contract and copy-paste commands for every supported stack", () => {

@@ -5,6 +5,7 @@ describe("voice-testops GitHub Actions workflow", () => {
   it("runs unit tests, passing suites, build, audit, and uploads reports", () => {
     const workflow = readFileSync(".github/workflows/voice-testops.yml", "utf8");
 
+    expect(workflow).toContain("FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true");
     expect(workflow).toContain("npm ci");
     expect(workflow).toContain("npm test");
     expect(workflow).toContain("examples/voice-testops/xhs-receptionist-suite.json");

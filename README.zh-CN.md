@@ -44,13 +44,13 @@ Voice Agent TestOps 的目标很朴素：
 
 ```bash
 npm install
-npm run voice-test -- --suite examples/voice-testops/xhs-receptionist-suite.json
+npx voice-agent-testops run --suite examples/voice-testops/xhs-receptionist-suite.json
 ```
 
 生成面向商家演示的报告：
 
 ```bash
-npm run voice-test -- --suite examples/voice-testops/photo-studio-multiturn-suite.json
+npx voice-agent-testops run --suite examples/voice-testops/photo-studio-multiturn-suite.json
 npm run report:export
 ```
 
@@ -113,7 +113,7 @@ npm run voice-test -- \
 如果你已经遇到过一次真实失败，把 transcript 保存成文本文件，然后生成一个可编辑的 suite：
 
 ```bash
-npm run suite:from-transcript -- \
+npx voice-agent-testops from-transcript \
   --transcript examples/voice-testops/transcripts/failed-photo-booking.txt \
   --merchant examples/voice-testops/merchants/guangying-photo.json \
   --out examples/voice-testops/generated-transcript-suite.json \
@@ -157,7 +157,7 @@ Suite 就是 JSON。它描述商家资料、客户对话，以及每一轮必须
 CI 里可以用 `--fail-on-severity critical` 只阻断高危失败。这样轻微文案漂移会留在报告里，但不会和乱报价、漏手机号、错误转人工这类上线事故混在一起。
 
 ```bash
-npm run voice-test -- \
+npx voice-agent-testops run \
   --suite examples/voice-testops/chinese-risk-suite.json \
   --fail-on-severity critical
 ```

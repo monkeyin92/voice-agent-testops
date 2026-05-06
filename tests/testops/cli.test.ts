@@ -87,6 +87,29 @@ describe("voice-test CLI", () => {
     expect(suite.scenarios[0].turns).toHaveLength(2);
     expect(suite.scenarios[0].turns[0].expect.map((assertion) => assertion.type)).toContain("must_not_match");
   });
+
+  it("runs suites through the publishable bin with the run subcommand", async () => {
+    const tempDir = await mkdtemp(path.join(tmpdir(), "voice-testops-cli-"));
+    const suitePath = await writeMinorFailureSuite(tempDir);
+
+    const result = await runBin(["run", "--suite", suitePath, "--fail-on-severity", "major"]);
+
+    expect(result.code).toBe(0);
+    expect(result.stdout).toContain("Minor severity gate demo: failed (1 failures");
+    expect(result.stdout).toContain("Severity gate: passed");
+  });
+
+  it("resolves bundled example suites when the bin runs outside the repository root", async () => {
+    const tempDir = await mkdtemp(path.join(tmpdir(), "voice-testops-cli-"));
+
+    const result = await runBin(
+      ["run", "--suite", "examples/voice-testops/xhs-receptionist-suite.json", "--fail-on-severity", "critical"],
+      tempDir,
+    );
+
+    expect(result.code).toBe(0);
+    expect(result.stdout).toContain("JSON report: .voice-testops/report.json");
+  });
 });
 
 async function writeMinorFailureSuite(tempDir: string): Promise<string> {
@@ -124,9 +147,17 @@ async function runCli(args: string[]): Promise<CliResult> {
   const cliPath = path.resolve("src/testops/cli.ts");
   const tsxPath = path.resolve("node_modules/.bin/tsx");
 
+  return execCli(tsxPath, [cliPath, ...args]);
+}
+
+async function runBin(args: string[], cwd = process.cwd()): Promise<CliResult> {
+  return execCli(process.execPath, [path.resolve("bin/voice-agent-testops.mjs"), ...args], cwd);
+}
+
+async function execCli(command: string, args: string[], cwd = process.cwd()): Promise<CliResult> {
   try {
-    const { stdout, stderr } = await execFileAsync(tsxPath, [cliPath, ...args], {
-      cwd: process.cwd(),
+    const { stdout, stderr } = await execFileAsync(command, args, {
+      cwd,
       env: { ...process.env, OPENCLAW_API_KEY: "" },
     });
 

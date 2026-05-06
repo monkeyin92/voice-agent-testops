@@ -46,7 +46,7 @@ Run the local demo agent. No API key required.
 
 ```bash
 npm install
-npm run voice-test -- --suite examples/voice-testops/xhs-receptionist-suite.json
+npx voice-agent-testops run --suite examples/voice-testops/xhs-receptionist-suite.json
 ```
 
 Expected output:
@@ -60,7 +60,7 @@ HTML report: .voice-testops/report.html
 Generate a more polished merchant-facing report:
 
 ```bash
-npm run voice-test -- --suite examples/voice-testops/photo-studio-multiturn-suite.json
+npx voice-agent-testops run --suite examples/voice-testops/photo-studio-multiturn-suite.json
 npm run report:export
 ```
 
@@ -175,7 +175,7 @@ This runs the photo-studio multi-turn suite and exports a customer-ready report.
 Paste a real failed conversation into a transcript file, then generate a starter suite:
 
 ```bash
-npm run suite:from-transcript -- \
+npx voice-agent-testops from-transcript \
   --transcript examples/voice-testops/transcripts/failed-photo-booking.txt \
   --merchant examples/voice-testops/merchants/guangying-photo.json \
   --out examples/voice-testops/generated-transcript-suite.json \
@@ -254,7 +254,7 @@ The repository includes a GitHub Actions workflow at [.github/workflows/voice-te
 Use `--fail-on-severity` when you want CI to block only the failures that matter for release. This keeps minor copy drift visible in the report without treating it like a production-stopping safety issue.
 
 ```bash
-npm run voice-test -- \
+npx voice-agent-testops run \
   --suite examples/voice-testops/chinese-risk-suite.json \
   --fail-on-severity critical
 ```
