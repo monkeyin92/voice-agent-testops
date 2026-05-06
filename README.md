@@ -63,6 +63,7 @@ Connecting a real HTTP agent?
 
 ```bash
 npx voice-agent-testops init --stack http --name "Lumen Portrait Studio" --with-ci
+npx voice-agent-testops doctor --agent http --endpoint http://localhost:3000/test-turn
 ```
 
 Want a different vertical or language?
@@ -142,6 +143,22 @@ npm run voice-test -- \
 ```
 
 The example lives at [examples/http-agent-server/server.mjs](examples/http-agent-server/server.mjs). Replace its `createTestAgentResponse()` function with your real agent call when you are ready.
+
+Before running a full suite, ask `doctor` whether your bridge speaks the right contract:
+
+```bash
+npx voice-agent-testops doctor --agent http --endpoint http://127.0.0.1:4318/test-turn
+```
+
+Healthy output:
+
+```text
+Voice Agent TestOps doctor
+Endpoint reachable: ok
+spoken: ok
+summary: ok
+Doctor passed
+```
 
 Your endpoint receives one test turn:
 

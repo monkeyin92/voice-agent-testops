@@ -110,6 +110,18 @@ describe("integration documentation", () => {
     expect(chineseReadme).toContain("npx voice-agent-testops list --lang zh-CN");
   });
 
+  it("documents the doctor command in both READMEs", () => {
+    const readme = readFileSync("README.md", "utf8");
+    const chineseReadme = readFileSync("README.zh-CN.md", "utf8");
+
+    expect(readme).toContain("npx voice-agent-testops doctor --agent http --endpoint");
+    expect(readme).toContain("Endpoint reachable: ok");
+    expect(readme).toContain("spoken: ok");
+    expect(chineseReadme).toContain("npx voice-agent-testops doctor --agent http --endpoint");
+    expect(chineseReadme).toContain("Endpoint reachable: ok");
+    expect(chineseReadme).toContain("spoken: ok");
+  });
+
   it("documents the setup contract and copy-paste commands for every supported stack", () => {
     for (const doc of integrationDocs) {
       expect(existsSync(doc.path), `${doc.path} should exist`).toBe(true);

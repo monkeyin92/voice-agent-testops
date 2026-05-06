@@ -53,6 +53,7 @@ npx voice-agent-testops run --suite voice-testops/suite.json
 
 ```bash
 npx voice-agent-testops init --stack http --name "Lumen Portrait Studio" --with-ci
+npx voice-agent-testops doctor --agent http --endpoint http://localhost:3000/test-turn
 ```
 
 想换行业或语言，可以直接从 mock 模板开始：
@@ -128,6 +129,22 @@ npm run voice-test -- \
 ```
 
 示例代码在 [examples/http-agent-server/server.mjs](examples/http-agent-server/server.mjs)。真正接入时，把里面的 `createTestAgentResponse()` 换成你自己的 Agent 调用即可。
+
+跑完整 suite 之前，可以先用 `doctor` 检查 bridge 是否符合合同：
+
+```bash
+npx voice-agent-testops doctor --agent http --endpoint http://127.0.0.1:4318/test-turn
+```
+
+健康输出大概是这样：
+
+```text
+Voice Agent TestOps doctor
+Endpoint reachable: ok
+spoken: ok
+summary: ok
+Doctor passed
+```
 
 通用 HTTP endpoint 接收一轮测试输入，并返回 `{ spoken, summary }`。`spoken` 必填，`summary` 可选；如果返回结构化摘要，留资和意图断言会更有价值。
 

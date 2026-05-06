@@ -8,6 +8,7 @@ import { createHttpAgent } from "./adapters/httpAgent";
 import { createLocalReceptionistAgent } from "./adapters/localReceptionist";
 import { createOpenClawAgent } from "./adapters/openClawAgent";
 import { parseCliArgs } from "./cliArgs";
+import { diagnoseHttpAgentEndpoint, type DoctorCheck } from "./doctor";
 import { exampleCatalog, parseExampleLanguage, type ExampleCatalogEntry, type ExampleLanguage } from "./exampleCatalog";
 import { initializeVoiceTestOpsProject } from "./initProject";
 import { resolveReadablePath } from "./packagePaths";
@@ -40,6 +41,10 @@ async function main(argv: string[]): Promise<number> {
     return listExamples(argv.slice(1));
   }
 
+  if (argv[0] === "doctor") {
+    return doctor(argv.slice(1));
+  }
+
   if (argv[0] === "validate") {
     return validateSuite(argv.slice(1));
   }
@@ -63,6 +68,61 @@ async function initProject(argv: string[]): Promise<number> {
   }
 
   return 0;
+}
+
+async function doctor(argv: string[]): Promise<number> {
+  const args = parseDoctorArgs(argv);
+  const result = await diagnoseHttpAgentEndpoint(args.endpoint);
+
+  console.log("Voice Agent TestOps doctor");
+  for (const check of result.checks) {
+    console.log(formatDoctorCheck(check));
+    if (check.advice) {
+      console.log(`  fix: ${check.advice}`);
+    }
+    if (check.detail) {
+      console.log(`  detail: ${check.detail}`);
+    }
+  }
+
+  if (result.passed) {
+    console.log("Doctor passed");
+    return 0;
+  }
+
+  console.error("Doctor failed");
+  return 1;
+}
+
+type DoctorArgs = {
+  agent: "http";
+  endpoint: string;
+};
+
+function parseDoctorArgs(argv: string[]): DoctorArgs {
+  const values = parseKeyValueArgs(argv);
+
+  for (const option of values.keys()) {
+    if (option !== "agent" && option !== "endpoint") {
+      throw new Error(`Unknown doctor option: --${option}`);
+    }
+  }
+
+  const agent = values.get("agent") ?? "http";
+  if (agent !== "http") {
+    throw new Error("--agent must be http");
+  }
+
+  const endpoint = values.get("endpoint");
+  if (!endpoint) {
+    throw new Error("--endpoint is required");
+  }
+
+  return { agent, endpoint };
+}
+
+function formatDoctorCheck(check: DoctorCheck): string {
+  return `${check.label}: ${check.status}`;
 }
 
 function listExamples(argv: string[]): number {

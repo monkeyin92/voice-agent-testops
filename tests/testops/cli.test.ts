@@ -1,4 +1,5 @@
 import { execFile } from "node:child_process";
+import { createServer, type IncomingMessage, type ServerResponse } from "node:http";
 import { mkdtemp, readFile, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import path from "node:path";
@@ -136,6 +137,68 @@ describe("voice-test CLI", () => {
 
     expect(result.code).toBe(1);
     expect(result.stderr).toContain("--lang must be en or zh-CN");
+  });
+
+  it("diagnoses a healthy HTTP agent endpoint", async () => {
+    const requests: unknown[] = [];
+    const server = await startDoctorServer(async (request) => {
+      requests.push(request);
+
+      return {
+        spoken: "Solo portrait is $99-$199. Please leave your phone and preferred time.",
+        summary: {
+          source: "website",
+          intent: "pricing",
+          need: "Customer asks about price",
+          questions: ["What is the price for a solo portrait package?"],
+          level: "medium",
+          nextAction: "Follow up after confirming availability",
+          transcript: [
+            { role: "customer", text: "What is the price for a solo portrait package?", at: "2026-05-03T00:00:00.000Z" },
+            { role: "assistant", text: "Solo portrait is $99-$199. Please leave your phone.", at: "2026-05-03T00:00:01.000Z" },
+          ],
+        },
+      };
+    });
+
+    try {
+      const result = await runCli(["doctor", "--agent", "http", "--endpoint", server.url]);
+
+      expect(result.code).toBe(0);
+      expect(result.stdout).toContain("Voice Agent TestOps doctor");
+      expect(result.stdout).toContain("Endpoint reachable: ok");
+      expect(result.stdout).toContain("spoken: ok");
+      expect(result.stdout).toContain("summary: ok");
+      expect(result.stdout).toContain("Doctor passed");
+      expect(requests).toHaveLength(1);
+      expect(requests[0]).toMatchObject({
+        suiteName: "Voice Agent TestOps doctor",
+        scenarioId: "doctor_pricing_probe",
+        turnIndex: 0,
+        customerText: "What is the price for a solo portrait package?",
+        source: "website",
+        merchant: { name: "Doctor Demo Photo Studio", industry: "photography" },
+        messages: [],
+      });
+    } finally {
+      await server.close();
+    }
+  });
+
+  it("returns an actionable doctor failure when an HTTP endpoint omits spoken", async () => {
+    const server = await startDoctorServer(async () => ({ text: "I used the wrong response field." }));
+
+    try {
+      const result = await runCli(["doctor", "--endpoint", server.url]);
+
+      expect(result.code).toBe(1);
+      expect(result.stdout).toContain("Endpoint reachable: ok");
+      expect(result.stdout).toContain("spoken: failed");
+      expect(result.stdout).toContain("Return a JSON object with a non-empty `spoken` string.");
+      expect(result.stderr).toContain("Doctor failed");
+    } finally {
+      await server.close();
+    }
   });
 
   it("initializes a runnable suite and merchant config", async () => {
@@ -288,6 +351,40 @@ async function writeMinorFailureSuite(tempDir: string): Promise<string> {
   );
 
   return suitePath;
+}
+
+async function startDoctorServer(
+  handler: (request: unknown) => Promise<unknown>,
+): Promise<{ url: string; close: () => Promise<void> }> {
+  const server = createServer((request: IncomingMessage, response: ServerResponse) => {
+    void (async () => {
+      try {
+        const chunks: Buffer[] = [];
+        for await (const chunk of request) {
+          chunks.push(Buffer.isBuffer(chunk) ? chunk : Buffer.from(chunk));
+        }
+
+        const body = chunks.length > 0 ? JSON.parse(Buffer.concat(chunks).toString("utf8")) : {};
+        const result = await handler(body);
+        response.writeHead(200, { "content-type": "application/json" });
+        response.end(JSON.stringify(result));
+      } catch (error) {
+        response.writeHead(500, { "content-type": "application/json" });
+        response.end(JSON.stringify({ error: error instanceof Error ? error.message : "server error" }));
+      }
+    })();
+  });
+
+  await new Promise<void>((resolve) => server.listen(0, "127.0.0.1", resolve));
+  const address = server.address();
+  if (!address || typeof address === "string") {
+    throw new Error("Doctor test server did not bind to a TCP port");
+  }
+
+  return {
+    url: `http://127.0.0.1:${address.port}/test-turn`,
+    close: () => new Promise<void>((resolve, reject) => server.close((error) => (error ? reject(error) : resolve()))),
+  };
 }
 
 async function runCli(args: string[], cwd = process.cwd()): Promise<CliResult> {
