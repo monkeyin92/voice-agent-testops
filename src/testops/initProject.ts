@@ -14,6 +14,7 @@ type InitProjectArgs = {
   industry: InitIndustry;
   language: ExampleLanguage;
   endpoint?: string;
+  endpointEnv?: string;
   withCi: boolean;
   force: boolean;
 };
@@ -37,7 +38,16 @@ export async function initializeVoiceTestOpsProject(argv: string[], cwd = proces
 
   if (args.withCi) {
     const workflowPath = path.resolve(cwd, ".github/workflows/voice-testops.yml");
-    await writeGeneratedFile(workflowPath, buildWorkflow(relativeForCommand(suitePath, cwd)), args.force);
+    await writeGeneratedFile(
+      workflowPath,
+      buildWorkflow({
+        suitePath: relativeForCommand(suitePath, cwd),
+        stack: args.stack,
+        endpoint: args.endpoint ?? defaultEndpointForStack(args.stack),
+        endpointEnv: args.endpointEnv,
+      }),
+      args.force,
+    );
     files.push(workflowPath);
   }
 
@@ -54,7 +64,7 @@ export async function initializeVoiceTestOpsProject(argv: string[], cwd = proces
 function parseInitArgs(argv: string[], cwd: string): InitProjectArgs {
   const values = new Map<string, string>();
   const flags = new Set<string>();
-  const valueArgs = new Set(["out", "name", "stack", "endpoint", "industry", "lang"]);
+  const valueArgs = new Set(["out", "name", "stack", "endpoint", "endpoint-env", "industry", "lang"]);
   const flagArgs = new Set(["with-ci", "force"]);
 
   for (let index = 0; index < argv.length; index += 1) {
@@ -94,6 +104,7 @@ function parseInitArgs(argv: string[], cwd: string): InitProjectArgs {
     industry,
     language,
     endpoint: values.get("endpoint"),
+    endpointEnv: values.get("endpoint-env") ? parseEndpointEnv(values.get("endpoint-env") ?? "") : undefined,
     withCi: flags.has("with-ci"),
     force: flags.has("force"),
   };
@@ -109,6 +120,14 @@ function parseStack(value: string): InitStack {
   }
 
   throw new Error("--stack must be local-receptionist, local, http, or openclaw");
+}
+
+function parseEndpointEnv(value: string): string {
+  if (/^[A-Z_][A-Z0-9_]*$/.test(value)) {
+    return value;
+  }
+
+  throw new Error("--endpoint-env must be an uppercase environment variable name, for example VOICE_AGENT_ENDPOINT");
 }
 
 function parseInitIndustry(value: string): InitIndustry {
@@ -460,7 +479,16 @@ function buildStarterSuite(name: string, template: StarterTemplate) {
   };
 }
 
-function buildWorkflow(suitePath: string): string {
+function buildWorkflow(options: { suitePath: string; stack: InitStack; endpoint: string; endpointEnv?: string }): string {
+  const endpointEnv = options.endpointEnv ? `  ${options.endpointEnv}: \${{ secrets.${options.endpointEnv} }}\n` : "";
+  const doctorStep =
+    options.stack === "http"
+      ? `
+      - name: Check HTTP agent contract
+        run: npx voice-agent-testops doctor --agent http --endpoint "${endpointForCommand(options)}" --suite ${options.suitePath}
+`
+      : "";
+
   return `name: Voice Agent TestOps
 
 on:
@@ -470,6 +498,7 @@ on:
 
 env:
   FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+${endpointEnv}
 
 jobs:
   voice-testops:
@@ -484,11 +513,39 @@ jobs:
           node-version: 22
 
       - name: Validate voice test suite
-        run: npx voice-agent-testops validate --suite ${suitePath}
+        run: npx voice-agent-testops validate --suite ${options.suitePath}
+${doctorStep}
 
       - name: Run voice agent regression suite
-        run: npx voice-agent-testops run --suite ${suitePath} --fail-on-severity critical
+        run: ${buildWorkflowRunCommand(options)}
+
+      - name: Upload Voice TestOps reports
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: voice-testops-reports
+          path: |
+            .voice-testops/report.json
+            .voice-testops/report.html
+          if-no-files-found: ignore
+          include-hidden-files: true
 `;
+}
+
+function buildWorkflowRunCommand(options: { suitePath: string; stack: InitStack; endpoint: string; endpointEnv?: string }): string {
+  if (options.stack === "http") {
+    return `npx voice-agent-testops run --agent http --endpoint "${endpointForCommand(options)}" --suite ${options.suitePath} --fail-on-severity critical`;
+  }
+
+  if (options.stack === "openclaw") {
+    return `npx voice-agent-testops run --agent openclaw --endpoint "${endpointForCommand(options)}" --suite ${options.suitePath} --fail-on-severity critical`;
+  }
+
+  return `npx voice-agent-testops run --suite ${options.suitePath} --fail-on-severity critical`;
+}
+
+function endpointForCommand(options: { endpoint: string; endpointEnv?: string }): string {
+  return options.endpointEnv ? `$${options.endpointEnv}` : options.endpoint;
 }
 
 async function writeGeneratedFile(filePath: string, content: string, force: boolean): Promise<void> {

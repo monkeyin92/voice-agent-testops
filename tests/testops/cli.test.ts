@@ -376,6 +376,40 @@ describe("voice-test CLI", () => {
     expect(workflow).toContain("actions/checkout@v6");
   });
 
+  it("can initialize a production HTTP CI workflow with doctor and report artifacts", async () => {
+    const tempDir = await mkdtemp(path.join(tmpdir(), "voice-testops-cli-"));
+
+    const result = await runCli(
+      [
+        "init",
+        "--out",
+        "voice-testops",
+        "--name",
+        "Lumen Portrait Studio",
+        "--stack",
+        "http",
+        "--with-ci",
+        "--endpoint-env",
+        "VOICE_AGENT_ENDPOINT",
+      ],
+      tempDir,
+    );
+
+    const workflow = await readFile(path.join(tempDir, ".github/workflows/voice-testops.yml"), "utf8");
+
+    expect(result.code).toBe(0);
+    expect(workflow).toContain("VOICE_AGENT_ENDPOINT: ${{ secrets.VOICE_AGENT_ENDPOINT }}");
+    expect(workflow).toContain("npx voice-agent-testops validate --suite voice-testops/suite.json");
+    expect(workflow).toContain("npx voice-agent-testops doctor --agent http --endpoint \"$VOICE_AGENT_ENDPOINT\" --suite voice-testops/suite.json");
+    expect(workflow).toContain(
+      "npx voice-agent-testops run --agent http --endpoint \"$VOICE_AGENT_ENDPOINT\" --suite voice-testops/suite.json --fail-on-severity critical",
+    );
+    expect(workflow).toContain("actions/upload-artifact@v7");
+    expect(workflow).toContain("include-hidden-files: true");
+    expect(workflow).toContain(".voice-testops/report.json");
+    expect(workflow).toContain(".voice-testops/report.html");
+  });
+
   it("generates a default starter suite that runs immediately", async () => {
     const tempDir = await mkdtemp(path.join(tmpdir(), "voice-testops-cli-"));
     const outDir = path.join(tempDir, "voice-testops");

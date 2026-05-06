@@ -246,6 +246,17 @@ Suite 就是 JSON。它描述商家资料、客户对话，以及每一轮必须
 
 ## 常用命令
 
+如果要把真实 HTTP Agent 接进 GitHub Actions，可以让 `init` 直接生成带诊断和报告上传的 workflow，并把 endpoint 放在 GitHub Secret 里：
+
+```bash
+npx voice-agent-testops init \
+  --stack http \
+  --with-ci \
+  --endpoint-env VOICE_AGENT_ENDPOINT
+```
+
+在仓库设置里添加名为 `VOICE_AGENT_ENDPOINT` 的 GitHub Secret，值指向你的 test-turn bridge。生成的 workflow 会先 validate suite，再用 `doctor --agent http --suite voice-testops/suite.json` 检查合同，然后用 `--fail-on-severity critical` 跑回归，并通过 `actions/upload-artifact` 上传 `.voice-testops/report.json` 和 `.voice-testops/report.html`。
+
 CI 里可以用 `--fail-on-severity critical` 只阻断高危失败。这样轻微文案漂移会留在报告里，但不会和乱报价、漏手机号、错误转人工这类上线事故混在一起。
 
 ```bash

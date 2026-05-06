@@ -136,6 +136,22 @@ describe("integration documentation", () => {
     expect(chineseReadme).toContain("voice-test-suite.schema.json");
   });
 
+  it("documents the generated CI workflow with endpoint secrets", () => {
+    const readme = readFileSync("README.md", "utf8");
+    const chineseReadme = readFileSync("README.zh-CN.md", "utf8");
+
+    expect(readme).toContain("--endpoint-env VOICE_AGENT_ENDPOINT");
+    expect(readme).toContain("GitHub Secret");
+    expect(readme).toContain("VOICE_AGENT_ENDPOINT");
+    expect(readme).toContain("doctor --agent http");
+    expect(readme).toContain("actions/upload-artifact");
+    expect(chineseReadme).toContain("--endpoint-env VOICE_AGENT_ENDPOINT");
+    expect(chineseReadme).toContain("GitHub Secret");
+    expect(chineseReadme).toContain("VOICE_AGENT_ENDPOINT");
+    expect(chineseReadme).toContain("doctor --agent http");
+    expect(chineseReadme).toContain("actions/upload-artifact");
+  });
+
   it("documents the setup contract and copy-paste commands for every supported stack", () => {
     for (const doc of integrationDocs) {
       expect(existsSync(doc.path), `${doc.path} should exist`).toBe(true);

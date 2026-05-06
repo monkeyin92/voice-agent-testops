@@ -343,6 +343,17 @@ You can also keep merchant profiles in separate files and reference them with `m
 
 The repository includes a GitHub Actions workflow at [.github/workflows/voice-testops.yml](.github/workflows/voice-testops.yml). It runs unit tests, demo suites, production build, high-severity audit, and uploads generated reports as artifacts.
 
+For a real HTTP agent, generate a ready-to-edit GitHub Actions workflow and keep the endpoint in a GitHub Secret:
+
+```bash
+npx voice-agent-testops init \
+  --stack http \
+  --with-ci \
+  --endpoint-env VOICE_AGENT_ENDPOINT
+```
+
+Add `VOICE_AGENT_ENDPOINT` as a GitHub Secret, pointing at your test-turn bridge. The generated workflow validates the suite, runs `doctor --agent http` against `--suite voice-testops/suite.json`, runs the regression suite with `--fail-on-severity critical`, and uploads `.voice-testops/report.json` plus `.voice-testops/report.html` through `actions/upload-artifact`.
+
 Use `--fail-on-severity` when you want CI to block only the failures that matter for release. This keeps minor copy drift visible in the report without treating it like a production-stopping safety issue.
 
 ```bash
