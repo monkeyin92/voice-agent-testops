@@ -12,6 +12,8 @@ It is not another voice-agent framework. It is the safety harness you put around
 
 [中文介绍](#中文) · [Quick Start](#quick-start) · [Connect An Agent](#connect-an-agent) · [Suite Format](#suite-format)
 
+![Voice Agent TestOps report preview](docs/assets/report-preview.png)
+
 ## Why This Exists
 
 Voice agents fail in strangely expensive ways.
@@ -70,6 +72,25 @@ Artifacts:
 ## Connect An Agent
 
 ### Generic HTTP Agent
+
+Want a running example first?
+
+Terminal 1:
+
+```bash
+npm run example:http-agent
+```
+
+Terminal 2:
+
+```bash
+npm run voice-test -- \
+  --suite examples/voice-testops/openclaw-suite.json \
+  --agent http \
+  --endpoint http://127.0.0.1:4318/test-turn
+```
+
+The example lives at [examples/http-agent-server/server.mjs](examples/http-agent-server/server.mjs). Replace its `createTestAgentResponse()` function with your real agent call when you are ready.
 
 Your endpoint receives one test turn:
 

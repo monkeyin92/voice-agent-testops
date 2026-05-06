@@ -15,6 +15,7 @@
     "voice-test:photo-demo:export": "npm run voice-test:photo-demo && npm run report:export",
     "sales:demo": "npm run voice-test:photo-demo:export",
     "report:export": "node scripts/export-testops-report.mjs",
+    "example:http-agent": "node examples/http-agent-server/server.mjs",
     "prisma:generate": "prisma generate",
     "prisma:migrate": "prisma migrate dev",
     "prisma:studio": "prisma studio"
