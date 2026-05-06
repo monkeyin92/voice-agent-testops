@@ -11,6 +11,7 @@ import { parseCliArgs } from "./cliArgs";
 import { diagnoseHttpAgentEndpoint, type DoctorCheck } from "./doctor";
 import { exampleCatalog, parseExampleLanguage, type ExampleCatalogEntry, type ExampleLanguage } from "./exampleCatalog";
 import { initializeVoiceTestOpsProject } from "./initProject";
+import { buildVoiceTestSuiteJsonSchema } from "./jsonSchema";
 import { resolveReadablePath } from "./packagePaths";
 import { renderHtmlReport, renderJsonReport } from "./report";
 import { runVoiceTestSuite, type VoiceTestRunResult } from "./runner";
@@ -45,6 +46,10 @@ async function main(argv: string[]): Promise<number> {
     return doctor(argv.slice(1));
   }
 
+  if (argv[0] === "schema") {
+    return exportSchema(argv.slice(1));
+  }
+
   if (argv[0] === "validate") {
     return validateSuite(argv.slice(1));
   }
@@ -68,6 +73,32 @@ async function initProject(argv: string[]): Promise<number> {
   }
 
   return 0;
+}
+
+async function exportSchema(argv: string[]): Promise<number> {
+  const args = parseSchemaArgs(argv);
+  const content = `${JSON.stringify(buildVoiceTestSuiteJsonSchema(), null, 2)}\n`;
+
+  if (args.outPath) {
+    await writeReport(args.outPath, content);
+    console.log(`Wrote JSON Schema: ${args.outPath}`);
+    return 0;
+  }
+
+  process.stdout.write(content);
+  return 0;
+}
+
+function parseSchemaArgs(argv: string[]): { outPath?: string } {
+  const values = parseKeyValueArgs(argv);
+
+  for (const option of values.keys()) {
+    if (option !== "out") {
+      throw new Error(`Unknown schema option: --${option}`);
+    }
+  }
+
+  return { outPath: values.get("out") };
 }
 
 async function doctor(argv: string[]): Promise<number> {

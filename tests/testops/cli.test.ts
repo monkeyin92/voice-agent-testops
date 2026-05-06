@@ -201,6 +201,63 @@ describe("voice-test CLI", () => {
     }
   });
 
+  it("exports a JSON Schema for suite authoring and VS Code completion", async () => {
+    const tempDir = await mkdtemp(path.join(tmpdir(), "voice-testops-cli-"));
+    const schemaPath = path.join(tempDir, "voice-test-suite.schema.json");
+
+    const result = await runCli(["schema", "--out", schemaPath]);
+    const schema = JSON.parse(await readFile(schemaPath, "utf8")) as {
+      $schema?: string;
+      title?: string;
+      properties?: {
+        scenarios?: {
+          items?: {
+            properties?: {
+              source?: { enum?: string[] };
+              merchantRef?: unknown;
+              merchant?: unknown;
+              turns?: {
+                items?: {
+                  properties?: {
+                    expect?: {
+                      items?: {
+                        oneOf?: Array<{ properties?: Record<string, { const?: string; enum?: string[] }> }>;
+                      };
+                    };
+                  };
+                };
+              };
+            };
+          };
+        };
+      };
+    };
+
+    const scenarioProperties = schema.properties?.scenarios?.items?.properties;
+    const assertionVariants = scenarioProperties?.turns?.items?.properties?.expect?.items?.oneOf ?? [];
+    const leadIntentVariant = assertionVariants.find((variant) => variant.properties?.type?.const === "lead_intent");
+
+    expect(result.code).toBe(0);
+    expect(result.stdout).toContain(`Wrote JSON Schema: ${schemaPath}`);
+    expect(schema.$schema).toBe("https://json-schema.org/draft/2020-12/schema");
+    expect(schema.title).toBe("Voice Agent TestOps Suite");
+    expect(scenarioProperties?.source?.enum).toContain("website");
+    expect(scenarioProperties?.merchantRef).toBeDefined();
+    expect(scenarioProperties?.merchant).toBeDefined();
+    expect(assertionVariants.map((variant) => variant.properties?.type?.const)).toEqual(
+      expect.arrayContaining(["must_contain_any", "must_not_match", "max_latency_ms", "lead_field_present", "lead_intent"]),
+    );
+    expect(leadIntentVariant?.properties?.intent?.enum).toContain("handoff");
+  });
+
+  it("prints the suite JSON Schema to stdout when no output path is provided", async () => {
+    const result = await runCli(["schema"]);
+    const schema = JSON.parse(result.stdout) as { title?: string };
+
+    expect(result.code).toBe(0);
+    expect(schema.title).toBe("Voice Agent TestOps Suite");
+  });
+
   it("initializes a runnable suite and merchant config", async () => {
     const tempDir = await mkdtemp(path.join(tmpdir(), "voice-testops-cli-"));
     const outDir = path.join(tempDir, "voice-testops");

@@ -119,6 +119,29 @@ Supported starter verticals are `photography`, `dental_clinic`, `restaurant`, an
 
 For the recipe behind the examples, see the [Mock data guide](docs/guides/mock-data.md). It shows how to turn a merchant fact sheet into reviewable suites without guessing, overfitting, or needing an LLM.
 
+## Editor Autocomplete
+
+Export the suite JSON Schema when you want VS Code to autocomplete scenario fields, assertion types, lead intents, sources, industries, and severity values:
+
+```bash
+npx voice-agent-testops schema --out voice-testops/voice-test-suite.schema.json
+```
+
+Add this to `.vscode/settings.json`:
+
+```json
+{
+  "json.schemas": [
+    {
+      "fileMatch": ["voice-testops/suite.json", "**/*suite.json"],
+      "url": "./voice-testops/voice-test-suite.schema.json"
+    }
+  ]
+}
+```
+
+The schema describes the raw authoring format, so both inline `merchant` objects and `merchantRef` files get editor hints.
+
 ## Connect An Agent
 
 Start with HTTP if you want the shortest path. Use the OpenClaw adapter when you already have an OpenClaw-compatible `/v1/responses` endpoint. For hosted voice stacks, add a small test bridge so CI can test the same prompt, tool, and lead-summary logic without placing a real phone call.

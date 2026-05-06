@@ -122,6 +122,18 @@ describe("integration documentation", () => {
     expect(chineseReadme).toContain("spoken: ok");
   });
 
+  it("documents JSON Schema export and VS Code autocomplete in both READMEs", () => {
+    const readme = readFileSync("README.md", "utf8");
+    const chineseReadme = readFileSync("README.zh-CN.md", "utf8");
+
+    expect(readme).toContain("npx voice-agent-testops schema --out voice-testops/voice-test-suite.schema.json");
+    expect(readme).toContain('"json.schemas"');
+    expect(readme).toContain("voice-test-suite.schema.json");
+    expect(chineseReadme).toContain("npx voice-agent-testops schema --out voice-testops/voice-test-suite.schema.json");
+    expect(chineseReadme).toContain('"json.schemas"');
+    expect(chineseReadme).toContain("voice-test-suite.schema.json");
+  });
+
   it("documents the setup contract and copy-paste commands for every supported stack", () => {
     for (const doc of integrationDocs) {
       expect(existsSync(doc.path), `${doc.path} should exist`).toBe(true);

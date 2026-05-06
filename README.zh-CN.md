@@ -109,6 +109,29 @@ npx voice-agent-testops run --suite voice-testops/suite.json
 
 更完整的生成方法见 [Mock 数据指南](docs/guides/mock-data.zh-CN.md)：它会讲清楚如何从商家资料做出自己的 suite，而不是只能照抄仓库里有限的 examples。
 
+## 编辑器自动补全
+
+如果希望 VS Code 在写 suite 时自动提示 scenario 字段、断言类型、线索意图、来源、行业和 severity，可以先导出 JSON Schema：
+
+```bash
+npx voice-agent-testops schema --out voice-testops/voice-test-suite.schema.json
+```
+
+然后在 `.vscode/settings.json` 里加入：
+
+```json
+{
+  "json.schemas": [
+    {
+      "fileMatch": ["voice-testops/suite.json", "**/*suite.json"],
+      "url": "./voice-testops/voice-test-suite.schema.json"
+    }
+  ]
+}
+```
+
+这个 schema 描述的是用户实际编辑的原始格式，所以内嵌 `merchant` 和引用 `merchantRef` 都会有提示。
+
 ## 接入真实 Agent
 
 ### 通用 HTTP Agent
