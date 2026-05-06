@@ -39,8 +39,7 @@ jobs:
         run: npm audit --audit-level=high
 
       - name: Generate expected failing demo report
-        continue-on-error: true
-        run: npm run voice-test -- --suite examples/voice-testops/failing-demo-suite.json --fail-on-severity critical --json .voice-testops/failing-demo.json --html .voice-testops/failing-demo.html
+        run: npm run voice-test -- --suite examples/voice-testops/failing-demo-suite.json --fail-on-severity critical --json .voice-testops/failing-demo.json --html .voice-testops/failing-demo.html || true
 
       - name: Upload Voice TestOps reports
         if: always()

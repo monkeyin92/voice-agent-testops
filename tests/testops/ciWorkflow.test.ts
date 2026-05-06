@@ -14,7 +14,8 @@ describe("voice-testops GitHub Actions workflow", () => {
     expect(workflow).toContain("npm audit --audit-level=high");
     expect(workflow).toContain("actions/upload-artifact");
     expect(workflow).toContain("include-hidden-files: true");
-    expect(workflow).toContain("continue-on-error: true");
+    expect(workflow).not.toContain("continue-on-error: true");
+    expect(workflow).toContain("|| true");
     expect(workflow).toContain("examples/voice-testops/failing-demo-suite.json");
   });
 });
