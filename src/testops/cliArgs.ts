@@ -1,9 +1,12 @@
+import type { ReportLocale } from "./report";
+
 export type VoiceTestCliArgs = {
   suitePath: string;
   agent: "local-receptionist" | "http" | "openclaw";
   endpoint?: string;
   apiKey?: string;
   openClawMode: "custom" | "responses";
+  reportLocale: ReportLocale;
   jsonPath: string;
   htmlPath: string;
 };
@@ -44,6 +47,10 @@ export function parseCliArgs(argv: string[]): VoiceTestCliArgs {
   if (openClawMode !== "custom" && openClawMode !== "responses") {
     throw new Error("--openclaw-mode must be custom or responses");
   }
+  const reportLocale = values.get("report-locale") ?? "zh-CN";
+  if (reportLocale !== "zh-CN" && reportLocale !== "en") {
+    throw new Error("--report-locale must be zh-CN or en");
+  }
 
   return {
     suitePath,
@@ -51,6 +58,7 @@ export function parseCliArgs(argv: string[]): VoiceTestCliArgs {
     endpoint,
     apiKey: values.get("api-key") ?? process.env.OPENCLAW_API_KEY,
     openClawMode,
+    reportLocale,
     jsonPath: values.get("json") ?? ".voice-testops/report.json",
     htmlPath: values.get("html") ?? ".voice-testops/report.html",
   };

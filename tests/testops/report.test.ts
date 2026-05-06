@@ -87,4 +87,43 @@ describe("renderHtmlReport", () => {
     expect(html).toContain("对话抽样");
     expect(html).toContain("599-1299 元");
   });
+
+  it("renders English report chrome for international README screenshots", () => {
+    const result: VoiceTestRunResult = {
+      id: "run_en",
+      suiteName: "Photo Studio Voice Agent Launch Check",
+      passed: true,
+      startedAt: "2026-05-03T10:00:00.000Z",
+      finishedAt: "2026-05-03T10:01:00.000Z",
+      summary: { scenarios: 1, turns: 1, assertions: 4, failures: 0 },
+      scenarios: [
+        {
+          id: "pricing",
+          title: "Customer asks about price",
+          passed: true,
+          turns: [
+            {
+              index: 0,
+              user: "How much is the portrait package?",
+              assistant: "The single portrait package is usually $99-$199 and includes two outfits.",
+              latencyMs: 840,
+              passed: true,
+              assertions: 4,
+              failures: [],
+            },
+          ],
+        },
+      ],
+    };
+
+    const html = renderHtmlReport(result, { locale: "en" });
+
+    expect(html).toContain("Voice Agent Health Report");
+    expect(html).toContain("Launch advice: ready for a small pilot");
+    expect(html).toContain("Passed checks");
+    expect(html).toContain("Conversation sample");
+    expect(html).toContain("Customer");
+    expect(html).toContain("Voice agent");
+    expect(html).not.toContain("智能语音体检单");
+  });
 });

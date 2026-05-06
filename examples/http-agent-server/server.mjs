@@ -16,7 +16,7 @@ export function createTestAgentResponse(input) {
   const phone = customerText.match(/1[3-9]\d{9}/)?.[0];
   const customerName = customerText.match(/我(?:叫|是)\s*([\u4e00-\u9fa5A-Za-z]{1,12})(?:[，,。；;\s]|$)/)?.[1];
   const preferredTime = customerText.match(/(?:这周|下周)?周[一二三四五六日天]|星期[一二三四五六日天]|周末|今天|明天|后天/)?.[0];
-  const asksPrice = /price|pricing|多少钱|价格|费用|报价/i.test(customerText);
+  const asksPrice = /price|pricing|how much|cost|多少钱|价格|费用|报价/i.test(customerText);
   const asksHandoff = /human|handoff|operator|人工|真人|客服|老板|转接|联系/i.test(customerText);
   const asksTime = /available|availability|book|booking|time|schedule|档期|时间|预约|想约|周末|周[一二三四五六日天]/i.test(
     customerText,
@@ -26,7 +26,7 @@ export function createTestAgentResponse(input) {
   const spoken = asksHandoff
     ? "可以，我会帮你转人工跟进。请留下电话或联系方式，方便真人客服联系你。"
     : asksPrice
-      ? `${firstPackage.name}一般是 ${firstPackage.priceRange}，包含${firstPackage.includes}。档期和最终优惠需要人工确认。`
+      ? `${firstPackage.name} is usually ${firstPackage.priceRange}, including ${firstPackage.includes}. Final availability and discounts need manual confirmation.`
       : asksTime
         ? "档期需要人工确认。我先记录你的期望时间，请留下电话，方便客服尽快跟进。"
         : "我先帮你记录需求。请告诉我你想咨询的服务、预算或期望时间。";

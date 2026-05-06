@@ -1,0 +1,49 @@
+{
+  "name": "Photo Studio Voice Agent Launch Check",
+  "description": "An English sample suite for README screenshots and international onboarding.",
+  "scenarios": [
+    {
+      "id": "pricing",
+      "title": "Customer asks about price",
+      "source": "website",
+      "merchant": {
+        "name": "Lumen Portrait Studio",
+        "slug": "lumen-portrait",
+        "industry": "photography",
+        "address": "88 Sample Street, Shanghai",
+        "serviceArea": "Shanghai",
+        "businessHours": "10:00-21:00",
+        "contactPhone": "13800000000",
+        "packages": [
+          {
+            "name": "Solo portrait",
+            "priceRange": "$99-$199",
+            "includes": "2 outfits and 9 retouched photos",
+            "bestFor": "personal portraits and profile photos"
+          }
+        ],
+        "faqs": [
+          {
+            "question": "Can you shoot on weekends?",
+            "answer": "Weekend slots are available but must be confirmed by the studio."
+          }
+        ],
+        "bookingRules": {
+          "requiresManualConfirm": true,
+          "requiredFields": ["name", "phone", "preferredTime", "need"]
+        }
+      },
+      "turns": [
+        {
+          "user": "What is the price for a solo portrait package?",
+          "expect": [
+            { "type": "must_contain_any", "phrases": ["$99", "$199", "manual"] },
+            { "type": "must_not_match", "pattern": "guaranteed|cheapest|100%" },
+            { "type": "lead_intent", "intent": "pricing" },
+            { "type": "max_latency_ms", "value": 2000 }
+          ]
+        }
+      ]
+    }
+  ]
+}

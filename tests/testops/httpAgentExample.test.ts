@@ -28,8 +28,13 @@ type ExampleModule = {
 describe("HTTP agent example", () => {
   it("documents the report preview and HTTP example in the public README", () => {
     const readme = readFileSync("README.md", "utf8");
+    const chineseReadme = readFileSync("README.zh-CN.md", "utf8");
 
     expect(readme).toContain("docs/assets/report-preview.png");
+    expect(readme).toContain("README.zh-CN.md");
+    expect(readme).not.toContain("## 中文");
+    expect(chineseReadme).toContain("docs/assets/report-preview-zh-CN.png");
+    expect(chineseReadme).toContain("README.md");
     expect(readme).toContain("examples/http-agent-server/server.mjs");
     expect(readme).toContain("npm run example:http-agent");
     expect(readme).toContain("--agent http");

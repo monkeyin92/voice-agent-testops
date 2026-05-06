@@ -36,7 +36,7 @@ async function main(argv: string[]): Promise<number> {
   });
 
   await writeReport(args.jsonPath, renderJsonReport(result));
-  await writeReport(args.htmlPath, renderHtmlReport(result));
+  await writeReport(args.htmlPath, renderHtmlReport(result, { locale: args.reportLocale }));
 
   const status = result.passed ? "passed" : "failed";
   console.log(

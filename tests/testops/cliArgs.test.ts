@@ -9,6 +9,7 @@ describe("parseCliArgs", () => {
       endpoint: undefined,
       apiKey: undefined,
       openClawMode: "custom",
+      reportLocale: "zh-CN",
       jsonPath: ".voice-testops/report.json",
       htmlPath: ".voice-testops/report.html",
     });
@@ -55,5 +56,17 @@ describe("parseCliArgs", () => {
       endpoint: "http://localhost:18889/v1/responses",
       openClawMode: "responses",
     });
+  });
+
+  it("supports English report rendering", () => {
+    expect(parseCliArgs(["--suite", "suite.json", "--report-locale", "en"])).toMatchObject({
+      reportLocale: "en",
+    });
+  });
+
+  it("rejects unsupported report locales", () => {
+    expect(() => parseCliArgs(["--suite", "suite.json", "--report-locale", "fr"])).toThrow(
+      "--report-locale must be zh-CN or en",
+    );
   });
 });

@@ -1,10 +1,120 @@
 import type { VoiceTestRunResult } from "./runner";
 
+export type ReportLocale = "zh-CN" | "en";
+
+type ReportCopy = {
+  htmlLang: string;
+  titleSuffix: string;
+  eyebrow: string;
+  timeLabel: string;
+  recommendation: { passed: string; failed: string };
+  metrics: {
+    scenarios: string;
+    turns: string;
+    assertions: string;
+    failures: string;
+    scenarioUnit: (count: number) => string;
+    turnUnit: (count: number) => string;
+    assertionUnit: (count: number) => string;
+    failureUnit: (count: number) => string;
+  };
+  status: { passed: string; failed: string };
+  scenarioTurns: (count: number) => string;
+  turnMeta: (input: { index: number; latencyMs: number; passed: boolean; assertions: number; failures: number }) => string;
+  customer: string;
+  agent: string;
+  riskHeading: string;
+  passedHeading: string;
+  conversationSample: string;
+  noRisk: string;
+  riskItemPrefix: string;
+  repairLabel: string;
+  passedSummary: (result: VoiceTestRunResult, passedTurns: number) => string;
+  repairAdvice: (code: string) => string;
+};
+
+const zhCopy: ReportCopy = {
+  htmlLang: "zh-CN",
+  titleSuffix: "智能语音体检单",
+  eyebrow: "智能语音体检单",
+  timeLabel: "检测时间",
+  recommendation: {
+    passed: "上线建议：可以进入小范围试点",
+    failed: "上线建议：暂缓上线，先修复高风险对话",
+  },
+  metrics: {
+    scenarios: "场景",
+    turns: "对话",
+    assertions: "断言",
+    failures: "风险",
+    scenarioUnit: (count) => `${count} 个场景`,
+    turnUnit: (count) => `${count} 轮`,
+    assertionUnit: (count) => `${count} 条断言`,
+    failureUnit: (count) => `${count} 个失败`,
+  },
+  status: { passed: "通过", failed: "有风险" },
+  scenarioTurns: (count) => `${count} 轮对话`,
+  turnMeta: ({ index, latencyMs, passed, assertions, failures }) =>
+    `第 ${index + 1} 轮 · ${latencyMs}ms · ${passed ? `通过 ${assertions} 条断言` : `${failures} 个风险`}`,
+  customer: "客户",
+  agent: "智能语音",
+  riskHeading: "风险项",
+  passedHeading: "通过项",
+  conversationSample: "对话抽样",
+  noRisk: "本次未发现高风险回复。继续用更多真实客户问题做回归，可以逐步扩大试点范围。",
+  riskItemPrefix: "风险项",
+  repairLabel: "建议修复话术",
+  passedSummary: (result, passedTurns) =>
+    `<li>${result.summary.scenarios} 个场景完成体检。</li><li>${passedTurns} 轮对话通过断言。</li><li>${result.summary.assertions} 条断言用于检查价格、档期、转人工、留资和安全边界。</li>`,
+  repairAdvice: repairAdviceForZh,
+};
+
+const enCopy: ReportCopy = {
+  htmlLang: "en",
+  titleSuffix: "Voice Agent Health Report",
+  eyebrow: "Voice Agent Health Report",
+  timeLabel: "Run time",
+  recommendation: {
+    passed: "Launch advice: ready for a small pilot",
+    failed: "Launch advice: pause launch and fix high-risk turns",
+  },
+  metrics: {
+    scenarios: "Scenarios",
+    turns: "Turns",
+    assertions: "Assertions",
+    failures: "Risks",
+    scenarioUnit: (count) => `${count} scenario${count === 1 ? "" : "s"}`,
+    turnUnit: (count) => `${count} turn${count === 1 ? "" : "s"}`,
+    assertionUnit: (count) => `${count} assertion${count === 1 ? "" : "s"}`,
+    failureUnit: (count) => `${count} failure${count === 1 ? "" : "s"}`,
+  },
+  status: { passed: "Passed", failed: "At risk" },
+  scenarioTurns: (count) => `${count} conversation turn${count === 1 ? "" : "s"}`,
+  turnMeta: ({ index, latencyMs, passed, assertions, failures }) =>
+    `Turn ${index + 1} · ${latencyMs}ms · ${passed ? `${assertions} assertions passed` : `${failures} risks`}`,
+  customer: "Customer",
+  agent: "Voice agent",
+  riskHeading: "Risks",
+  passedHeading: "Passed checks",
+  conversationSample: "Conversation sample",
+  noRisk: "No high-risk reply found in this run. Keep expanding coverage with more real customer questions before launch.",
+  riskItemPrefix: "Risk",
+  repairLabel: "Suggested fix",
+  passedSummary: (result, passedTurns) =>
+    `<li>${result.summary.scenarios} scenario${result.summary.scenarios === 1 ? "" : "s"} completed.</li><li>${passedTurns} conversation turn${passedTurns === 1 ? "" : "s"} passed.</li><li>${result.summary.assertions} assertions checked pricing, availability, handoff, lead capture, and safety boundaries.</li>`,
+  repairAdvice: repairAdviceForEn,
+};
+
+function copyFor(locale: ReportLocale): ReportCopy {
+  return locale === "en" ? enCopy : zhCopy;
+}
+
 export function renderJsonReport(result: VoiceTestRunResult): string {
   return `${JSON.stringify(result, null, 2)}\n`;
 }
 
-export function renderHtmlReport(result: VoiceTestRunResult): string {
+export function renderHtmlReport(result: VoiceTestRunResult, options: { locale?: ReportLocale } = {}): string {
+  const copy = copyFor(options.locale ?? "zh-CN");
   const failedTurns = result.scenarios.flatMap((scenario) =>
     scenario.turns
       .filter((turn) => turn.failures.length > 0)
@@ -20,21 +130,27 @@ export function renderHtmlReport(result: VoiceTestRunResult): string {
           <div class="scenario-heading">
             <div>
               <h2>${escapeHtml(scenario.title)}</h2>
-              <p class="muted">${escapeHtml(scenario.id)} · ${scenario.turns.length} 轮对话</p>
+              <p class="muted">${escapeHtml(scenario.id)} · ${copy.scenarioTurns(scenario.turns.length)}</p>
             </div>
-            <span class="status ${scenario.passed ? "ok" : "risk"}">${scenario.passed ? "通过" : "有风险"}</span>
+            <span class="status ${scenario.passed ? "ok" : "risk"}">${
+              scenario.passed ? copy.status.passed : copy.status.failed
+            }</span>
           </div>
           <div class="conversation">
           ${scenario.turns
             .map(
               (turn) => `
                 <article class="turn ${turn.passed ? "passed" : "failed"}">
-                  <div class="turn-meta">第 ${turn.index + 1} 轮 · ${turn.latencyMs}ms · ${
-                    turn.passed ? `通过 ${turn.assertions} 条断言` : `${turn.failures.length} 个风险`
-                  }</div>
-                  <div class="bubble customer"><span>客户</span><p>${escapeHtml(turn.user)}</p></div>
-                  <div class="bubble agent"><span>智能语音</span><p>${escapeHtml(turn.assistant)}</p></div>
-                  ${renderFailures(turn.failures)}
+                  <div class="turn-meta">${copy.turnMeta({
+                    index: turn.index,
+                    latencyMs: turn.latencyMs,
+                    passed: turn.passed,
+                    assertions: turn.assertions,
+                    failures: turn.failures.length,
+                  })}</div>
+                  <div class="bubble customer"><span>${copy.customer}</span><p>${escapeHtml(turn.user)}</p></div>
+                  <div class="bubble agent"><span>${copy.agent}</span><p>${escapeHtml(turn.assistant)}</p></div>
+                  ${renderFailures(turn.failures, copy)}
                 </article>
               `,
             )
@@ -44,14 +160,14 @@ export function renderHtmlReport(result: VoiceTestRunResult): string {
       `,
     )
     .join("");
-  const recommendation = result.passed ? "上线建议：可以进入小范围试点" : "上线建议：暂缓上线，先修复高风险对话";
+  const recommendation = result.passed ? copy.recommendation.passed : copy.recommendation.failed;
 
   return `<!doctype html>
-<html lang="zh-CN">
+<html lang="${copy.htmlLang}">
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>${escapeHtml(result.suiteName)} · 智能语音体检单</title>
+  <title>${escapeHtml(result.suiteName)} · ${copy.titleSuffix}</title>
   <style>
     :root { --ink: #1f2328; --muted: #65717c; --line: #d9dee3; --paper: #fbfcfd; --panel: #ffffff; --green: #217a4b; --green-bg: #eaf6ef; --red: #a13a2f; --red-bg: #fff0ee; --blue: #285f9f; --blue-bg: #edf4ff; }
     * { box-sizing: border-box; }
@@ -101,24 +217,24 @@ export function renderHtmlReport(result: VoiceTestRunResult): string {
     <section class="hero">
       <div class="hero-grid">
         <div>
-          <p class="eyebrow">智能语音体检单</p>
+          <p class="eyebrow">${copy.eyebrow}</p>
           <h1>${escapeHtml(result.suiteName)}</h1>
-          <p class="muted">检测时间：${escapeHtml(result.startedAt)} - ${escapeHtml(result.finishedAt)}</p>
+          <p class="muted">${copy.timeLabel}: ${escapeHtml(result.startedAt)} - ${escapeHtml(result.finishedAt)}</p>
           <div class="recommendation ${result.passed ? "ok" : "risk"}">${recommendation}</div>
         </div>
         <div class="summary">
-          <div class="metric"><span>场景</span><strong>${result.summary.scenarios}</strong><span>${result.summary.scenarios} 个场景</span></div>
-          <div class="metric"><span>对话</span><strong>${result.summary.turns}</strong><span>${result.summary.turns} 轮</span></div>
-          <div class="metric"><span>断言</span><strong>${result.summary.assertions}</strong><span>${result.summary.assertions} 条断言</span></div>
-          <div class="metric"><span>风险</span><strong>${result.summary.failures}</strong><span>${result.summary.failures} 个失败</span></div>
+          <div class="metric"><span>${copy.metrics.scenarios}</span><strong>${result.summary.scenarios}</strong><span>${copy.metrics.scenarioUnit(result.summary.scenarios)}</span></div>
+          <div class="metric"><span>${copy.metrics.turns}</span><strong>${result.summary.turns}</strong><span>${copy.metrics.turnUnit(result.summary.turns)}</span></div>
+          <div class="metric"><span>${copy.metrics.assertions}</span><strong>${result.summary.assertions}</strong><span>${copy.metrics.assertionUnit(result.summary.assertions)}</span></div>
+          <div class="metric"><span>${copy.metrics.failures}</span><strong>${result.summary.failures}</strong><span>${copy.metrics.failureUnit(result.summary.failures)}</span></div>
         </div>
       </div>
     </section>
     <section class="insights">
-      ${renderRiskSummary(failedTurns)}
-      ${renderPassSummary(result)}
+      ${renderRiskSummary(failedTurns, copy)}
+      ${renderPassSummary(result, copy)}
     </section>
-    <h3>对话抽样</h3>
+    <h3>${copy.conversationSample}</h3>
     ${scenarioRows}
   </main>
 </body>
@@ -126,7 +242,10 @@ export function renderHtmlReport(result: VoiceTestRunResult): string {
 `;
 }
 
-function renderFailures(failures: VoiceTestRunResult["scenarios"][number]["turns"][number]["failures"]): string {
+function renderFailures(
+  failures: VoiceTestRunResult["scenarios"][number]["turns"][number]["failures"],
+  copy: ReportCopy,
+): string {
   if (failures.length === 0) {
     return "";
   }
@@ -134,10 +253,10 @@ function renderFailures(failures: VoiceTestRunResult["scenarios"][number]["turns
   return failures
     .map(
       (failure) =>
-        `<div class="failure"><strong>风险项：${escapeHtml(failure.code)}</strong> · ${escapeHtml(
+        `<div class="failure"><strong>${copy.riskItemPrefix}: ${escapeHtml(failure.code)}</strong> · ${escapeHtml(
           failure.severity,
-        )}<br />${escapeHtml(failure.message)}<div class="repair"><strong>建议修复话术</strong>：${escapeHtml(
-          repairAdviceFor(failure.code),
+        )}<br />${escapeHtml(failure.message)}<div class="repair"><strong>${copy.repairLabel}</strong>: ${escapeHtml(
+          copy.repairAdvice(failure.code),
         )}</div></div>`,
     )
     .join("");
@@ -148,33 +267,34 @@ function renderRiskSummary(
     scenario: VoiceTestRunResult["scenarios"][number];
     turn: VoiceTestRunResult["scenarios"][number]["turns"][number];
   }>,
+  copy: ReportCopy,
 ): string {
   if (failedTurns.length === 0) {
-    return `<div class="insight"><h3>风险项</h3><p class="muted">本次未发现高风险回复。继续用更多真实客户问题做回归，可以逐步扩大试点范围。</p></div>`;
+    return `<div class="insight"><h3>${copy.riskHeading}</h3><p class="muted">${copy.noRisk}</p></div>`;
   }
 
-  return `<div class="insight"><h3>风险项</h3><ul>${failedTurns
+  return `<div class="insight"><h3>${copy.riskHeading}</h3><ul>${failedTurns
     .flatMap(({ scenario, turn }) =>
       turn.failures.map(
         (failure) =>
           `<li><strong>${escapeHtml(scenario.title)}</strong>：${escapeHtml(failure.message)}。${escapeHtml(
-            repairAdviceFor(failure.code),
+            copy.repairAdvice(failure.code),
           )}</li>`,
       ),
     )
     .join("")}</ul></div>`;
 }
 
-function renderPassSummary(result: VoiceTestRunResult): string {
+function renderPassSummary(result: VoiceTestRunResult, copy: ReportCopy): string {
   const passedTurns = result.scenarios.reduce(
     (count, scenario) => count + scenario.turns.filter((turn) => turn.passed).length,
     0,
   );
 
-  return `<div class="insight"><h3>通过项</h3><ul><li>${result.summary.scenarios} 个场景完成体检。</li><li>${passedTurns} 轮对话通过断言。</li><li>${result.summary.assertions} 条断言用于检查价格、档期、转人工、留资和安全边界。</li></ul></div>`;
+  return `<div class="insight"><h3>${copy.passedHeading}</h3><ul>${copy.passedSummary(result, passedTurns)}</ul></div>`;
 }
 
-function repairAdviceFor(code: string): string {
+function repairAdviceForZh(code: string): string {
   switch (code) {
     case "forbidden_pattern_matched":
       return "删除绝对承诺，改成“需要商家确认”“会尽量沟通和引导”。";
@@ -188,6 +308,23 @@ function repairAdviceFor(code: string): string {
       return "检查模型链路、网络和工具调用，必要时缩短上下文或使用更快模型。";
     default:
       return "复盘该轮对话，补充提示词或测试样例后重新体检。";
+  }
+}
+
+function repairAdviceForEn(code: string): string {
+  switch (code) {
+    case "forbidden_pattern_matched":
+      return "Remove absolute promises and route uncertain claims to human confirmation.";
+    case "expected_phrase_missing":
+      return "Answer the current customer question with configured package, price, or availability facts.";
+    case "lead_intent_mismatch":
+      return "Tune intent routing so pricing, availability, booking, and handoff land in the right bucket.";
+    case "lead_field_missing":
+      return "Ask for and extract the required lead field, such as phone, name, or preferred time.";
+    case "latency_exceeded":
+      return "Check model latency, network hops, and tool calls; shorten context or use a faster model if needed.";
+    default:
+      return "Review this turn, update the prompt or suite, and rerun the health check.";
   }
 }
 
