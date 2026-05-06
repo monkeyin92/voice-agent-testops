@@ -1,6 +1,10 @@
 import { describe, expect, it } from "vitest";
 import { parseVoiceTestSuite } from "@/testops/schema";
-import { buildVoiceTestSuiteFromTranscript, parseTranscript } from "@/testops/transcriptSuite";
+import {
+  buildDraftMerchantFromTranscript,
+  buildVoiceTestSuiteFromTranscript,
+  parseTranscript,
+} from "@/testops/transcriptSuite";
 
 const merchant = {
   name: "光影写真馆",
@@ -65,5 +69,22 @@ Assistant: Sure, someone will call you.
         { type: "lead_field_present", field: "phone", severity: "critical" },
       ]),
     );
+  });
+
+  it("builds a draft merchant profile when only a transcript is available", () => {
+    const draftMerchant = buildDraftMerchantFromTranscript({
+      transcript: `
+Customer: Do you have a table for six this Saturday?
+Assistant: Yes, you can come directly. It is 388 per person.
+`,
+      name: "Transcript import draft",
+    });
+
+    expect(draftMerchant).toMatchObject({
+      name: "Transcript import draft",
+      industry: "restaurant",
+      packages: [{ priceRange: "388" }],
+      bookingRules: { requiresManualConfirm: true },
+    });
   });
 });

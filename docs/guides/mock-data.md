@@ -95,14 +95,16 @@ When you already have a bad conversation, save the transcript and generate a dra
 
 ```bash
 npx voice-agent-testops from-transcript \
-  --transcript examples/voice-testops/transcripts/failed-photo-booking.txt \
-  --merchant examples/voice-testops/merchants/guangying-photo.json \
+  --input examples/voice-testops/transcripts/failed-photo-booking.txt \
   --out voice-testops/generated-suite.json \
+  --merchant-name "Lumen Portrait Studio" \
   --name "Generated transcript regression" \
   --source website
 ```
 
-The transcript generator is deterministic. It does not call an LLM; it extracts customer turns and adds reviewable assertions for unsafe promises, pricing facts, lead fields, handoff intent, and latency. Treat the generated suite as a first draft, then tighten the assertions around the exact failure you want to prevent from coming back.
+The transcript generator is deterministic. It does not call an LLM; it extracts customer turns, infers a draft merchant profile when no merchant file is available, and adds reviewable assertions for unsafe promises, pricing facts, lead fields, handoff intent, and latency. Treat the generated suite as a first draft, then tighten the assertions around the exact failure you want to prevent from coming back.
+
+When you already have approved business facts, add `--merchant examples/voice-testops/merchants/guangying-photo.json` so the generated suite can anchor pricing and service assertions to known-good data.
 
 ## A Small Checklist
 

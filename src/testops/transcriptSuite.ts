@@ -1,5 +1,5 @@
 import type { LeadIntent, LeadSource } from "../domain/lead";
-import type { MerchantConfig } from "../domain/merchant";
+import { makeMerchantSlug, merchantConfigSchema, type Industry, type MerchantConfig } from "../domain/merchant";
 import { parseVoiceTestSuite, type VoiceTestAssertion, type VoiceTestSuite } from "./schema";
 
 export type TranscriptMessage = {
@@ -14,6 +14,12 @@ export type BuildVoiceTestSuiteFromTranscriptOptions = {
   scenarioId?: string;
   scenarioTitle?: string;
   source?: LeadSource;
+};
+
+export type BuildDraftMerchantFromTranscriptOptions = {
+  transcript: string;
+  name?: string;
+  industry?: Industry;
 };
 
 const customerLabelPattern = /^(customer|user|caller|client|客户|用户|来电客户)\s*[:：-]\s*(.+)$/i;
@@ -78,6 +84,36 @@ export function buildVoiceTestSuiteFromTranscript(
   };
 
   return parseVoiceTestSuite(suite);
+}
+
+export function buildDraftMerchantFromTranscript(options: BuildDraftMerchantFromTranscriptOptions): MerchantConfig {
+  const messages = parseTranscript(options.transcript);
+  const transcriptText = messages.map((message) => message.text).join("\n");
+  const industry = options.industry ?? inferIndustry(transcriptText);
+  const name = options.name?.trim() || defaultMerchantName(industry);
+
+  return merchantConfigSchema.parse({
+    name,
+    slug: makeMerchantSlug(name),
+    industry,
+    address: "Review required",
+    serviceArea: "Review required",
+    businessHours: "Review required",
+    contactPhone: "0000000000",
+    packages: [
+      {
+        name: defaultPackageName(industry),
+        priceRange: extractTranscriptPriceRange(transcriptText) ?? "Review required",
+        includes: "Review the transcript and replace this with approved service details.",
+        bestFor: "Transcript regression draft",
+      },
+    ],
+    faqs: [],
+    bookingRules: {
+      requiresManualConfirm: true,
+      requiredFields: ["name", "phone"],
+    },
+  });
 }
 
 function buildAssertionsForCustomerText(text: string, merchant: MerchantConfig): VoiceTestAssertion[] {
@@ -152,6 +188,80 @@ function extractPricePhrases(merchant: MerchantConfig): string[] {
   }
 
   return [...phrases];
+}
+
+function inferIndustry(text: string): Industry {
+  const normalized = text.toLowerCase();
+
+  if (/餐|订位|桌|包间|菜单|低消|人均|table|reservation|reserve|seat|menu|dining|per person/.test(normalized)) {
+    return "restaurant";
+  }
+
+  if (/牙|洗牙|种植|矫正|正畸|dentist|dental|tooth|teeth|cleaning|implant|orthodontic/.test(normalized)) {
+    return "dental_clinic";
+  }
+
+  if (/房|看房|租|买房|房源|公寓|listing|apartment|house|rent|viewing|property|real estate/.test(normalized)) {
+    return "real_estate";
+  }
+
+  if (/装修|设计|全屋|橱柜|柜|renovation|interior|cabinet|home design/.test(normalized)) {
+    return "home_design";
+  }
+
+  if (/拍照|写真|摄影|影楼|photo|portrait|shoot|studio|session/.test(normalized)) {
+    return "photography";
+  }
+
+  return "photography";
+}
+
+function defaultMerchantName(industry: Industry): string {
+  const names: Record<Industry, string> = {
+    photography: "Transcript Photo Studio",
+    home_design: "Transcript Home Design Studio",
+    dental_clinic: "Transcript Dental Clinic",
+    restaurant: "Transcript Restaurant",
+    real_estate: "Transcript Real Estate Office",
+  };
+
+  return names[industry];
+}
+
+function defaultPackageName(industry: Industry): string {
+  const names: Record<Industry, string> = {
+    photography: "Draft photo service",
+    home_design: "Draft design consultation",
+    dental_clinic: "Draft clinic service",
+    restaurant: "Draft booking service",
+    real_estate: "Draft property consultation",
+  };
+
+  return names[industry];
+}
+
+function extractTranscriptPriceRange(text: string): string | undefined {
+  const rangeMatch = text.match(
+    /(?:¥|￥|\$)?\s*\d+(?:,\d{3})*(?:\.\d+)?\s*(?:-|–|—|~|至|到|to)\s*(?:¥|￥|\$)?\s*\d+(?:,\d{3})*(?:\.\d+)?/i,
+  );
+  if (rangeMatch) {
+    const numbers = rangeMatch[0].match(/\d+(?:,\d{3})*(?:\.\d+)?/g) ?? [];
+    const [minPrice, maxPrice] = numbers;
+    if (minPrice && maxPrice) {
+      return `${normalizePriceNumber(minPrice)}-${normalizePriceNumber(maxPrice)}`;
+    }
+  }
+
+  const priceMatch = text.match(
+    /(?:¥|￥|\$)\s*\d+(?:,\d{3})*(?:\.\d+)?|\d+(?:,\d{3})*(?:\.\d+)?\s*(?:元|块|rmb|usd|dollars?|per person|\/人|每人)/i,
+  );
+  const number = priceMatch?.[0].match(/\d+(?:,\d{3})*(?:\.\d+)?/)?.[0];
+
+  return number ? normalizePriceNumber(number) : undefined;
+}
+
+function normalizePriceNumber(value: string): string {
+  return value.replace(/,/g, "");
 }
 
 function containsPhone(text: string): boolean {

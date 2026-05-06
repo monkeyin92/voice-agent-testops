@@ -3,7 +3,7 @@ import { mkdir, readFile, writeFile } from "node:fs/promises";
 import path from "node:path";
 import type { LeadSource } from "../domain/lead";
 import { leadSourceSchema } from "../domain/lead";
-import { merchantConfigSchema } from "../domain/merchant";
+import { industrySchema, merchantConfigSchema, type Industry } from "../domain/merchant";
 import { createHttpAgent } from "./adapters/httpAgent";
 import { createLocalReceptionistAgent } from "./adapters/localReceptionist";
 import { createOpenClawAgent } from "./adapters/openClawAgent";
@@ -18,7 +18,7 @@ import { renderHtmlReport, renderJsonReport, renderJunitReport, renderMarkdownSu
 import { runVoiceTestSuite, type VoiceTestRunResult } from "./runner";
 import type { VoiceTestSeverity } from "./schema";
 import { loadVoiceTestSuite } from "./suiteLoader";
-import { buildVoiceTestSuiteFromTranscript } from "./transcriptSuite";
+import { buildDraftMerchantFromTranscript, buildVoiceTestSuiteFromTranscript } from "./transcriptSuite";
 
 const severityRank: Record<VoiceTestSeverity, number> = {
   minor: 1,
@@ -461,7 +461,13 @@ async function readVoiceTestReport(filePath: string, label: string): Promise<Voi
 async function generateSuiteFromTranscript(argv: string[]): Promise<number> {
   const args = parseFromTranscriptArgs(argv);
   const transcript = await readFile(await resolveReadablePath(args.transcriptPath), "utf8");
-  const merchant = merchantConfigSchema.parse(JSON.parse(await readFile(await resolveReadablePath(args.merchantPath), "utf8")));
+  const merchant = args.merchantPath
+    ? merchantConfigSchema.parse(JSON.parse(await readFile(await resolveReadablePath(args.merchantPath), "utf8")))
+    : buildDraftMerchantFromTranscript({
+        transcript,
+        name: args.merchantName,
+        industry: args.industry,
+      });
   const suite = buildVoiceTestSuiteFromTranscript({
     transcript,
     merchant,
@@ -473,14 +479,19 @@ async function generateSuiteFromTranscript(argv: string[]): Promise<number> {
 
   await writeReport(args.outPath, `${JSON.stringify(suite, null, 2)}\n`);
   console.log(`Generated suite: ${args.outPath}`);
+  if (!args.merchantPath) {
+    console.log("Merchant draft: generated from transcript");
+  }
   console.log(`Customer turns: ${suite.scenarios[0].turns.length}`);
   return 0;
 }
 
 type FromTranscriptArgs = {
   transcriptPath: string;
-  merchantPath: string;
+  merchantPath?: string;
   outPath: string;
+  merchantName?: string;
+  industry?: Industry;
   name?: string;
   scenarioId?: string;
   scenarioTitle?: string;
@@ -489,16 +500,12 @@ type FromTranscriptArgs = {
 
 function parseFromTranscriptArgs(argv: string[]): FromTranscriptArgs {
   const values = parseKeyValueArgs(argv);
-  const transcriptPath = values.get("transcript");
+  const transcriptPath = values.get("transcript") ?? values.get("input");
   const merchantPath = values.get("merchant");
   const outPath = values.get("out");
 
   if (!transcriptPath) {
-    throw new Error("--transcript is required");
-  }
-
-  if (!merchantPath) {
-    throw new Error("--merchant is required");
+    throw new Error("--transcript or --input is required");
   }
 
   if (!outPath) {
@@ -511,6 +518,8 @@ function parseFromTranscriptArgs(argv: string[]): FromTranscriptArgs {
     transcriptPath,
     merchantPath,
     outPath,
+    merchantName: values.get("merchant-name"),
+    industry: values.has("industry") ? industrySchema.parse(values.get("industry")) : undefined,
     name: values.get("name"),
     scenarioId: values.get("scenario-id"),
     scenarioTitle: values.get("scenario-title"),

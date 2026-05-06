@@ -209,14 +209,16 @@ npm run voice-test -- \
 
 ```bash
 npx voice-agent-testops from-transcript \
-  --transcript examples/voice-testops/transcripts/failed-photo-booking.txt \
-  --merchant examples/voice-testops/merchants/guangying-photo.json \
+  --input examples/voice-testops/transcripts/failed-photo-booking.txt \
   --out examples/voice-testops/generated-transcript-suite.json \
+  --merchant-name "光影写真馆" \
   --name "Generated transcript regression" \
   --source website
 ```
 
-这个生成器不调用 LLM，只做确定性规则提取：客户轮次、乱承诺拦截、价格事实、留资字段、转人工意图和延迟断言。生成结果应该先人工检查，再放进 CI 作为上线门禁。
+这个生成器不调用 LLM，只做确定性规则提取：客户轮次、商家资料草稿、乱承诺拦截、价格事实、留资字段、转人工意图和延迟断言。生成结果应该先人工检查，再放进 CI 作为上线门禁。
+
+如果你已经有审核过的商家事实 JSON，可以再加 `--merchant examples/voice-testops/merchants/guangying-photo.json`。这样生成出来的价格和服务断言会更贴近真实业务。
 
 ## 场景格式
 

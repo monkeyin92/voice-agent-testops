@@ -277,6 +277,40 @@ describe("voice-test CLI", () => {
     expect(suite.scenarios[0].turns[0].expect.map((assertion) => assertion.type)).toContain("must_not_match");
   });
 
+  it("generates a draft suite from a transcript without a merchant file", async () => {
+    const tempDir = await mkdtemp(path.join(tmpdir(), "voice-testops-cli-"));
+    const transcriptPath = path.join(tempDir, "restaurant-call.txt");
+    const outPath = path.join(tempDir, "generated-suite.json");
+    await writeFile(
+      transcriptPath,
+      [
+        "Customer: Do you have a table for six this Saturday?",
+        "Assistant: Yes, you can come directly. It is 388 per person.",
+      ].join("\n"),
+      "utf8",
+    );
+
+    const result = await runCli([
+      "from-transcript",
+      "--input",
+      transcriptPath,
+      "--out",
+      outPath,
+      "--merchant-name",
+      "Transcript import draft",
+    ]);
+
+    const generated = JSON.parse(await readFile(outPath, "utf8")) as unknown;
+    const suite = parseVoiceTestSuite(generated);
+    expect(result.code).toBe(0);
+    expect(result.stdout).toContain("Merchant draft: generated from transcript");
+    expect(suite.scenarios[0].merchant).toMatchObject({
+      name: "Transcript import draft",
+      industry: "restaurant",
+      packages: [{ priceRange: "388" }],
+    });
+  });
+
   it("runs suites through the publishable bin with the run subcommand", async () => {
     const tempDir = await mkdtemp(path.join(tmpdir(), "voice-testops-cli-"));
     const suitePath = await writeMinorFailureSuite(tempDir);

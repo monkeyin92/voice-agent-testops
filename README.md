@@ -271,14 +271,16 @@ Paste a real failed conversation into a transcript file, then generate a starter
 
 ```bash
 npx voice-agent-testops from-transcript \
-  --transcript examples/voice-testops/transcripts/failed-photo-booking.txt \
-  --merchant examples/voice-testops/merchants/guangying-photo.json \
+  --input examples/voice-testops/transcripts/failed-photo-booking.txt \
   --out examples/voice-testops/generated-transcript-suite.json \
+  --merchant-name "Lumen Portrait Studio" \
   --name "Generated transcript regression" \
   --source website
 ```
 
-The generator is deterministic. It does not call an LLM; it extracts customer turns and adds reviewable assertions for unsafe promises, pricing facts, lead fields, handoff intent, and latency. Treat the generated file as a first draft, then tighten it before using it as a release gate.
+The generator is deterministic. It does not call an LLM; it extracts customer turns, infers a draft merchant profile when you do not have one yet, and adds reviewable assertions for unsafe promises, pricing facts, lead fields, handoff intent, and latency. Treat the generated file as a first draft, then tighten it before using it as a release gate.
+
+If you already keep approved business facts in JSON, add `--merchant examples/voice-testops/merchants/guangying-photo.json`. That gives the generated suite better price and service assertions from day one.
 
 ## Suite Format
 
@@ -413,7 +415,7 @@ Voice Agent TestOps is intentionally small today. The next useful steps are base
 - A larger public library of risky business scenarios
 - CI gates that can fail a deployment when agent behavior regresses
 - Report diffs across model, prompt, and workflow changes
-- Recording/transcript import to turn real failures into regression suites
+- More transcript import helpers for turning real calls into regression suites
 
 If your team has ever watched a voice agent sound confident at exactly the wrong moment, star the repo and try it against one real endpoint.
 
