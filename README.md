@@ -47,6 +47,7 @@ Create a starter suite. No API key required.
 
 ```bash
 npx voice-agent-testops init
+npx voice-agent-testops validate --suite voice-testops/suite.json
 npx voice-agent-testops run --suite voice-testops/suite.json
 ```
 

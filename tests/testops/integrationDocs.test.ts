@@ -70,8 +70,10 @@ describe("integration documentation", () => {
     const chineseReadme = readFileSync("README.zh-CN.md", "utf8");
 
     expect(readme).toContain("npx voice-agent-testops init");
+    expect(readme).toContain("npx voice-agent-testops validate --suite voice-testops/suite.json");
     expect(readme).toContain("npx voice-agent-testops run --suite voice-testops/suite.json");
     expect(chineseReadme).toContain("npx voice-agent-testops init");
+    expect(chineseReadme).toContain("npx voice-agent-testops validate --suite voice-testops/suite.json");
     expect(chineseReadme).toContain("npx voice-agent-testops run --suite voice-testops/suite.json");
   });
 

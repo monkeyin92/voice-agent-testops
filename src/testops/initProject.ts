@@ -15,7 +15,7 @@ type InitProjectArgs = {
 
 type InitProjectResult = {
   files: string[];
-  nextCommand: string;
+  nextCommands: string[];
 };
 
 export async function initializeVoiceTestOpsProject(argv: string[], cwd = process.cwd()): Promise<InitProjectResult> {
@@ -37,7 +37,7 @@ export async function initializeVoiceTestOpsProject(argv: string[], cwd = proces
 
   return {
     files,
-    nextCommand: buildNextCommand({
+    nextCommands: buildNextCommands({
       suitePath: relativeForCommand(suitePath, cwd),
       stack: args.stack,
       endpoint: args.endpoint ?? defaultEndpointForStack(args.stack),
@@ -179,6 +179,9 @@ jobs:
         with:
           node-version: 22
 
+      - name: Validate voice test suite
+        run: npx voice-agent-testops validate --suite ${suitePath}
+
       - name: Run voice agent regression suite
         run: npx voice-agent-testops run --suite ${suitePath} --fail-on-severity critical
 `;
@@ -202,18 +205,19 @@ async function exists(filePath: string): Promise<boolean> {
   }
 }
 
-function buildNextCommand(options: { suitePath: string; stack: InitStack; endpoint: string }): string {
-  const base = `npx voice-agent-testops run --suite ${options.suitePath}`;
+function buildNextCommands(options: { suitePath: string; stack: InitStack; endpoint: string }): string[] {
+  const validate = `npx voice-agent-testops validate --suite ${options.suitePath}`;
+  const run = `npx voice-agent-testops run --suite ${options.suitePath}`;
 
   if (options.stack === "http") {
-    return `${base} --agent http --endpoint ${options.endpoint}`;
+    return [validate, `${run} --agent http --endpoint ${options.endpoint}`];
   }
 
   if (options.stack === "openclaw") {
-    return `${base} --agent openclaw --endpoint ${options.endpoint}`;
+    return [validate, `${run} --agent openclaw --endpoint ${options.endpoint}`];
   }
 
-  return base;
+  return [validate, run];
 }
 
 function defaultEndpointForStack(stack: InitStack): string {
@@ -244,4 +248,3 @@ function slugify(value: string): string {
 function formatJson(value: unknown): string {
   return `${JSON.stringify(value, null, 2)}\n`;
 }
-

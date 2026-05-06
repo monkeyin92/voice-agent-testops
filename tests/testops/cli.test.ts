@@ -126,6 +126,7 @@ describe("voice-test CLI", () => {
 
     expect(result.code).toBe(0);
     expect(result.stdout).toContain(`Created ${path.join(outDir, "merchant.json")}`);
+    expect(result.stdout).toContain("npx voice-agent-testops validate");
     expect(result.stdout).toContain("npx voice-agent-testops run");
     expect(result.stdout).toContain("--agent http");
     expect(generatedMerchant.name).toBe("Lumen Portrait Studio");
@@ -147,6 +148,7 @@ describe("voice-test CLI", () => {
 
     expect(result.code).toBe(0);
     expect(result.stdout).toContain(".github/workflows/voice-testops.yml");
+    expect(workflow).toContain("npx voice-agent-testops validate --suite voice-testops/suite.json");
     expect(workflow).toContain("npx voice-agent-testops run --suite voice-testops/suite.json");
     expect(workflow).toContain("FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true");
     expect(workflow).toContain("actions/checkout@v6");
@@ -163,6 +165,51 @@ describe("voice-test CLI", () => {
     expect(runResult.code).toBe(0);
     expect(runResult.stdout).toContain("Example Photo Studio Voice Agent TestOps: passed (0 failures");
     expect(runResult.stdout).toContain("Severity gate: passed");
+  });
+
+  it("validates a suite without running the agent", async () => {
+    const tempDir = await mkdtemp(path.join(tmpdir(), "voice-testops-cli-"));
+    const outDir = path.join(tempDir, "voice-testops");
+    await runCli(["init", "--out", outDir]);
+
+    const result = await runCli(["validate", "--suite", path.join(outDir, "suite.json")]);
+
+    expect(result.code).toBe(0);
+    expect(result.stdout).toContain("Suite valid: Example Photo Studio Voice Agent TestOps");
+    expect(result.stdout).toContain("Scenarios: 1");
+    expect(result.stdout).toContain("Turns: 1");
+    expect(result.stdout).toContain("Assertions: 4");
+    expect(result.stdout).not.toContain("turn 1/1: running");
+  });
+
+  it("fails validation when merchantRef cannot be resolved", async () => {
+    const tempDir = await mkdtemp(path.join(tmpdir(), "voice-testops-cli-"));
+    const suitePath = path.join(tempDir, "suite.json");
+    await writeFile(
+      suitePath,
+      JSON.stringify(
+        {
+          name: "Broken suite",
+          scenarios: [
+            {
+              id: "missing_merchant",
+              title: "Missing merchant reference",
+              source: "website",
+              merchantRef: "missing-merchant.json",
+              turns: [{ user: "How much is it?", expect: [] }],
+            },
+          ],
+        },
+        null,
+        2,
+      ),
+      "utf8",
+    );
+
+    const result = await runCli(["validate", "--suite", suitePath]);
+
+    expect(result.code).toBe(1);
+    expect(result.stderr).toContain("missing-merchant.json");
   });
 });
 

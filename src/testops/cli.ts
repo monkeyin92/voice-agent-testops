@@ -35,6 +35,10 @@ async function main(argv: string[]): Promise<number> {
     return initProject(argv.slice(1));
   }
 
+  if (argv[0] === "validate") {
+    return validateSuite(argv.slice(1));
+  }
+
   if (argv[0] && !argv[0].startsWith("--")) {
     throw new Error(`Unknown command: ${argv[0]}`);
   }
@@ -49,9 +53,39 @@ async function initProject(argv: string[]): Promise<number> {
     console.log(`Created ${filePath}`);
   }
   console.log("Next:");
-  console.log(result.nextCommand);
+  for (const command of result.nextCommands) {
+    console.log(command);
+  }
 
   return 0;
+}
+
+async function validateSuite(argv: string[]): Promise<number> {
+  const args = parseValidateArgs(argv);
+  const suite = await loadVoiceTestSuite(args.suitePath);
+  const turns = suite.scenarios.reduce((count, scenario) => count + scenario.turns.length, 0);
+  const assertions = suite.scenarios.reduce(
+    (count, scenario) => count + scenario.turns.reduce((turnCount, turn) => turnCount + turn.expect.length, 0),
+    0,
+  );
+
+  console.log(`Suite valid: ${suite.name}`);
+  console.log(`Scenarios: ${suite.scenarios.length}`);
+  console.log(`Turns: ${turns}`);
+  console.log(`Assertions: ${assertions}`);
+
+  return 0;
+}
+
+function parseValidateArgs(argv: string[]): { suitePath: string } {
+  const values = parseKeyValueArgs(argv);
+  const suitePath = values.get("suite");
+
+  if (!suitePath) {
+    throw new Error("--suite is required");
+  }
+
+  return { suitePath };
 }
 
 async function runSuite(argv: string[]): Promise<number> {

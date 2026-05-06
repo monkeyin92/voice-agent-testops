@@ -45,6 +45,7 @@ Voice Agent TestOps 的目标很朴素：
 
 ```bash
 npx voice-agent-testops init
+npx voice-agent-testops validate --suite voice-testops/suite.json
 npx voice-agent-testops run --suite voice-testops/suite.json
 ```
 
