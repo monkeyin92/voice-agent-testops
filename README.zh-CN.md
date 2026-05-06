@@ -53,7 +53,7 @@ npx voice-agent-testops run --suite voice-testops/suite.json
 
 ```bash
 npx voice-agent-testops init --stack http --name "Lumen Portrait Studio" --with-ci
-npx voice-agent-testops doctor --agent http --endpoint http://localhost:3000/test-turn
+npx voice-agent-testops doctor --agent http --endpoint http://localhost:3000/test-turn --suite voice-testops/suite.json
 ```
 
 想换行业或语言，可以直接从 mock 模板开始：
@@ -156,13 +156,18 @@ npm run voice-test -- \
 跑完整 suite 之前，可以先用 `doctor` 检查 bridge 是否符合合同：
 
 ```bash
-npx voice-agent-testops doctor --agent http --endpoint http://127.0.0.1:4318/test-turn
+npx voice-agent-testops doctor \
+  --agent http \
+  --endpoint http://127.0.0.1:4318/test-turn \
+  --suite voice-testops/suite.json
 ```
 
 健康输出大概是这样：
 
 ```text
 Voice Agent TestOps doctor
+Suite valid: ok
+Probe scenario: pricing_safety
 Endpoint reachable: ok
 spoken: ok
 summary: ok

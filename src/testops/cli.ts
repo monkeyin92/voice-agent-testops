@@ -8,7 +8,7 @@ import { createHttpAgent } from "./adapters/httpAgent";
 import { createLocalReceptionistAgent } from "./adapters/localReceptionist";
 import { createOpenClawAgent } from "./adapters/openClawAgent";
 import { parseCliArgs } from "./cliArgs";
-import { diagnoseHttpAgentEndpoint, type DoctorCheck } from "./doctor";
+import { buildDoctorProbeFromSuite, diagnoseHttpAgentEndpoint, type DoctorCheck } from "./doctor";
 import { exampleCatalog, parseExampleLanguage, type ExampleCatalogEntry, type ExampleLanguage } from "./exampleCatalog";
 import { initializeVoiceTestOpsProject } from "./initProject";
 import { buildVoiceTestSuiteJsonSchema } from "./jsonSchema";
@@ -103,9 +103,17 @@ function parseSchemaArgs(argv: string[]): { outPath?: string } {
 
 async function doctor(argv: string[]): Promise<number> {
   const args = parseDoctorArgs(argv);
-  const result = await diagnoseHttpAgentEndpoint(args.endpoint);
+  const suite = args.suitePath ? await loadVoiceTestSuite(args.suitePath) : undefined;
+  const result = await diagnoseHttpAgentEndpoint(
+    args.endpoint,
+    suite ? buildDoctorProbeFromSuite(suite) : undefined,
+  );
 
   console.log("Voice Agent TestOps doctor");
+  if (suite) {
+    console.log("Suite valid: ok");
+    console.log(`Probe scenario: ${result.probe.scenarioId}`);
+  }
   for (const check of result.checks) {
     console.log(formatDoctorCheck(check));
     if (check.advice) {
@@ -128,13 +136,14 @@ async function doctor(argv: string[]): Promise<number> {
 type DoctorArgs = {
   agent: "http";
   endpoint: string;
+  suitePath?: string;
 };
 
 function parseDoctorArgs(argv: string[]): DoctorArgs {
   const values = parseKeyValueArgs(argv);
 
   for (const option of values.keys()) {
-    if (option !== "agent" && option !== "endpoint") {
+    if (option !== "agent" && option !== "endpoint" && option !== "suite") {
       throw new Error(`Unknown doctor option: --${option}`);
     }
   }
@@ -149,7 +158,7 @@ function parseDoctorArgs(argv: string[]): DoctorArgs {
     throw new Error("--endpoint is required");
   }
 
-  return { agent, endpoint };
+  return { agent, endpoint, suitePath: values.get("suite") };
 }
 
 function formatDoctorCheck(check: DoctorCheck): string {

@@ -63,7 +63,7 @@ Connecting a real HTTP agent?
 
 ```bash
 npx voice-agent-testops init --stack http --name "Lumen Portrait Studio" --with-ci
-npx voice-agent-testops doctor --agent http --endpoint http://localhost:3000/test-turn
+npx voice-agent-testops doctor --agent http --endpoint http://localhost:3000/test-turn --suite voice-testops/suite.json
 ```
 
 Want a different vertical or language?
@@ -170,13 +170,18 @@ The example lives at [examples/http-agent-server/server.mjs](examples/http-agent
 Before running a full suite, ask `doctor` whether your bridge speaks the right contract:
 
 ```bash
-npx voice-agent-testops doctor --agent http --endpoint http://127.0.0.1:4318/test-turn
+npx voice-agent-testops doctor \
+  --agent http \
+  --endpoint http://127.0.0.1:4318/test-turn \
+  --suite voice-testops/suite.json
 ```
 
 Healthy output:
 
 ```text
 Voice Agent TestOps doctor
+Suite valid: ok
+Probe scenario: pricing_safety
 Endpoint reachable: ok
 spoken: ok
 summary: ok

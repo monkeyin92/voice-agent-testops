@@ -115,9 +115,11 @@ describe("integration documentation", () => {
     const chineseReadme = readFileSync("README.zh-CN.md", "utf8");
 
     expect(readme).toContain("npx voice-agent-testops doctor --agent http --endpoint");
+    expect(readme).toContain("--suite voice-testops/suite.json");
     expect(readme).toContain("Endpoint reachable: ok");
     expect(readme).toContain("spoken: ok");
     expect(chineseReadme).toContain("npx voice-agent-testops doctor --agent http --endpoint");
+    expect(chineseReadme).toContain("--suite voice-testops/suite.json");
     expect(chineseReadme).toContain("Endpoint reachable: ok");
     expect(chineseReadme).toContain("spoken: ok");
   });

@@ -1,5 +1,6 @@
-import { leadSummarySchema } from "../domain/lead";
+import { leadSummarySchema, type LeadSource } from "../domain/lead";
 import type { MerchantConfig } from "../domain/merchant";
+import type { VoiceTestSuite } from "./schema";
 
 type DoctorCheckStatus = "ok" | "failed" | "skipped";
 
@@ -13,6 +14,17 @@ export type DoctorCheck = {
 export type DoctorResult = {
   passed: boolean;
   checks: DoctorCheck[];
+  probe: DoctorProbe;
+};
+
+export type DoctorProbe = {
+  suiteName: string;
+  scenarioId: string;
+  turnIndex: number;
+  customerText: string;
+  source: LeadSource;
+  merchant: MerchantConfig;
+  messages: [];
 };
 
 const doctorMerchant: MerchantConfig = {
@@ -43,7 +55,7 @@ const doctorMerchant: MerchantConfig = {
   },
 };
 
-export async function diagnoseHttpAgentEndpoint(endpoint: string): Promise<DoctorResult> {
+export async function diagnoseHttpAgentEndpoint(endpoint: string, probe = buildDefaultDoctorProbe()): Promise<DoctorResult> {
   const checks: DoctorCheck[] = [];
   let body: unknown;
 
@@ -51,15 +63,7 @@ export async function diagnoseHttpAgentEndpoint(endpoint: string): Promise<Docto
     const response = await fetch(endpoint, {
       method: "POST",
       headers: { "content-type": "application/json" },
-      body: JSON.stringify({
-        suiteName: "Voice Agent TestOps doctor",
-        scenarioId: "doctor_pricing_probe",
-        turnIndex: 0,
-        customerText: "What is the price for a solo portrait package?",
-        source: "website",
-        merchant: doctorMerchant,
-        messages: [],
-      }),
+      body: JSON.stringify(probe),
     });
 
     if (!response.ok) {
@@ -69,7 +73,7 @@ export async function diagnoseHttpAgentEndpoint(endpoint: string): Promise<Docto
         detail: `HTTP ${response.status}`,
         advice: "Make sure your test-turn endpoint accepts POST requests and returns 2xx JSON responses.",
       });
-      return buildResult(checks);
+      return buildResult(checks, probe);
     }
 
     body = await response.json();
@@ -81,7 +85,7 @@ export async function diagnoseHttpAgentEndpoint(endpoint: string): Promise<Docto
       detail: error instanceof Error ? error.message : "request failed",
       advice: "Start your agent bridge locally, check the URL, and make sure the endpoint returns JSON.",
     });
-    return buildResult(checks);
+    return buildResult(checks, probe);
   }
 
   const responseBody = isRecord(body) ? body : {};
@@ -102,7 +106,7 @@ export async function diagnoseHttpAgentEndpoint(endpoint: string): Promise<Docto
       status: "skipped",
       detail: "No summary returned. This is optional, but lead and intent assertions work better with it.",
     });
-    return buildResult(checks);
+    return buildResult(checks, probe);
   }
 
   const summary = leadSummarySchema.safeParse(responseBody.summary);
@@ -117,12 +121,40 @@ export async function diagnoseHttpAgentEndpoint(endpoint: string): Promise<Docto
     });
   }
 
-  return buildResult(checks);
+  return buildResult(checks, probe);
 }
 
-function buildResult(checks: DoctorCheck[]): DoctorResult {
+export function buildDoctorProbeFromSuite(suite: VoiceTestSuite): DoctorProbe {
+  const scenario = suite.scenarios[0];
+  const turn = scenario.turns[0];
+
+  return {
+    suiteName: suite.name,
+    scenarioId: scenario.id,
+    turnIndex: 0,
+    customerText: turn.user,
+    source: scenario.source,
+    merchant: scenario.merchant,
+    messages: [],
+  };
+}
+
+function buildDefaultDoctorProbe(): DoctorProbe {
+  return {
+    suiteName: "Voice Agent TestOps doctor",
+    scenarioId: "doctor_pricing_probe",
+    turnIndex: 0,
+    customerText: "What is the price for a solo portrait package?",
+    source: "website",
+    merchant: doctorMerchant,
+    messages: [],
+  };
+}
+
+function buildResult(checks: DoctorCheck[], probe: DoctorProbe): DoctorResult {
   return {
     checks,
+    probe,
     passed: checks.every((check) => check.status !== "failed"),
   };
 }

@@ -185,6 +185,62 @@ describe("voice-test CLI", () => {
     }
   });
 
+  it("uses the first scenario from a suite when doctor receives --suite", async () => {
+    const tempDir = await mkdtemp(path.join(tmpdir(), "voice-testops-cli-"));
+    const outDir = path.join(tempDir, "voice-testops");
+    await runCli(["init", "--out", outDir, "--industry", "restaurant", "--lang", "zh-CN"]);
+
+    const requests: unknown[] = [];
+    const server = await startDoctorServer(async (request) => {
+      requests.push(request);
+
+      return {
+        spoken: "双人晚餐套餐是 198-298 元，包间需要确认桌态，请留下电话。",
+        summary: {
+          source: "website",
+          intent: "pricing",
+          need: "客户咨询双人晚餐套餐和包间",
+          questions: ["双人晚餐套餐多少钱，今晚能保证有包间吗"],
+          level: "medium",
+          nextAction: "联系客户确认桌态和预约信息",
+          transcript: [
+            { role: "customer", text: "双人晚餐套餐多少钱，今晚能保证有包间吗", at: "2026-05-03T00:00:00.000Z" },
+            { role: "assistant", text: "双人晚餐套餐是 198-298 元，包间需要确认桌态。", at: "2026-05-03T00:00:01.000Z" },
+          ],
+        },
+      };
+    });
+
+    try {
+      const result = await runCli([
+        "doctor",
+        "--agent",
+        "http",
+        "--endpoint",
+        server.url,
+        "--suite",
+        path.join(outDir, "suite.json"),
+      ]);
+
+      expect(result.code).toBe(0);
+      expect(result.stdout).toContain("Suite valid: ok");
+      expect(result.stdout).toContain("Probe scenario: dinner_set_price");
+      expect(result.stdout).toContain("Endpoint reachable: ok");
+      expect(result.stdout).toContain("Doctor passed");
+      expect(requests[0]).toMatchObject({
+        suiteName: "云栖小馆 Voice Agent TestOps",
+        scenarioId: "dinner_set_price",
+        turnIndex: 0,
+        customerText: "双人晚餐套餐多少钱，今晚能保证有包间吗",
+        source: "website",
+        merchant: { name: "云栖小馆", industry: "restaurant" },
+        messages: [],
+      });
+    } finally {
+      await server.close();
+    }
+  });
+
   it("returns an actionable doctor failure when an HTTP endpoint omits spoken", async () => {
     const server = await startDoctorServer(async () => ({ text: "I used the wrong response field." }));
 
