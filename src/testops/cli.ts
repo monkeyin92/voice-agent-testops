@@ -8,6 +8,7 @@ import { createHttpAgent } from "./adapters/httpAgent";
 import { createLocalReceptionistAgent } from "./adapters/localReceptionist";
 import { createOpenClawAgent } from "./adapters/openClawAgent";
 import { parseCliArgs } from "./cliArgs";
+import { initializeVoiceTestOpsProject } from "./initProject";
 import { resolveReadablePath } from "./packagePaths";
 import { renderHtmlReport, renderJsonReport } from "./report";
 import { runVoiceTestSuite, type VoiceTestRunResult } from "./runner";
@@ -30,11 +31,27 @@ async function main(argv: string[]): Promise<number> {
     return generateSuiteFromTranscript(argv.slice(1));
   }
 
+  if (argv[0] === "init") {
+    return initProject(argv.slice(1));
+  }
+
   if (argv[0] && !argv[0].startsWith("--")) {
     throw new Error(`Unknown command: ${argv[0]}`);
   }
 
   return runSuite(argv);
+}
+
+async function initProject(argv: string[]): Promise<number> {
+  const result = await initializeVoiceTestOpsProject(argv);
+
+  for (const filePath of result.files) {
+    console.log(`Created ${filePath}`);
+  }
+  console.log("Next:");
+  console.log(result.nextCommand);
+
+  return 0;
 }
 
 async function runSuite(argv: string[]): Promise<number> {

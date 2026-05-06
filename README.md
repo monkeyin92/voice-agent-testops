@@ -43,19 +43,25 @@ If you are building voice agents for real businesses, this repo is meant to be t
 
 ## Quick Start
 
-Run the local demo agent. No API key required.
+Create a starter suite. No API key required.
 
 ```bash
-npm install
-npx voice-agent-testops run --suite examples/voice-testops/xhs-receptionist-suite.json
+npx voice-agent-testops init
+npx voice-agent-testops run --suite voice-testops/suite.json
 ```
 
 Expected output:
 
 ```text
-小红书接待 Demo Agent 回归测试: passed (0 failures, 8 assertions)
+Example Photo Studio Voice Agent TestOps: passed (0 failures, 4 assertions)
 JSON report: .voice-testops/report.json
 HTML report: .voice-testops/report.html
+```
+
+Connecting a real HTTP agent?
+
+```bash
+npx voice-agent-testops init --stack http --name "Lumen Portrait Studio" --with-ci
 ```
 
 Generate a more polished merchant-facing report:

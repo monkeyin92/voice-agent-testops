@@ -4,9 +4,12 @@ export async function respondWithLocalReceptionist(input: AgentRequest): Promise
   const lastMessage = input.messages[input.messages.length - 1]?.text ?? "";
   const firstPackage = input.merchant.packages[0];
   const now = new Date().toISOString();
-  const asksPrice = /价格|多少钱|费用|报价/.test(lastMessage);
-  const asksHandoff = /人工|真人|客服|老板|转接|联系/.test(lastMessage);
-  const asksTime = /档期|时间|周末|预约|想约|周一|周二|周三|周四|周五|周六|周日|过去/.test(lastMessage);
+  const asksPrice = /价格|多少钱|费用|报价|price|cost|how much|package/i.test(lastMessage);
+  const asksHandoff = /人工|真人|客服|老板|转接|联系|human|person|call me|contact me|handoff|transfer/i.test(lastMessage);
+  const asksTime =
+    /档期|时间|周末|预约|想约|周一|周二|周三|周四|周五|周六|周日|过去|available|availability|weekend|book|booking|appointment/i.test(
+      lastMessage,
+    );
   const contactFields = extractContactFields(lastMessage);
 
   const spoken = asksHandoff

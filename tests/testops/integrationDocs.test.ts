@@ -65,6 +65,16 @@ describe("integration documentation", () => {
     expect(chineseReadme).toContain("npx voice-agent-testops from-transcript");
   });
 
+  it("documents the init quickstart in both READMEs", () => {
+    const readme = readFileSync("README.md", "utf8");
+    const chineseReadme = readFileSync("README.zh-CN.md", "utf8");
+
+    expect(readme).toContain("npx voice-agent-testops init");
+    expect(readme).toContain("npx voice-agent-testops run --suite voice-testops/suite.json");
+    expect(chineseReadme).toContain("npx voice-agent-testops init");
+    expect(chineseReadme).toContain("npx voice-agent-testops run --suite voice-testops/suite.json");
+  });
+
   it("documents the setup contract and copy-paste commands for every supported stack", () => {
     for (const doc of integrationDocs) {
       expect(existsSync(doc.path), `${doc.path} should exist`).toBe(true);

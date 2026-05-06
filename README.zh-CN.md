@@ -41,11 +41,17 @@ Voice Agent TestOps 的目标很朴素：
 
 ## 30 秒试跑
 
-本地 demo 不需要任何 API key：
+先生成一个 starter suite，不需要任何 API key：
 
 ```bash
-npm install
-npx voice-agent-testops run --suite examples/voice-testops/xhs-receptionist-suite.json
+npx voice-agent-testops init
+npx voice-agent-testops run --suite voice-testops/suite.json
+```
+
+如果要接入真实 HTTP Agent，可以直接生成带 CI 的模板：
+
+```bash
+npx voice-agent-testops init --stack http --name "Lumen Portrait Studio" --with-ci
 ```
 
 生成面向商家演示的报告：

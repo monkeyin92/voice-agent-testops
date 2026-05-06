@@ -5,6 +5,7 @@ import path from "node:path";
 import { promisify } from "node:util";
 import { describe, expect, it } from "vitest";
 import { parseVoiceTestSuite } from "@/testops/schema";
+import { loadVoiceTestSuite } from "@/testops/suiteLoader";
 
 const execFileAsync = promisify(execFile);
 
@@ -110,6 +111,59 @@ describe("voice-test CLI", () => {
     expect(result.code).toBe(0);
     expect(result.stdout).toContain("JSON report: .voice-testops/report.json");
   });
+
+  it("initializes a runnable suite and merchant config", async () => {
+    const tempDir = await mkdtemp(path.join(tmpdir(), "voice-testops-cli-"));
+    const outDir = path.join(tempDir, "voice-testops");
+
+    const result = await runCli(["init", "--out", outDir, "--name", "Lumen Portrait Studio", "--stack", "http"]);
+
+    const generatedMerchant = JSON.parse(await readFile(path.join(outDir, "merchant.json"), "utf8")) as typeof merchant;
+    const rawSuite = JSON.parse(await readFile(path.join(outDir, "suite.json"), "utf8")) as {
+      scenarios: Array<{ merchantRef?: string }>;
+    };
+    const suite = await loadVoiceTestSuite(path.join(outDir, "suite.json"));
+
+    expect(result.code).toBe(0);
+    expect(result.stdout).toContain(`Created ${path.join(outDir, "merchant.json")}`);
+    expect(result.stdout).toContain("npx voice-agent-testops run");
+    expect(result.stdout).toContain("--agent http");
+    expect(generatedMerchant.name).toBe("Lumen Portrait Studio");
+    expect(generatedMerchant.slug).toBe("lumen-portrait-studio");
+    expect(rawSuite.scenarios[0].merchantRef).toBe("merchant.json");
+    expect(suite.name).toBe("Lumen Portrait Studio Voice Agent TestOps");
+    expect(suite.scenarios[0].merchant.name).toBe("Lumen Portrait Studio");
+  });
+
+  it("can initialize a CI workflow for the generated suite", async () => {
+    const tempDir = await mkdtemp(path.join(tmpdir(), "voice-testops-cli-"));
+
+    const result = await runCli(
+      ["init", "--out", "voice-testops", "--name", "Lumen Portrait Studio", "--with-ci"],
+      tempDir,
+    );
+
+    const workflow = await readFile(path.join(tempDir, ".github/workflows/voice-testops.yml"), "utf8");
+
+    expect(result.code).toBe(0);
+    expect(result.stdout).toContain(".github/workflows/voice-testops.yml");
+    expect(workflow).toContain("npx voice-agent-testops run --suite voice-testops/suite.json");
+    expect(workflow).toContain("FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true");
+    expect(workflow).toContain("actions/checkout@v6");
+  });
+
+  it("generates a default starter suite that runs immediately", async () => {
+    const tempDir = await mkdtemp(path.join(tmpdir(), "voice-testops-cli-"));
+    const outDir = path.join(tempDir, "voice-testops");
+
+    const initResult = await runCli(["init", "--out", outDir]);
+    const runResult = await runCli(["run", "--suite", path.join(outDir, "suite.json"), "--fail-on-severity", "critical"]);
+
+    expect(initResult.code).toBe(0);
+    expect(runResult.code).toBe(0);
+    expect(runResult.stdout).toContain("Example Photo Studio Voice Agent TestOps: passed (0 failures");
+    expect(runResult.stdout).toContain("Severity gate: passed");
+  });
 });
 
 async function writeMinorFailureSuite(tempDir: string): Promise<string> {
@@ -143,11 +197,11 @@ async function writeMinorFailureSuite(tempDir: string): Promise<string> {
   return suitePath;
 }
 
-async function runCli(args: string[]): Promise<CliResult> {
+async function runCli(args: string[], cwd = process.cwd()): Promise<CliResult> {
   const cliPath = path.resolve("src/testops/cli.ts");
   const tsxPath = path.resolve("node_modules/.bin/tsx");
 
-  return execCli(tsxPath, [cliPath, ...args]);
+  return execCli(tsxPath, [cliPath, ...args], cwd);
 }
 
 async function runBin(args: string[], cwd = process.cwd()): Promise<CliResult> {
