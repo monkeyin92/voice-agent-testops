@@ -4,6 +4,8 @@
 
 目标：今天先发出 5 个高相关试用邀请，验证开发者是否愿意把自己的 voice agent 接到 TestOps 跑一次。
 
+项目地址：https://github.com/monkeyin92/voice-agent-testops
+
 ## 发送原则
 
 - 先找正在做 voice agent 框架、SDK、平台示例、电话/实时语音服务端的人。
@@ -64,11 +66,11 @@ npm run voice-test -- \
 
 | 日期 | 目标 | 入口 | 是否已发送 | 是否回复 | 是否跑通 | 阻塞点 | 下一步 |
 |---|---|---|---|---|---|---|---|
-| 2026-05-06 | Vapi ecosystem | GitHub / community |  |  |  |  |  |
-| 2026-05-06 | Retell ecosystem | GitHub / community |  |  |  |  |  |
-| 2026-05-06 | LiveKit Agents JS | GitHub discussion/community |  |  |  |  |  |
-| 2026-05-06 | Pipecat bot developers | GitHub/community |  |  |  |  |  |
-| 2026-05-06 | Streamcore server | GitHub |  |  |  |  |  |
+| 2026-05-06 | Vapi ecosystem | [VapiAI/example-voice-test-script#2](https://github.com/VapiAI/example-voice-test-script/issues/2) | 是 |  |  |  | 等待回复 |
+| 2026-05-06 | Retell ecosystem | [RetellAI/retell-custom-llm-node-demo#12](https://github.com/RetellAI/retell-custom-llm-node-demo/issues/12) | 是 |  |  |  | 等待回复 |
+| 2026-05-06 | LiveKit Agents JS | [livekit/agents-js#1400](https://github.com/livekit/agents-js/issues/1400) | 是 |  |  |  | 等待回复 |
+| 2026-05-06 | Pipecat bot developers | [pipecat-ai/pipecat-client-web#207](https://github.com/pipecat-ai/pipecat-client-web/issues/207) | 是 |  |  |  | 等待回复 |
+| 2026-05-06 | Streamcore server | [streamcoreai/streamcore-server#4](https://github.com/streamcoreai/streamcore-server/issues/4) | 是 |  |  |  | 等待回复 |
 
 ## 今天的验收
 
