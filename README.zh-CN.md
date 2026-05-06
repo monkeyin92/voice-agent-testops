@@ -1,6 +1,7 @@
 # Voice Agent TestOps
 
 [![Voice Agent TestOps](https://img.shields.io/badge/Voice%20Agent-TestOps-285f9f)](https://github.com/monkeyin92/voice-agent-testops)
+[![npm version](https://img.shields.io/npm/v/voice-agent-testops?color=cb3837)](https://www.npmjs.com/package/voice-agent-testops)
 [![CI](https://github.com/monkeyin92/voice-agent-testops/actions/workflows/voice-testops.yml/badge.svg)](https://github.com/monkeyin92/voice-agent-testops/actions/workflows/voice-testops.yml)
 [![Node.js](https://img.shields.io/badge/Node.js-22%2B-339933)](https://nodejs.org/)
 
