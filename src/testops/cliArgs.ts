@@ -15,10 +15,13 @@ export type VoiceTestCliArgs = {
   junitPath?: string;
   baselinePath?: string;
   diffMarkdownPath?: string;
+  failOnNew: boolean;
 };
 
 export function parseCliArgs(argv: string[]): VoiceTestCliArgs {
   const values = new Map<string, string>();
+  const flags = new Set<string>();
+  const flagArgs = new Set(["fail-on-new"]);
 
   for (let index = 0; index < argv.length; index += 1) {
     const arg = argv[index];
@@ -26,12 +29,18 @@ export function parseCliArgs(argv: string[]): VoiceTestCliArgs {
       throw new Error(`Unexpected argument: ${arg}`);
     }
 
+    const name = arg.slice(2);
+    if (flagArgs.has(name)) {
+      flags.add(name);
+      continue;
+    }
+
     const value = argv[index + 1];
     if (!value || value.startsWith("--")) {
       throw new Error(`${arg} requires a value`);
     }
 
-    values.set(arg.slice(2), value);
+    values.set(name, value);
     index += 1;
   }
 
@@ -69,6 +78,9 @@ export function parseCliArgs(argv: string[]): VoiceTestCliArgs {
   if (values.has("diff-markdown") && !values.has("baseline")) {
     throw new Error("--diff-markdown requires --baseline");
   }
+  if (flags.has("fail-on-new") && !values.has("baseline")) {
+    throw new Error("--fail-on-new requires --baseline");
+  }
 
   return {
     suitePath,
@@ -84,5 +96,6 @@ export function parseCliArgs(argv: string[]): VoiceTestCliArgs {
     junitPath: values.get("junit"),
     baselinePath: values.get("baseline"),
     diffMarkdownPath: values.get("diff-markdown") ?? (values.has("baseline") ? ".voice-testops/diff.md" : undefined),
+    failOnNew: flags.has("fail-on-new"),
   };
 }

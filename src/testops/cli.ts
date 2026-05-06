@@ -307,9 +307,11 @@ async function runSuite(argv: string[]): Promise<number> {
   if (args.junitPath) {
     await writeReport(args.junitPath, renderJunitReport(result));
   }
+  let newFailureCount: number | undefined;
   if (args.baselinePath && args.diffMarkdownPath) {
     const baseline = await readVoiceTestReport(args.baselinePath, "Baseline");
     const diff = diffVoiceTestReports(baseline, result);
+    newFailureCount = diff.summary.newFailures;
     await writeReport(args.diffMarkdownPath, renderMarkdownDiff(diff));
   }
 
@@ -328,6 +330,12 @@ async function runSuite(argv: string[]): Promise<number> {
   if (args.baselinePath && args.diffMarkdownPath) {
     console.log(`Baseline report: ${args.baselinePath}`);
     console.log(`Diff summary: ${args.diffMarkdownPath}`);
+  }
+
+  if (args.failOnNew) {
+    const newFailures = newFailureCount ?? 0;
+    console.log(`New failure gate: ${newFailures === 0 ? "passed" : "failed"} (${newFailures} new failures)`);
+    return newFailures === 0 ? 0 : 1;
   }
 
   if (args.failOnSeverity) {
@@ -358,6 +366,13 @@ async function compareReports(argv: string[]): Promise<number> {
     console.log(`Diff summary: ${args.diffMarkdownPath}`);
   }
 
+  if (args.failOnNew) {
+    console.log(
+      `New failure gate: ${diff.summary.newFailures === 0 ? "passed" : "failed"} (${diff.summary.newFailures} new failures)`,
+    );
+    return diff.summary.newFailures === 0 ? 0 : 1;
+  }
+
   return 0;
 }
 
@@ -365,15 +380,36 @@ type CompareArgs = {
   baselinePath: string;
   currentPath: string;
   diffMarkdownPath?: string;
+  failOnNew: boolean;
 };
 
 function parseCompareArgs(argv: string[]): CompareArgs {
-  const values = parseKeyValueArgs(argv);
+  const values = new Map<string, string>();
+  const flags = new Set<string>();
 
-  for (const option of values.keys()) {
-    if (option !== "baseline" && option !== "current" && option !== "diff-markdown") {
-      throw new Error(`Unknown compare option: --${option}`);
+  for (let index = 0; index < argv.length; index += 1) {
+    const arg = argv[index];
+    if (!arg.startsWith("--")) {
+      throw new Error(`Unexpected argument: ${arg}`);
     }
+
+    const name = arg.slice(2);
+    if (name === "fail-on-new") {
+      flags.add(name);
+      continue;
+    }
+
+    if (name !== "baseline" && name !== "current" && name !== "diff-markdown") {
+      throw new Error(`Unknown compare option: --${name}`);
+    }
+
+    const value = argv[index + 1];
+    if (!value || value.startsWith("--")) {
+      throw new Error(`${arg} requires a value`);
+    }
+
+    values.set(name, value);
+    index += 1;
   }
 
   const baselinePath = values.get("baseline");
@@ -390,6 +426,7 @@ function parseCompareArgs(argv: string[]): CompareArgs {
     baselinePath,
     currentPath,
     diffMarkdownPath: values.get("diff-markdown"),
+    failOnNew: flags.has("fail-on-new"),
   };
 }
 

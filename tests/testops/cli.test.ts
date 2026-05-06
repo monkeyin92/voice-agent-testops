@@ -153,6 +153,46 @@ describe("voice-test CLI", () => {
     expect(markdown).toContain("Old blocked promise / turn 1");
   });
 
+  it("allows existing baseline failures when failing only on new failures", async () => {
+    const tempDir = await mkdtemp(path.join(tmpdir(), "voice-testops-cli-"));
+    const suitePath = await writeMinorFailureSuite(tempDir);
+    const baselinePath = path.join(tempDir, "baseline.json");
+    await writeJsonReport(
+      baselinePath,
+      "Previous run",
+      "minor_copy_regression",
+      "Minor wording regression",
+      "expected_phrase_missing",
+      "old missing phrase",
+      "minor",
+    );
+
+    const result = await runCli(["--suite", suitePath, "--baseline", baselinePath, "--fail-on-new"]);
+
+    expect(result.code).toBe(0);
+    expect(result.stdout).toContain("Minor severity gate demo: failed (1 failures");
+    expect(result.stdout).toContain("New failure gate: passed (0 new failures)");
+  });
+
+  it("fails when a run introduces new baseline failures", async () => {
+    const tempDir = await mkdtemp(path.join(tmpdir(), "voice-testops-cli-"));
+    const suitePath = await writeMinorFailureSuite(tempDir);
+    const baselinePath = path.join(tempDir, "baseline.json");
+    await writeJsonReport(
+      baselinePath,
+      "Previous run",
+      "old_blocked_promise",
+      "Old blocked promise",
+      "forbidden_pattern_matched",
+      "old absolute promise",
+    );
+
+    const result = await runCli(["--suite", suitePath, "--baseline", baselinePath, "--fail-on-new"]);
+
+    expect(result.code).toBe(1);
+    expect(result.stdout).toContain("New failure gate: failed (1 new failures)");
+  });
+
   it("compares two existing JSON reports without running a suite", async () => {
     const tempDir = await mkdtemp(path.join(tmpdir(), "voice-testops-cli-"));
     const baselinePath = path.join(tempDir, "baseline.json");
@@ -183,12 +223,14 @@ describe("voice-test CLI", () => {
       currentPath,
       "--diff-markdown",
       diffPath,
+      "--fail-on-new",
     ]);
 
     const markdown = await readFile(diffPath, "utf8");
 
-    expect(result.code).toBe(0);
+    expect(result.code).toBe(1);
     expect(result.stdout).toContain("Voice Agent TestOps diff: 1 new, 1 resolved, 0 unchanged");
+    expect(result.stdout).toContain("New failure gate: failed (1 new failures)");
     expect(result.stdout).toContain(`Diff summary: ${diffPath}`);
     expect(markdown).toContain("Previous run");
     expect(markdown).toContain("Current run");
@@ -547,11 +589,13 @@ describe("voice-test CLI", () => {
     expect(workflow).toContain("npx voice-agent-testops validate --suite voice-testops/suite.json");
     expect(workflow).toContain("npx voice-agent-testops doctor --agent http --endpoint \"$VOICE_AGENT_ENDPOINT\" --suite voice-testops/suite.json");
     expect(workflow).toContain(
-      "npx voice-agent-testops run --agent http --endpoint \"$VOICE_AGENT_ENDPOINT\" --suite voice-testops/suite.json --summary .voice-testops/summary.md --junit .voice-testops/junit.xml --fail-on-severity critical",
+      "npx voice-agent-testops run --agent http --endpoint \"$VOICE_AGENT_ENDPOINT\" --suite voice-testops/suite.json --summary .voice-testops/summary.md --junit .voice-testops/junit.xml $BASELINE_ARGS $GATE_ARGS",
     );
     expect(workflow).toContain("actions/cache/restore@v4");
     expect(workflow).toContain(".voice-testops-baseline/report.json");
+    expect(workflow).toContain("GATE_ARGS=\"--fail-on-severity critical\"");
     expect(workflow).toContain("BASELINE_ARGS=\"--baseline .voice-testops-baseline/report.json --diff-markdown .voice-testops/diff.md\"");
+    expect(workflow).toContain("GATE_ARGS=\"--fail-on-new\"");
     expect(workflow).toContain("cat .voice-testops/summary.md >> \"$GITHUB_STEP_SUMMARY\"");
     expect(workflow).toContain("cat .voice-testops/diff.md >> \"$GITHUB_STEP_SUMMARY\"");
     expect(workflow).toContain("actions/cache/save@v4");
@@ -661,6 +705,7 @@ async function writeJsonReport(
   scenarioTitle: string,
   code: string,
   message: string,
+  severity: "minor" | "major" | "critical" = "critical",
 ): Promise<void> {
   await writeFile(
     filePath,
@@ -685,7 +730,7 @@ async function writeJsonReport(
                 latencyMs: 42,
                 passed: false,
                 assertions: 1,
-                failures: [{ code, message, severity: "critical" }],
+                failures: [{ code, message, severity }],
               },
             ],
           },

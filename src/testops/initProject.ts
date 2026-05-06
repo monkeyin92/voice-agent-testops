@@ -528,10 +528,12 @@ ${doctorStep}
       - name: Run voice agent regression suite
         run: |
           BASELINE_ARGS=""
+          GATE_ARGS="--fail-on-severity critical"
           if [ -f .voice-testops-baseline/report.json ]; then
             BASELINE_ARGS="--baseline .voice-testops-baseline/report.json --diff-markdown .voice-testops/diff.md"
+            GATE_ARGS="--fail-on-new"
           fi
-          ${buildWorkflowRunCommand(options)} $BASELINE_ARGS
+          ${buildWorkflowRunCommand(options)} $BASELINE_ARGS $GATE_ARGS
 
       - name: Add Voice TestOps summary
         if: always()
@@ -576,7 +578,7 @@ ${doctorStep}
 }
 
 function buildWorkflowRunCommand(options: { suitePath: string; stack: InitStack; endpoint: string; endpointEnv?: string }): string {
-  const reportOptions = "--summary .voice-testops/summary.md --junit .voice-testops/junit.xml --fail-on-severity critical";
+  const reportOptions = "--summary .voice-testops/summary.md --junit .voice-testops/junit.xml";
 
   if (options.stack === "http") {
     return `npx voice-agent-testops run --agent http --endpoint "${endpointForCommand(options)}" --suite ${options.suitePath} ${reportOptions}`;

@@ -17,6 +17,7 @@ describe("parseCliArgs", () => {
       junitPath: undefined,
       baselinePath: undefined,
       diffMarkdownPath: undefined,
+      failOnNew: false,
     });
   });
 
@@ -116,6 +117,21 @@ describe("parseCliArgs", () => {
       baselinePath: "old-report.json",
       diffMarkdownPath: "diffs/voice-testops.md",
     });
+  });
+
+  it("supports failing only on new baseline failures", () => {
+    expect(
+      parseCliArgs(["--suite", "suite.json", "--baseline", ".voice-testops-baseline/report.json", "--fail-on-new"]),
+    ).toMatchObject({
+      failOnNew: true,
+      baselinePath: ".voice-testops-baseline/report.json",
+    });
+  });
+
+  it("requires a baseline when failing on new failures", () => {
+    expect(() => parseCliArgs(["--suite", "suite.json", "--fail-on-new"])).toThrow(
+      "--fail-on-new requires --baseline",
+    );
   });
 
   it("rejects unsupported severity gates", () => {
