@@ -1,48 +1,51 @@
 # Voice Agent TestOps
 
-AI 语音 Agent 的自动化测试、评测与销售演示报告工具。
+[![Voice Agent TestOps](https://img.shields.io/badge/Voice%20Agent-TestOps-285f9f)](https://github.com/monkeyin92/voice-agent-testops)
+[![CI](https://github.com/monkeyin92/voice-agent-testops/actions/workflows/voice-testops.yml/badge.svg)](https://github.com/monkeyin92/voice-agent-testops/actions/workflows/voice-testops.yml)
+[![Node.js](https://img.shields.io/badge/Node.js-22%2B-339933)](https://nodejs.org/)
 
-当前仓库保留了一个小红书商家接待 demo agent，但战略产品已经转向 Voice Agent TestOps：用场景脚本自动和 Agent 对话，检查延迟、话术安全、字段收集、意图识别和业务承诺。
+**Regression testing for voice agents before they embarrass you in front of a real customer.**
 
-## Sales Demo
+Voice Agent TestOps runs scripted customer conversations against your agent, then checks the things demos usually hide: unsafe pricing, over-promising, missed phone numbers, wrong handoff intent, and latency that quietly kills the experience.
 
-销售演示只需要一条命令：
+It is not another voice-agent framework. It is the safety harness you put around agents built with OpenClaw, Vapi, Retell, LiveKit, Pipecat, Twilio, or your own HTTP service.
 
-```bash
-npm run sales:demo
-```
+[中文介绍](#中文) · [Quick Start](#quick-start) · [Connect An Agent](#connect-an-agent) · [Suite Format](#suite-format)
 
-前置条件：本机 OpenClaw Gateway 已按 `docs/ops/openclaw-docker.md` 启动，并且模型 provider 凭证可用。
+## Why This Exists
 
-这条命令会跑写真馆多轮演示套件，并导出可发给客户的报告：
+Voice agents fail in strangely expensive ways.
 
-- `.voice-testops/report.html`：现场讲解用的交互式报告。
-- `.voice-testops/report.pdf`：发给客户或放进销售材料。
-- `.voice-testops/report.png`：社群、飞书、微信里快速预览。
+They quote a price that was never approved. They promise a slot that is already booked. They sound helpful but forget to collect the phone number. They say they will transfer to a human, then classify the lead as `other`. A normal unit test will not catch that. A happy-path demo will not reveal it either.
 
-演示链路覆盖四个销售最容易讲清楚的风险点：询价不能乱承诺、档期必须转人工确认、效果不能保证、客户要求真人时要正确留资。底层使用 `examples/voice-testops/photo-studio-multiturn-suite.json`，商家样例在 `examples/voice-testops/merchants/guangying-photo.json`。
+Voice Agent TestOps gives you a small, repeatable gate:
 
-如果要展示“测试失败时报告如何定位问题”，再运行故意失败的报告：
+- **Write the risky customer scenario once.**
+- **Run it against every agent build.**
+- **Get a report a human can read and a JSON artifact CI can enforce.**
 
-```bash
-npm run voice-test -- \
-  --suite examples/voice-testops/failing-demo-suite.json \
-  --json .voice-testops/failing-demo.json \
-  --html .voice-testops/failing-demo.html || true
-```
+If you are building voice agents for real businesses, this repo is meant to be the boring little alarm bell that rings before production does.
 
-打开 `.voice-testops/failing-demo.html` 可以看到失败原因，例如 `lead_field_missing`。
+## What It Catches
+
+| Risk | Example failure | Assertion |
+|---|---|---|
+| Unsafe pricing | "The cheapest package is guaranteed." | `must_not_match` |
+| Missing facts | Agent never says the configured `599-1299` package range | `must_contain_any` |
+| Lead leakage | Customer gives a phone number, summary has no `phone` | `lead_field_present` |
+| Wrong intent | Handoff request classified as `pricing` | `lead_intent` |
+| Slow turns | One response takes 12 seconds | `max_latency_ms` |
 
 ## Quick Start
 
-安装依赖后运行本地 demo：
+Run the local demo agent. No API key required.
 
 ```bash
 npm install
 npm run voice-test -- --suite examples/voice-testops/xhs-receptionist-suite.json
 ```
 
-输出：
+Expected output:
 
 ```text
 小红书接待 Demo Agent 回归测试: passed (0 failures, 8 assertions)
@@ -50,36 +53,25 @@ JSON report: .voice-testops/report.json
 HTML report: .voice-testops/report.html
 ```
 
-## Test A Real Agent
-
-### OpenClaw-compatible endpoint
+Generate a more polished merchant-facing report:
 
 ```bash
-npm run voice-test -- \
-  --suite examples/voice-testops/openclaw-suite.json \
-  --agent openclaw \
-  --endpoint "$OPENCLAW_AGENT_URL" \
-  --api-key "$OPENCLAW_API_KEY"
+npm run voice-test -- --suite examples/voice-testops/photo-studio-multiturn-suite.json
+npm run report:export
 ```
 
-OpenClaw endpoint 需要接受 `POST` JSON，并返回：
+Artifacts:
 
-```json
-{
-  "spoken": "给用户播报的简短回复",
-  "summary": {
-    "source": "website",
-    "intent": "pricing",
-    "level": "medium",
-    "need": "客户咨询价格",
-    "questions": ["单人写真多少钱"],
-    "nextAction": "请人工确认档期",
-    "transcript": []
-  }
-}
-```
+- `.voice-testops/report.json` for CI and automation
+- `.voice-testops/report.html` for debugging and walkthroughs
+- `.voice-testops/report.pdf` for customers or internal review
+- `.voice-testops/report.png` for quick sharing
 
-### Generic HTTP endpoint
+## Connect An Agent
+
+### Generic HTTP Agent
+
+Your endpoint receives one test turn:
 
 ```bash
 npm run voice-test -- \
@@ -88,41 +80,73 @@ npm run voice-test -- \
   --endpoint "https://your-agent.example.com/test-turn"
 ```
 
-## Generate A Failing Report
-
-推广和调试时，失败报告比全绿报告更有说服力。这个 suite 会故意失败，因为它要求摘要里必须出现 `phone` 字段，而本地 demo agent 只会在话术里索要电话，不会自动解析手机号字段。
-
-```bash
-npm run voice-test -- \
-  --suite examples/voice-testops/failing-demo-suite.json \
-  --json .voice-testops/failing-demo.json \
-  --html .voice-testops/failing-demo.html || true
-```
-
-打开 `.voice-testops/failing-demo.html` 可以看到失败原因，例如 `lead_field_missing`。
-
-## CI
-
-仓库包含 GitHub Actions 示例：`.github/workflows/voice-testops.yml`。
-
-CI 会执行：
-
-- `npm ci`
-- `npm test`
-- 本地通过型 suite
-- `npm run build`
-- `npm audit --audit-level=high`
-- 生成一个预期失败的 demo 报告并上传 `.voice-testops/*.json` 和 `.voice-testops/*.html`
-
-## Suite Format
+Request shape:
 
 ```json
 {
-  "name": "回归测试",
+  "suiteName": "回归测试",
+  "scenarioId": "pricing",
+  "turnIndex": 0,
+  "customerText": "单人写真多少钱",
+  "source": "website",
+  "merchant": {},
+  "messages": []
+}
+```
+
+Response shape:
+
+```json
+{
+  "spoken": "单人写真一般是 599-1299 元，档期需要人工确认。",
+  "summary": {
+    "source": "website",
+    "intent": "pricing",
+    "level": "medium",
+    "need": "客户咨询单人写真价格",
+    "questions": ["单人写真多少钱"],
+    "nextAction": "人工确认档期后跟进",
+    "transcript": []
+  }
+}
+```
+
+`spoken` is required. `summary` is optional, but lead and intent assertions become much more useful when you return it.
+
+### OpenClaw-compatible Endpoint
+
+```bash
+npm run voice-test -- \
+  --suite examples/voice-testops/openclaw-suite.json \
+  --agent openclaw \
+  --endpoint "$OPENCLAW_AGENT_URL" \
+  --api-key "$OPENCLAW_API_KEY" \
+  --openclaw-mode responses
+```
+
+For a local OpenClaw Gateway setup, see [docs/ops/openclaw-docker.md](docs/ops/openclaw-docker.md).
+
+## Sales Demo
+
+If you already have a local OpenClaw Gateway running with a model provider configured:
+
+```bash
+npm run sales:demo
+```
+
+This runs the photo-studio multi-turn suite and exports a customer-ready report. It covers the four failure modes that are easiest to explain in a sales conversation: pricing, availability, impossible quality promises, and human handoff.
+
+## Suite Format
+
+Suites are just JSON. They describe a merchant, a customer conversation, and the assertions each turn must satisfy.
+
+```json
+{
+  "name": "Photo studio launch check",
   "scenarios": [
     {
       "id": "pricing",
-      "title": "客户询价时不能乱报价",
+      "title": "Customer asks for price",
       "source": "website",
       "merchant": {
         "name": "光影写真馆",
@@ -141,16 +165,19 @@ CI 会执行：
           }
         ],
         "faqs": [],
-        "bookingRules": { "requiresManualConfirm": true, "requiredFields": ["name", "phone"] }
+        "bookingRules": {
+          "requiresManualConfirm": true,
+          "requiredFields": ["name", "phone"]
+        }
       },
       "turns": [
         {
-          "user": "单人写真多少钱",
+          "user": "单人写真多少钱，能保证拍得好看吗",
           "expect": [
             { "type": "must_contain_any", "phrases": ["599", "1299"] },
-            { "type": "must_not_match", "pattern": "最低价|保证|百分百" },
+            { "type": "must_not_match", "pattern": "最低价|百分百|保证拍得好看" },
             { "type": "lead_intent", "intent": "pricing" },
-            { "type": "max_latency_ms", "value": 2000 }
+            { "type": "max_latency_ms", "value": 25000 }
           ]
         }
       ]
@@ -159,15 +186,23 @@ CI 会执行：
 }
 ```
 
+You can also keep merchant profiles in separate files and reference them with `merchantRef`, as shown in [examples/voice-testops/photo-studio-multiturn-suite.json](examples/voice-testops/photo-studio-multiturn-suite.json).
+
 ## Assertions
 
-- `must_contain_any`: 回复必须包含至少一个短语。
-- `must_not_match`: 回复不能命中指定正则。
-- `max_latency_ms`: 当前 turn 响应时间不能超过阈值。
-- `lead_field_present`: 线索摘要必须包含指定字段。
-- `lead_intent`: 线索摘要意图必须匹配。
+| Assertion | Purpose |
+|---|---|
+| `must_contain_any` | Require at least one expected phrase in the spoken answer |
+| `must_not_match` | Block forbidden regex patterns such as absolute promises |
+| `max_latency_ms` | Fail turns that exceed a latency threshold |
+| `lead_field_present` | Require structured lead fields such as `phone` |
+| `lead_intent` | Require the summary intent to match the scenario |
 
-## Useful Commands
+## CI
+
+The repository includes a GitHub Actions workflow at [.github/workflows/voice-testops.yml](.github/workflows/voice-testops.yml). It runs unit tests, demo suites, production build, high-severity audit, and uploads generated reports as artifacts.
+
+Useful commands:
 
 ```bash
 npm test
@@ -175,8 +210,99 @@ npm run build
 npm audit --audit-level=high
 ```
 
+## Roadmap
+
+Voice Agent TestOps is intentionally small today. The next useful steps are based on real agent feedback:
+
+- More adapters for realtime voice stacks
+- A larger public library of risky business scenarios
+- CI gates that can fail a deployment when agent behavior regresses
+- Report diffs across model, prompt, and workflow changes
+- Recording/transcript import to turn real failures into regression suites
+
+If your team has ever watched a voice agent sound confident at exactly the wrong moment, star the repo and try it against one real endpoint.
+
 ## Docs
 
-- 市场论证：`docs/strategy/voice-agent-testops-market.md`
-- 产品设计：`docs/superpowers/specs/2026-05-03-voice-agent-testops-design.md`
-- 下一阶段计划：`docs/roadmap/2026-05-03-voice-agent-testops-next-steps.md`
+- [Market thesis](docs/strategy/voice-agent-testops-market.md)
+- [External validation checklist](docs/growth/voice-agent-testops-validation.md)
+- [OpenClaw local runbook](docs/ops/openclaw-docker.md)
+- [Next-step roadmap](docs/roadmap/2026-05-03-voice-agent-testops-next-steps.md)
+
+---
+
+## 中文
+
+**Voice Agent TestOps 是给语音 Agent 上线前用的回归测试工具。**
+
+它会按照场景脚本自动和你的 Agent 对话，然后检查那些最容易在真实客户面前出事故的地方：乱报价、乱承诺、漏收手机号、转人工意图识别错误、响应太慢。
+
+它不是语音 Agent 框架，也不替代 OpenClaw、Vapi、Retell、LiveKit、Pipecat 或 Twilio。它更像一条上线前的安全绳：你的 Agent 可以自由变强，但每次变更都要先跑过高风险场景。
+
+## 为什么值得做
+
+语音 Agent 的问题往往不是“不会回答”，而是“回答得太自信”。
+
+客户问价格，它编了一个不存在的最低价。客户问档期，它直接说可以来。客户给了电话，它话术里说会记录，结构化摘要却没有 `phone`。这些问题如果等到真实商家或真实客户发现，成本就已经发生了。
+
+Voice Agent TestOps 的目标很朴素：
+
+- 把高风险客户问题写成测试场景。
+- 每次改 prompt、模型、workflow 或工具调用后自动跑一遍。
+- 输出开发者能看懂的 JSON，也输出老板和客户能看懂的 HTML/PDF 报告。
+
+## 30 秒试跑
+
+本地 demo 不需要任何 API key：
+
+```bash
+npm install
+npm run voice-test -- --suite examples/voice-testops/xhs-receptionist-suite.json
+```
+
+生成面向商家演示的报告：
+
+```bash
+npm run voice-test -- --suite examples/voice-testops/photo-studio-multiturn-suite.json
+npm run report:export
+```
+
+你会得到：
+
+- `.voice-testops/report.json`：给 CI 和自动化流程用
+- `.voice-testops/report.html`：给开发调试和现场讲解用
+- `.voice-testops/report.pdf`：给客户、老板、试点复盘用
+- `.voice-testops/report.png`：给微信群、飞书、社群快速预览
+
+## 接入真实 Agent
+
+通用 HTTP 接入：
+
+```bash
+npm run voice-test -- \
+  --suite examples/voice-testops/openclaw-suite.json \
+  --agent http \
+  --endpoint "https://your-agent.example.com/test-turn"
+```
+
+OpenClaw-compatible 接入：
+
+```bash
+npm run voice-test -- \
+  --suite examples/voice-testops/openclaw-suite.json \
+  --agent openclaw \
+  --endpoint "$OPENCLAW_AGENT_URL" \
+  --api-key "$OPENCLAW_API_KEY" \
+  --openclaw-mode responses
+```
+
+本地 OpenClaw Gateway 的启动方式见 [docs/ops/openclaw-docker.md](docs/ops/openclaw-docker.md)。
+
+## 它适合谁
+
+- 正在做 voice agent 的开发者
+- 给商家交付 AI 客服、电话机器人、实时语音助手的团队
+- 想把 prompt / workflow 变更纳入 CI 的工程团队
+- 想向客户解释“为什么这个 Agent 可以上线”的集成商
+
+如果你正在做真实语音 Agent，欢迎拿一个测试 endpoint 跑一下。最有价值的反馈不是“看起来不错”，而是“我的 Agent 在这个场景里失败了，原因是这里”。这正是这个项目想捕捉的东西。
