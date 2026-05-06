@@ -8,6 +8,7 @@ import { createHttpAgent } from "./adapters/httpAgent";
 import { createLocalReceptionistAgent } from "./adapters/localReceptionist";
 import { createOpenClawAgent } from "./adapters/openClawAgent";
 import { parseCliArgs } from "./cliArgs";
+import { diffVoiceTestReports, renderMarkdownDiff } from "./diffReport";
 import { buildDoctorProbeFromSuite, diagnoseHttpAgentEndpoint, type DoctorCheck } from "./doctor";
 import { exampleCatalog, parseExampleLanguage, type ExampleCatalogEntry, type ExampleLanguage } from "./exampleCatalog";
 import { initializeVoiceTestOpsProject } from "./initProject";
@@ -302,6 +303,11 @@ async function runSuite(argv: string[]): Promise<number> {
   if (args.junitPath) {
     await writeReport(args.junitPath, renderJunitReport(result));
   }
+  if (args.baselinePath && args.diffMarkdownPath) {
+    const baseline = await readBaselineReport(args.baselinePath);
+    const diff = diffVoiceTestReports(baseline, result);
+    await writeReport(args.diffMarkdownPath, renderMarkdownDiff(diff));
+  }
 
   const status = result.passed ? "passed" : "failed";
   console.log(
@@ -314,6 +320,10 @@ async function runSuite(argv: string[]): Promise<number> {
   }
   if (args.junitPath) {
     console.log(`JUnit report: ${args.junitPath}`);
+  }
+  if (args.baselinePath && args.diffMarkdownPath) {
+    console.log(`Baseline report: ${args.baselinePath}`);
+    console.log(`Diff summary: ${args.diffMarkdownPath}`);
   }
 
   if (args.failOnSeverity) {
@@ -344,6 +354,17 @@ function createAgentFromArgs(args: ReturnType<typeof parseCliArgs>) {
 async function writeReport(filePath: string, content: string): Promise<void> {
   await mkdir(path.dirname(filePath), { recursive: true });
   await writeFile(filePath, content, "utf8");
+}
+
+async function readBaselineReport(filePath: string): Promise<VoiceTestRunResult> {
+  const content = await readFile(filePath, "utf8");
+  const parsed = JSON.parse(content) as Partial<VoiceTestRunResult>;
+
+  if (!parsed.suiteName || !parsed.summary || !Array.isArray(parsed.scenarios)) {
+    throw new Error(`Baseline report is not a Voice Agent TestOps JSON report: ${filePath}`);
+  }
+
+  return parsed as VoiceTestRunResult;
 }
 
 async function generateSuiteFromTranscript(argv: string[]): Promise<number> {

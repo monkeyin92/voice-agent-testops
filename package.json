@@ -1,6 +1,6 @@
 {
   "name": "voice-agent-testops",
-  "version": "0.1.9",
+  "version": "0.1.10",
   "description": "Regression testing for voice agents: scripted conversations, safety assertions, CI-ready reports.",
   "license": "MIT",
   "homepage": "https://github.com/monkeyin92/voice-agent-testops#readme",

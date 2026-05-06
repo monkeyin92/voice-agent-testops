@@ -13,6 +13,8 @@ export type VoiceTestCliArgs = {
   htmlPath: string;
   summaryPath?: string;
   junitPath?: string;
+  baselinePath?: string;
+  diffMarkdownPath?: string;
 };
 
 export function parseCliArgs(argv: string[]): VoiceTestCliArgs {
@@ -64,6 +66,9 @@ export function parseCliArgs(argv: string[]): VoiceTestCliArgs {
   ) {
     throw new Error("--fail-on-severity must be critical, major, or minor");
   }
+  if (values.has("diff-markdown") && !values.has("baseline")) {
+    throw new Error("--diff-markdown requires --baseline");
+  }
 
   return {
     suitePath,
@@ -77,5 +82,7 @@ export function parseCliArgs(argv: string[]): VoiceTestCliArgs {
     htmlPath: values.get("html") ?? ".voice-testops/report.html",
     summaryPath: values.get("summary"),
     junitPath: values.get("junit"),
+    baselinePath: values.get("baseline"),
+    diffMarkdownPath: values.get("diff-markdown") ?? (values.has("baseline") ? ".voice-testops/diff.md" : undefined),
   };
 }

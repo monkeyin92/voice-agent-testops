@@ -147,6 +147,8 @@ describe("integration documentation", () => {
     expect(readme).toContain("actions/upload-artifact");
     expect(readme).toContain("--summary .voice-testops/summary.md");
     expect(readme).toContain("--junit .voice-testops/junit.xml");
+    expect(readme).toContain("--baseline .voice-testops-baseline/report.json");
+    expect(readme).toContain("--diff-markdown .voice-testops/diff.md");
     expect(readme).toContain("GITHUB_STEP_SUMMARY");
     expect(chineseReadme).toContain("--endpoint-env VOICE_AGENT_ENDPOINT");
     expect(chineseReadme).toContain("GitHub Secret");
@@ -155,6 +157,8 @@ describe("integration documentation", () => {
     expect(chineseReadme).toContain("actions/upload-artifact");
     expect(chineseReadme).toContain("--summary .voice-testops/summary.md");
     expect(chineseReadme).toContain("--junit .voice-testops/junit.xml");
+    expect(chineseReadme).toContain("--baseline .voice-testops-baseline/report.json");
+    expect(chineseReadme).toContain("--diff-markdown .voice-testops/diff.md");
     expect(chineseReadme).toContain("GITHUB_STEP_SUMMARY");
   });
 

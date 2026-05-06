@@ -15,6 +15,8 @@ describe("parseCliArgs", () => {
       htmlPath: ".voice-testops/report.html",
       summaryPath: undefined,
       junitPath: undefined,
+      baselinePath: undefined,
+      diffMarkdownPath: undefined,
     });
   });
 
@@ -92,6 +94,27 @@ describe("parseCliArgs", () => {
     ).toMatchObject({
       summaryPath: ".voice-testops/summary.md",
       junitPath: ".voice-testops/junit.xml",
+    });
+  });
+
+  it("supports baseline diff report paths", () => {
+    expect(parseCliArgs(["--suite", "suite.json", "--baseline", ".voice-testops-baseline/report.json"])).toMatchObject({
+      baselinePath: ".voice-testops-baseline/report.json",
+      diffMarkdownPath: ".voice-testops/diff.md",
+    });
+
+    expect(
+      parseCliArgs([
+        "--suite",
+        "suite.json",
+        "--baseline",
+        "old-report.json",
+        "--diff-markdown",
+        "diffs/voice-testops.md",
+      ]),
+    ).toMatchObject({
+      baselinePath: "old-report.json",
+      diffMarkdownPath: "diffs/voice-testops.md",
     });
   });
 

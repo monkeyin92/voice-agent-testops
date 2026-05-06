@@ -84,6 +84,75 @@ describe("voice-test CLI", () => {
     expect(junit).toContain("NEVER_MATCHING_PHRASE");
   });
 
+  it("writes a Markdown diff against a baseline JSON report", async () => {
+    const tempDir = await mkdtemp(path.join(tmpdir(), "voice-testops-cli-"));
+    const suitePath = await writeMinorFailureSuite(tempDir);
+    const baselinePath = path.join(tempDir, "baseline.json");
+    const diffPath = path.join(tempDir, "diff.md");
+    await writeFile(
+      baselinePath,
+      JSON.stringify(
+        {
+          id: "baseline",
+          suiteName: "Previous run",
+          passed: false,
+          startedAt: "2026-05-05T00:00:00.000Z",
+          finishedAt: "2026-05-05T00:00:01.000Z",
+          summary: { scenarios: 1, turns: 1, assertions: 1, failures: 1 },
+          scenarios: [
+            {
+              id: "old_blocked_promise",
+              title: "Old blocked promise",
+              passed: false,
+              turns: [
+                {
+                  index: 0,
+                  user: "Can you guarantee it?",
+                  assistant: "Guaranteed.",
+                  latencyMs: 42,
+                  passed: false,
+                  assertions: 1,
+                  failures: [
+                    {
+                      code: "forbidden_pattern_matched",
+                      message: "old absolute promise",
+                      severity: "critical",
+                    },
+                  ],
+                },
+              ],
+            },
+          ],
+        },
+        null,
+        2,
+      ),
+      "utf8",
+    );
+
+    const result = await runCli([
+      "--suite",
+      suitePath,
+      "--baseline",
+      baselinePath,
+      "--diff-markdown",
+      diffPath,
+      "--fail-on-severity",
+      "major",
+    ]);
+
+    const markdown = await readFile(diffPath, "utf8");
+
+    expect(result.code).toBe(0);
+    expect(result.stdout).toContain(`Diff summary: ${diffPath}`);
+    expect(markdown).toContain("Previous run");
+    expect(markdown).toContain("Minor severity gate demo");
+    expect(markdown).toContain("New failures: 1");
+    expect(markdown).toContain("Resolved failures: 1");
+    expect(markdown).toContain("Minor wording regression / turn 1");
+    expect(markdown).toContain("Old blocked promise / turn 1");
+  });
+
   it("generates a regression suite from a transcript file", async () => {
     const tempDir = await mkdtemp(path.join(tmpdir(), "voice-testops-cli-"));
     const transcriptPath = path.join(tempDir, "failed-call.txt");
@@ -437,13 +506,19 @@ describe("voice-test CLI", () => {
     expect(workflow).toContain(
       "npx voice-agent-testops run --agent http --endpoint \"$VOICE_AGENT_ENDPOINT\" --suite voice-testops/suite.json --summary .voice-testops/summary.md --junit .voice-testops/junit.xml --fail-on-severity critical",
     );
+    expect(workflow).toContain("actions/cache/restore@v4");
+    expect(workflow).toContain(".voice-testops-baseline/report.json");
+    expect(workflow).toContain("BASELINE_ARGS=\"--baseline .voice-testops-baseline/report.json --diff-markdown .voice-testops/diff.md\"");
     expect(workflow).toContain("cat .voice-testops/summary.md >> \"$GITHUB_STEP_SUMMARY\"");
+    expect(workflow).toContain("cat .voice-testops/diff.md >> \"$GITHUB_STEP_SUMMARY\"");
+    expect(workflow).toContain("actions/cache/save@v4");
     expect(workflow).toContain("actions/upload-artifact@v7");
     expect(workflow).toContain("include-hidden-files: true");
     expect(workflow).toContain(".voice-testops/report.json");
     expect(workflow).toContain(".voice-testops/report.html");
     expect(workflow).toContain(".voice-testops/summary.md");
     expect(workflow).toContain(".voice-testops/junit.xml");
+    expect(workflow).toContain(".voice-testops/diff.md");
   });
 
   it("generates a default starter suite that runs immediately", async () => {

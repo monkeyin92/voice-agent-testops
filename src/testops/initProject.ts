@@ -516,8 +516,22 @@ jobs:
         run: npx voice-agent-testops validate --suite ${options.suitePath}
 ${doctorStep}
 
+      - name: Restore Voice TestOps baseline
+        if: github.event_name == 'push'
+        uses: actions/cache/restore@v4
+        with:
+          path: .voice-testops-baseline
+          key: voice-testops-baseline-\${{ github.ref_name }}-\${{ github.run_id }}
+          restore-keys: |
+            voice-testops-baseline-\${{ github.ref_name }}-
+
       - name: Run voice agent regression suite
-        run: ${buildWorkflowRunCommand(options)}
+        run: |
+          BASELINE_ARGS=""
+          if [ -f .voice-testops-baseline/report.json ]; then
+            BASELINE_ARGS="--baseline .voice-testops-baseline/report.json --diff-markdown .voice-testops/diff.md"
+          fi
+          ${buildWorkflowRunCommand(options)} $BASELINE_ARGS
 
       - name: Add Voice TestOps summary
         if: always()
@@ -525,6 +539,25 @@ ${doctorStep}
           if [ -f .voice-testops/summary.md ]; then
             cat .voice-testops/summary.md >> "$GITHUB_STEP_SUMMARY"
           fi
+          if [ -f .voice-testops/diff.md ]; then
+            echo "" >> "$GITHUB_STEP_SUMMARY"
+            cat .voice-testops/diff.md >> "$GITHUB_STEP_SUMMARY"
+          fi
+
+      - name: Update Voice TestOps baseline cache
+        if: always() && github.event_name == 'push'
+        run: |
+          mkdir -p .voice-testops-baseline
+          if [ -f .voice-testops/report.json ]; then
+            cp .voice-testops/report.json .voice-testops-baseline/report.json
+          fi
+
+      - name: Save Voice TestOps baseline
+        if: always() && github.event_name == 'push'
+        uses: actions/cache/save@v4
+        with:
+          path: .voice-testops-baseline
+          key: voice-testops-baseline-\${{ github.ref_name }}-\${{ github.run_id }}
 
       - name: Upload Voice TestOps reports
         if: always()
@@ -536,6 +569,7 @@ ${doctorStep}
             .voice-testops/report.html
             .voice-testops/summary.md
             .voice-testops/junit.xml
+            .voice-testops/diff.md
           if-no-files-found: ignore
           include-hidden-files: true
 `;

@@ -76,6 +76,7 @@ npm run report:export
 - `.voice-testops/report.html`：给开发调试和现场讲解用
 - `.voice-testops/summary.md`：给 GitHub Actions Summary 直接展示失败摘要
 - `.voice-testops/junit.xml`：给 CI 测试看板、JUnit 解析器和质量平台用
+- `.voice-testops/diff.md`：把本次结果和 baseline 对比，显示新增、已修复、仍存在的风险
 - `.voice-testops/report.pdf`：给客户、老板、试点复盘用
 - `.voice-testops/report.png`：给微信群、飞书、社群快速预览
 
@@ -269,7 +270,17 @@ npx voice-agent-testops run \
   --fail-on-severity critical
 ```
 
-workflow 会把 `.voice-testops/summary.md` 追加到 `GITHUB_STEP_SUMMARY`，失败原因会直接显示在 Actions 页面里；同时通过 `actions/upload-artifact` 上传 `.voice-testops/report.json`、`.voice-testops/report.html`、`.voice-testops/summary.md` 和 `.voice-testops/junit.xml`。
+如果已经有上一轮报告，可以直接做 baseline 对比：
+
+```bash
+npx voice-agent-testops run \
+  --suite voice-testops/suite.json \
+  --baseline .voice-testops-baseline/report.json \
+  --diff-markdown .voice-testops/diff.md \
+  --fail-on-severity critical
+```
+
+生成的 workflow 会把最新 push 的 `.voice-testops/report.json` 缓存在 `.voice-testops-baseline/report.json`。下一次 push 时，它会生成 `.voice-testops/diff.md`，列出新增、已修复和仍存在的风险，并把 `.voice-testops/summary.md` 和 `.voice-testops/diff.md` 一起追加到 `GITHUB_STEP_SUMMARY`；同时通过 `actions/upload-artifact` 上传 `.voice-testops/report.json`、`.voice-testops/report.html`、`.voice-testops/summary.md`、`.voice-testops/junit.xml` 和 `.voice-testops/diff.md`。
 
 CI 里可以用 `--fail-on-severity critical` 只阻断高危失败。这样轻微文案漂移会留在报告里，但不会和乱报价、漏手机号、错误转人工这类上线事故混在一起。
 

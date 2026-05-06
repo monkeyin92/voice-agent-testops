@@ -86,6 +86,7 @@ Artifacts:
 - `.voice-testops/report.html` for debugging and walkthroughs
 - `.voice-testops/summary.md` for GitHub Actions step summaries
 - `.voice-testops/junit.xml` for CI test dashboards
+- `.voice-testops/diff.md` for comparing this run with a baseline report
 - `.voice-testops/report.pdf` for customers or internal review
 - `.voice-testops/report.png` for quick sharing
 
@@ -366,7 +367,17 @@ npx voice-agent-testops run \
   --fail-on-severity critical
 ```
 
-The workflow appends `.voice-testops/summary.md` to `GITHUB_STEP_SUMMARY`, so failures show up directly on the Actions run page. It also uploads `.voice-testops/report.json`, `.voice-testops/report.html`, `.voice-testops/summary.md`, and `.voice-testops/junit.xml` through `actions/upload-artifact`.
+When a previous report is available, compare the current run against it:
+
+```bash
+npx voice-agent-testops run \
+  --suite voice-testops/suite.json \
+  --baseline .voice-testops-baseline/report.json \
+  --diff-markdown .voice-testops/diff.md \
+  --fail-on-severity critical
+```
+
+The generated workflow caches the latest push report as `.voice-testops-baseline/report.json`. On the next push it writes `.voice-testops/diff.md` with new, resolved, and unchanged failures, then appends both `.voice-testops/summary.md` and `.voice-testops/diff.md` to `GITHUB_STEP_SUMMARY`. It also uploads `.voice-testops/report.json`, `.voice-testops/report.html`, `.voice-testops/summary.md`, `.voice-testops/junit.xml`, and `.voice-testops/diff.md` through `actions/upload-artifact`.
 
 Use `--fail-on-severity` when you want CI to block only the failures that matter for release. This keeps minor copy drift visible in the report without treating it like a production-stopping safety issue.
 
