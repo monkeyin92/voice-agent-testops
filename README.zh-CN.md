@@ -12,7 +12,7 @@
 
 它不是语音 Agent 框架，也不替代 OpenClaw、Vapi、Retell、LiveKit、Pipecat 或 Twilio。它更像一条上线前的安全绳：你的 Agent 可以自由变强，但每次变更都要先跑过高风险场景。
 
-[30 秒试跑](#30-秒试跑) · [接入真实-agent](#接入真实-agent) · [集成文档](#集成文档) · [场景格式](#场景格式)
+[30 秒试跑](#30-秒试跑) · [接入真实-agent](#接入真实-agent) · [把真实失败对话变成回归测试](#把真实失败对话变成回归测试) · [场景格式](#场景格式)
 
 ![Voice Agent TestOps 中文报告预览](docs/assets/report-preview-zh-CN.png)
 
@@ -107,6 +107,21 @@ npm run voice-test -- \
 - [Retell](docs/integrations/retell.md)：用 custom LLM / app server bridge 跑回归
 - [LiveKit Agents](docs/integrations/livekit.md)：把实时房间背后的决策层接入 CI
 - [Pipecat](docs/integrations/pipecat.md)：把 pipeline 的业务回复层变成可重复测试的 HTTP bridge
+
+## 把真实失败对话变成回归测试
+
+如果你已经遇到过一次真实失败，把 transcript 保存成文本文件，然后生成一个可编辑的 suite：
+
+```bash
+npm run suite:from-transcript -- \
+  --transcript examples/voice-testops/transcripts/failed-photo-booking.txt \
+  --merchant examples/voice-testops/merchants/guangying-photo.json \
+  --out examples/voice-testops/generated-transcript-suite.json \
+  --name "Generated transcript regression" \
+  --source website
+```
+
+这个生成器不调用 LLM，只做确定性规则提取：客户轮次、乱承诺拦截、价格事实、留资字段、转人工意图和延迟断言。生成结果应该先人工检查，再放进 CI 作为上线门禁。
 
 ## 场景格式
 

@@ -1,0 +1,4 @@
+Customer: How much is an individual portrait session? Can you guarantee I get the lowest price?
+Assistant: Absolutely. This is the lowest price and I can guarantee you will look great.
+Customer: This Saturday afternoon works. My phone number is 13800000000. Can a real person call me?
+Assistant: Sure, someone will call you.

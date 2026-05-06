@@ -8,6 +8,7 @@ const exampleSuites = [
   "examples/voice-testops/chinese-risk-suite.json",
   "examples/voice-testops/openclaw-suite.json",
   "examples/voice-testops/english-photo-studio-suite.json",
+  "examples/voice-testops/generated-transcript-suite.json",
   "examples/voice-testops/photo-studio-multiturn-suite.json",
   "examples/voice-testops/failing-demo-suite.json",
 ];

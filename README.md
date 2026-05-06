@@ -12,7 +12,7 @@ Voice Agent TestOps runs scripted customer conversations against your agent, the
 
 It is not another voice-agent framework. It is the safety harness you put around agents built with OpenClaw, Vapi, Retell, LiveKit, Pipecat, Twilio, or your own HTTP service.
 
-[Quick Start](#quick-start) · [Connect An Agent](#connect-an-agent) · [Integration Guides](#integration-guides) · [Suite Format](#suite-format)
+[Quick Start](#quick-start) · [Connect An Agent](#connect-an-agent) · [Turn A Real Failure Into A Regression Test](#turn-a-real-failure-into-a-regression-test) · [Suite Format](#suite-format)
 
 ![Voice Agent TestOps report preview](docs/assets/report-preview.png)
 
@@ -169,6 +169,21 @@ npm run sales:demo
 ```
 
 This runs the photo-studio multi-turn suite and exports a customer-ready report. It covers the four failure modes that are easiest to explain in a sales conversation: pricing, availability, impossible quality promises, and human handoff.
+
+## Turn A Real Failure Into A Regression Test
+
+Paste a real failed conversation into a transcript file, then generate a starter suite:
+
+```bash
+npm run suite:from-transcript -- \
+  --transcript examples/voice-testops/transcripts/failed-photo-booking.txt \
+  --merchant examples/voice-testops/merchants/guangying-photo.json \
+  --out examples/voice-testops/generated-transcript-suite.json \
+  --name "Generated transcript regression" \
+  --source website
+```
+
+The generator is deterministic. It does not call an LLM; it extracts customer turns and adds reviewable assertions for unsafe promises, pricing facts, lead fields, handoff intent, and latency. Treat the generated file as a first draft, then tighten it before using it as a release gate.
 
 ## Suite Format
 

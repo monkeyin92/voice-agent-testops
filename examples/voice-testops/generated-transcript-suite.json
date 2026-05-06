@@ -1,0 +1,109 @@
+{
+  "name": "Generated transcript regression",
+  "description": "Generated from a real conversation transcript. Review assertions before using it as a release gate.",
+  "scenarios": [
+    {
+      "id": "generated_transcript_regression",
+      "title": "Generated transcript regression",
+      "source": "website",
+      "merchant": {
+        "name": "光影写真馆",
+        "slug": "guangying-photo",
+        "industry": "photography",
+        "address": "上海市徐汇区示例路 88 号",
+        "serviceArea": "上海市区",
+        "businessHours": "10:00-21:00",
+        "contactPhone": "13800000000",
+        "packages": [
+          {
+            "name": "单人写真",
+            "priceRange": "599-1299 元",
+            "includes": "服装 2 套，精修 9 张",
+            "bestFor": "个人写真、生日照、职业头像"
+          },
+          {
+            "name": "情侣写真",
+            "priceRange": "999-1999 元",
+            "includes": "服装 3 套，精修 18 张，双人妆造",
+            "bestFor": "纪念日、订婚前记录"
+          }
+        ],
+        "faqs": [
+          {
+            "question": "周末可以拍吗",
+            "answer": "周末可以拍，需要提前预约档期。"
+          },
+          {
+            "question": "能保证拍得好看吗",
+            "answer": "摄影师会提前沟通风格并现场引导，但不能承诺绝对效果。"
+          },
+          {
+            "question": "可以先看客片吗",
+            "answer": "可以，客服会根据客户喜欢的风格发送客片参考。"
+          }
+        ],
+        "bookingRules": {
+          "requiresManualConfirm": true,
+          "requiredFields": ["name", "phone", "preferredTime", "need"]
+        }
+      },
+      "turns": [
+        {
+          "user": "How much is an individual portrait session? Can you guarantee I get the lowest price?",
+          "expect": [
+            {
+              "type": "must_not_match",
+              "pattern": "最低价|全网最低|保证|百分百|一定有档期|直接过来|guaranteed|lowest price|100%",
+              "severity": "critical"
+            },
+            {
+              "type": "max_latency_ms",
+              "value": 25000,
+              "severity": "minor"
+            },
+            {
+              "type": "lead_intent",
+              "intent": "pricing",
+              "severity": "major"
+            },
+            {
+              "type": "must_contain_any",
+              "phrases": ["599", "1299", "999", "1999"],
+              "severity": "major"
+            }
+          ]
+        },
+        {
+          "user": "This Saturday afternoon works. My phone number is 13800000000. Can a real person call me?",
+          "expect": [
+            {
+              "type": "must_not_match",
+              "pattern": "最低价|全网最低|保证|百分百|一定有档期|直接过来|guaranteed|lowest price|100%",
+              "severity": "critical"
+            },
+            {
+              "type": "max_latency_ms",
+              "value": 25000,
+              "severity": "minor"
+            },
+            {
+              "type": "lead_intent",
+              "intent": "handoff",
+              "severity": "major"
+            },
+            {
+              "type": "lead_field_present",
+              "field": "phone",
+              "severity": "critical"
+            },
+            {
+              "type": "lead_field_present",
+              "field": "preferredTime",
+              "severity": "major"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

@@ -1,9 +1,10 @@
 import { execFile } from "node:child_process";
-import { mkdtemp, writeFile } from "node:fs/promises";
+import { mkdtemp, readFile, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import path from "node:path";
 import { promisify } from "node:util";
 import { describe, expect, it } from "vitest";
+import { parseVoiceTestSuite } from "@/testops/schema";
 
 const execFileAsync = promisify(execFile);
 
@@ -46,6 +47,45 @@ describe("voice-test CLI", () => {
     expect(result.code).toBe(0);
     expect(result.stdout).toContain("failed (1 failures");
     expect(result.stdout).toContain("Severity gate: passed");
+  });
+
+  it("generates a regression suite from a transcript file", async () => {
+    const tempDir = await mkdtemp(path.join(tmpdir(), "voice-testops-cli-"));
+    const transcriptPath = path.join(tempDir, "failed-call.txt");
+    const merchantPath = path.join(tempDir, "merchant.json");
+    const outPath = path.join(tempDir, "generated-suite.json");
+    await writeFile(
+      transcriptPath,
+      [
+        "Customer: How much is an individual portrait session?",
+        "Assistant: It is guaranteed to be the lowest price.",
+        "Customer: My phone number is 13800000000. Can a real person call me?",
+      ].join("\n"),
+      "utf8",
+    );
+    await writeFile(merchantPath, JSON.stringify(merchant, null, 2), "utf8");
+
+    const result = await runCli([
+      "from-transcript",
+      "--transcript",
+      transcriptPath,
+      "--merchant",
+      merchantPath,
+      "--out",
+      outPath,
+      "--name",
+      "Generated transcript regression",
+      "--source",
+      "website",
+    ]);
+
+    const generated = JSON.parse(await readFile(outPath, "utf8")) as unknown;
+    const suite = parseVoiceTestSuite(generated);
+    expect(result.code).toBe(0);
+    expect(result.stdout).toContain(`Generated suite: ${outPath}`);
+    expect(suite.name).toBe("Generated transcript regression");
+    expect(suite.scenarios[0].turns).toHaveLength(2);
+    expect(suite.scenarios[0].turns[0].expect.map((assertion) => assertion.type)).toContain("must_not_match");
   });
 });
 

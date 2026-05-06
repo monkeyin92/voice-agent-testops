@@ -52,6 +52,19 @@ describe("integration documentation", () => {
     expect(readme).toContain("--fail-on-severity critical");
   });
 
+  it("documents the transcript-to-regression workflow", () => {
+    const packageJson = JSON.parse(readFileSync("package.json", "utf8")) as { scripts: Record<string, string> };
+    const readme = readFileSync("README.md", "utf8");
+    const chineseReadme = readFileSync("README.zh-CN.md", "utf8");
+
+    expect(packageJson.scripts["suite:from-transcript"]).toContain("from-transcript");
+    expect(existsSync("examples/voice-testops/transcripts/failed-photo-booking.txt")).toBe(true);
+    expect(readme).toContain("Turn A Real Failure Into A Regression Test");
+    expect(readme).toContain("npm run suite:from-transcript");
+    expect(chineseReadme).toContain("把真实失败对话变成回归测试");
+    expect(chineseReadme).toContain("npm run suite:from-transcript");
+  });
+
   it("documents the setup contract and copy-paste commands for every supported stack", () => {
     for (const doc of integrationDocs) {
       expect(existsSync(doc.path), `${doc.path} should exist`).toBe(true);
