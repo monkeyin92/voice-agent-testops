@@ -153,6 +153,49 @@ describe("voice-test CLI", () => {
     expect(markdown).toContain("Old blocked promise / turn 1");
   });
 
+  it("compares two existing JSON reports without running a suite", async () => {
+    const tempDir = await mkdtemp(path.join(tmpdir(), "voice-testops-cli-"));
+    const baselinePath = path.join(tempDir, "baseline.json");
+    const currentPath = path.join(tempDir, "current.json");
+    const diffPath = path.join(tempDir, "history-diff.md");
+    await writeJsonReport(
+      baselinePath,
+      "Previous run",
+      "old_blocked_promise",
+      "Old blocked promise",
+      "forbidden_pattern_matched",
+      "old absolute promise",
+    );
+    await writeJsonReport(
+      currentPath,
+      "Current run",
+      "new_missing_phone",
+      "New missing phone",
+      "lead_field_missing",
+      "new missing phone",
+    );
+
+    const result = await runCli([
+      "compare",
+      "--baseline",
+      baselinePath,
+      "--current",
+      currentPath,
+      "--diff-markdown",
+      diffPath,
+    ]);
+
+    const markdown = await readFile(diffPath, "utf8");
+
+    expect(result.code).toBe(0);
+    expect(result.stdout).toContain("Voice Agent TestOps diff: 1 new, 1 resolved, 0 unchanged");
+    expect(result.stdout).toContain(`Diff summary: ${diffPath}`);
+    expect(markdown).toContain("Previous run");
+    expect(markdown).toContain("Current run");
+    expect(markdown).toContain("New missing phone / turn 1");
+    expect(markdown).toContain("Old blocked promise / turn 1");
+  });
+
   it("generates a regression suite from a transcript file", async () => {
     const tempDir = await mkdtemp(path.join(tmpdir(), "voice-testops-cli-"));
     const transcriptPath = path.join(tempDir, "failed-call.txt");
@@ -609,6 +652,50 @@ async function writeMinorFailureSuite(tempDir: string): Promise<string> {
   );
 
   return suitePath;
+}
+
+async function writeJsonReport(
+  filePath: string,
+  suiteName: string,
+  scenarioId: string,
+  scenarioTitle: string,
+  code: string,
+  message: string,
+): Promise<void> {
+  await writeFile(
+    filePath,
+    JSON.stringify(
+      {
+        id: `run_${scenarioId}`,
+        suiteName,
+        passed: false,
+        startedAt: "2026-05-05T00:00:00.000Z",
+        finishedAt: "2026-05-05T00:00:01.000Z",
+        summary: { scenarios: 1, turns: 1, assertions: 1, failures: 1 },
+        scenarios: [
+          {
+            id: scenarioId,
+            title: scenarioTitle,
+            passed: false,
+            turns: [
+              {
+                index: 0,
+                user: "customer",
+                assistant: "agent",
+                latencyMs: 42,
+                passed: false,
+                assertions: 1,
+                failures: [{ code, message, severity: "critical" }],
+              },
+            ],
+          },
+        ],
+      },
+      null,
+      2,
+    ),
+    "utf8",
+  );
 }
 
 async function startDoctorServer(

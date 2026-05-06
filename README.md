@@ -377,6 +377,15 @@ npx voice-agent-testops run \
   --fail-on-severity critical
 ```
 
+You can also compare two saved JSON reports without rerunning the suite:
+
+```bash
+npx voice-agent-testops compare \
+  --baseline .voice-testops-baseline/report.json \
+  --current .voice-testops/report.json \
+  --diff-markdown .voice-testops/diff.md
+```
+
 The generated workflow caches the latest push report as `.voice-testops-baseline/report.json`. On the next push it writes `.voice-testops/diff.md` with new, resolved, and unchanged failures, then appends both `.voice-testops/summary.md` and `.voice-testops/diff.md` to `GITHUB_STEP_SUMMARY`. It also uploads `.voice-testops/report.json`, `.voice-testops/report.html`, `.voice-testops/summary.md`, `.voice-testops/junit.xml`, and `.voice-testops/diff.md` through `actions/upload-artifact`.
 
 Use `--fail-on-severity` when you want CI to block only the failures that matter for release. This keeps minor copy drift visible in the report without treating it like a production-stopping safety issue.

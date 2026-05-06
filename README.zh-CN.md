@@ -280,6 +280,15 @@ npx voice-agent-testops run \
   --fail-on-severity critical
 ```
 
+也可以不重新跑 suite，直接对比两个已经保存的 JSON 报告：
+
+```bash
+npx voice-agent-testops compare \
+  --baseline .voice-testops-baseline/report.json \
+  --current .voice-testops/report.json \
+  --diff-markdown .voice-testops/diff.md
+```
+
 生成的 workflow 会把最新 push 的 `.voice-testops/report.json` 缓存在 `.voice-testops-baseline/report.json`。下一次 push 时，它会生成 `.voice-testops/diff.md`，列出新增、已修复和仍存在的风险，并把 `.voice-testops/summary.md` 和 `.voice-testops/diff.md` 一起追加到 `GITHUB_STEP_SUMMARY`；同时通过 `actions/upload-artifact` 上传 `.voice-testops/report.json`、`.voice-testops/report.html`、`.voice-testops/summary.md`、`.voice-testops/junit.xml` 和 `.voice-testops/diff.md`。
 
 CI 里可以用 `--fail-on-severity critical` 只阻断高危失败。这样轻微文案漂移会留在报告里，但不会和乱报价、漏手机号、错误转人工这类上线事故混在一起。

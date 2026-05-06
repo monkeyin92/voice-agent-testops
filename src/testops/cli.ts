@@ -47,6 +47,10 @@ async function main(argv: string[]): Promise<number> {
     return doctor(argv.slice(1));
   }
 
+  if (argv[0] === "compare") {
+    return compareReports(argv.slice(1));
+  }
+
   if (argv[0] === "schema") {
     return exportSchema(argv.slice(1));
   }
@@ -304,7 +308,7 @@ async function runSuite(argv: string[]): Promise<number> {
     await writeReport(args.junitPath, renderJunitReport(result));
   }
   if (args.baselinePath && args.diffMarkdownPath) {
-    const baseline = await readBaselineReport(args.baselinePath);
+    const baseline = await readVoiceTestReport(args.baselinePath, "Baseline");
     const diff = diffVoiceTestReports(baseline, result);
     await writeReport(args.diffMarkdownPath, renderMarkdownDiff(diff));
   }
@@ -339,6 +343,56 @@ async function runSuite(argv: string[]): Promise<number> {
   return result.passed ? 0 : 1;
 }
 
+async function compareReports(argv: string[]): Promise<number> {
+  const args = parseCompareArgs(argv);
+  const baseline = await readVoiceTestReport(args.baselinePath, "Baseline");
+  const current = await readVoiceTestReport(args.currentPath, "Current");
+  const diff = diffVoiceTestReports(baseline, current);
+
+  console.log(
+    `Voice Agent TestOps diff: ${diff.summary.newFailures} new, ${diff.summary.resolvedFailures} resolved, ${diff.summary.unchangedFailures} unchanged`,
+  );
+
+  if (args.diffMarkdownPath) {
+    await writeReport(args.diffMarkdownPath, renderMarkdownDiff(diff));
+    console.log(`Diff summary: ${args.diffMarkdownPath}`);
+  }
+
+  return 0;
+}
+
+type CompareArgs = {
+  baselinePath: string;
+  currentPath: string;
+  diffMarkdownPath?: string;
+};
+
+function parseCompareArgs(argv: string[]): CompareArgs {
+  const values = parseKeyValueArgs(argv);
+
+  for (const option of values.keys()) {
+    if (option !== "baseline" && option !== "current" && option !== "diff-markdown") {
+      throw new Error(`Unknown compare option: --${option}`);
+    }
+  }
+
+  const baselinePath = values.get("baseline");
+  if (!baselinePath) {
+    throw new Error("--baseline is required");
+  }
+
+  const currentPath = values.get("current");
+  if (!currentPath) {
+    throw new Error("--current is required");
+  }
+
+  return {
+    baselinePath,
+    currentPath,
+    diffMarkdownPath: values.get("diff-markdown"),
+  };
+}
+
 function createAgentFromArgs(args: ReturnType<typeof parseCliArgs>) {
   if (args.agent === "http") {
     return createHttpAgent({ endpoint: args.endpoint ?? "" });
@@ -356,12 +410,12 @@ async function writeReport(filePath: string, content: string): Promise<void> {
   await writeFile(filePath, content, "utf8");
 }
 
-async function readBaselineReport(filePath: string): Promise<VoiceTestRunResult> {
+async function readVoiceTestReport(filePath: string, label: string): Promise<VoiceTestRunResult> {
   const content = await readFile(filePath, "utf8");
   const parsed = JSON.parse(content) as Partial<VoiceTestRunResult>;
 
   if (!parsed.suiteName || !parsed.summary || !Array.isArray(parsed.scenarios)) {
-    throw new Error(`Baseline report is not a Voice Agent TestOps JSON report: ${filePath}`);
+    throw new Error(`${label} report is not a Voice Agent TestOps JSON report: ${filePath}`);
   }
 
   return parsed as VoiceTestRunResult;
