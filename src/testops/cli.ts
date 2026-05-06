@@ -6,8 +6,15 @@ import { createLocalReceptionistAgent } from "./adapters/localReceptionist";
 import { createOpenClawAgent } from "./adapters/openClawAgent";
 import { parseCliArgs } from "./cliArgs";
 import { renderHtmlReport, renderJsonReport } from "./report";
-import { runVoiceTestSuite } from "./runner";
+import { runVoiceTestSuite, type VoiceTestRunResult } from "./runner";
+import type { VoiceTestSeverity } from "./schema";
 import { loadVoiceTestSuite } from "./suiteLoader";
+
+const severityRank: Record<VoiceTestSeverity, number> = {
+  minor: 1,
+  major: 2,
+  critical: 3,
+};
 
 async function main(argv: string[]): Promise<number> {
   const args = parseCliArgs(argv);
@@ -45,6 +52,16 @@ async function main(argv: string[]): Promise<number> {
   console.log(`JSON report: ${args.jsonPath}`);
   console.log(`HTML report: ${args.htmlPath}`);
 
+  if (args.failOnSeverity) {
+    const gatedFailures = countFailuresAtOrAboveSeverity(result, args.failOnSeverity);
+    console.log(
+      `Severity gate: ${gatedFailures === 0 ? "passed" : "failed"} (${gatedFailures} failures at or above ${
+        args.failOnSeverity
+      })`,
+    );
+    return gatedFailures === 0 ? 0 : 1;
+  }
+
   return result.passed ? 0 : 1;
 }
 
@@ -63,6 +80,21 @@ function createAgentFromArgs(args: ReturnType<typeof parseCliArgs>) {
 async function writeReport(filePath: string, content: string): Promise<void> {
   await mkdir(path.dirname(filePath), { recursive: true });
   await writeFile(filePath, content, "utf8");
+}
+
+function countFailuresAtOrAboveSeverity(result: VoiceTestRunResult, threshold: VoiceTestSeverity): number {
+  const thresholdRank = severityRank[threshold];
+
+  return result.scenarios.reduce(
+    (scenarioCount, scenario) =>
+      scenarioCount +
+      scenario.turns.reduce(
+        (turnCount, turn) =>
+          turnCount + turn.failures.filter((failure) => severityRank[failure.severity] >= thresholdRank).length,
+        0,
+      ),
+    0,
+  );
 }
 
 main(process.argv.slice(2))

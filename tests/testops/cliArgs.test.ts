@@ -10,6 +10,7 @@ describe("parseCliArgs", () => {
       apiKey: undefined,
       openClawMode: "custom",
       reportLocale: "zh-CN",
+      failOnSeverity: undefined,
       jsonPath: ".voice-testops/report.json",
       htmlPath: ".voice-testops/report.html",
     });
@@ -67,6 +68,18 @@ describe("parseCliArgs", () => {
   it("rejects unsupported report locales", () => {
     expect(() => parseCliArgs(["--suite", "suite.json", "--report-locale", "fr"])).toThrow(
       "--report-locale must be zh-CN or en",
+    );
+  });
+
+  it("supports severity-gated process exits", () => {
+    expect(parseCliArgs(["--suite", "suite.json", "--fail-on-severity", "major"])).toMatchObject({
+      failOnSeverity: "major",
+    });
+  });
+
+  it("rejects unsupported severity gates", () => {
+    expect(() => parseCliArgs(["--suite", "suite.json", "--fail-on-severity", "high"])).toThrow(
+      "--fail-on-severity must be critical, major, or minor",
     );
   });
 });

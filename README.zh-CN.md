@@ -139,6 +139,14 @@ Suite 就是 JSON。它描述商家资料、客户对话，以及每一轮必须
 
 ## 常用命令
 
+CI 里可以用 `--fail-on-severity critical` 只阻断高危失败。这样轻微文案漂移会留在报告里，但不会和乱报价、漏手机号、错误转人工这类上线事故混在一起。
+
+```bash
+npm run voice-test -- \
+  --suite examples/voice-testops/chinese-risk-suite.json \
+  --fail-on-severity critical
+```
+
 ```bash
 npm test
 npm run build

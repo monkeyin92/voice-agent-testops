@@ -19,7 +19,8 @@ npm run voice-test -- \
   --agent openclaw \
   --endpoint "$OPENCLAW_AGENT_URL" \
   --api-key "$OPENCLAW_API_KEY" \
-  --openclaw-mode responses
+  --openclaw-mode responses \
+  --fail-on-severity critical
 ```
 
 For a local Gateway with isolated ports, use the runbook:

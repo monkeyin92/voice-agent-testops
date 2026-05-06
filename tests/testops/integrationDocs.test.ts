@@ -49,6 +49,7 @@ describe("integration documentation", () => {
     expect(readme).toContain("集成文档");
     expect(readme).toContain("[HTTP](docs/integrations/http.md)");
     expect(readme).toContain("[OpenClaw](docs/integrations/openclaw.md)");
+    expect(readme).toContain("--fail-on-severity critical");
   });
 
   it("documents the setup contract and copy-paste commands for every supported stack", () => {

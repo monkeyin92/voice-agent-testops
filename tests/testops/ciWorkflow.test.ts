@@ -9,6 +9,7 @@ describe("voice-testops GitHub Actions workflow", () => {
     expect(workflow).toContain("npm test");
     expect(workflow).toContain("examples/voice-testops/xhs-receptionist-suite.json");
     expect(workflow).toContain("examples/voice-testops/chinese-risk-suite.json");
+    expect(workflow).toContain("--fail-on-severity critical");
     expect(workflow).toContain("npm run build");
     expect(workflow).toContain("npm audit --audit-level=high");
     expect(workflow).toContain("actions/upload-artifact");

@@ -1,4 +1,5 @@
 import type { ReportLocale } from "./report";
+import type { VoiceTestSeverity } from "./schema";
 
 export type VoiceTestCliArgs = {
   suitePath: string;
@@ -7,6 +8,7 @@ export type VoiceTestCliArgs = {
   apiKey?: string;
   openClawMode: "custom" | "responses";
   reportLocale: ReportLocale;
+  failOnSeverity?: VoiceTestSeverity;
   jsonPath: string;
   htmlPath: string;
 };
@@ -51,6 +53,15 @@ export function parseCliArgs(argv: string[]): VoiceTestCliArgs {
   if (reportLocale !== "zh-CN" && reportLocale !== "en") {
     throw new Error("--report-locale must be zh-CN or en");
   }
+  const failOnSeverity = values.get("fail-on-severity");
+  if (
+    failOnSeverity !== undefined &&
+    failOnSeverity !== "critical" &&
+    failOnSeverity !== "major" &&
+    failOnSeverity !== "minor"
+  ) {
+    throw new Error("--fail-on-severity must be critical, major, or minor");
+  }
 
   return {
     suitePath,
@@ -59,6 +70,7 @@ export function parseCliArgs(argv: string[]): VoiceTestCliArgs {
     apiKey: values.get("api-key") ?? process.env.OPENCLAW_API_KEY,
     openClawMode,
     reportLocale,
+    failOnSeverity,
     jsonPath: values.get("json") ?? ".voice-testops/report.json",
     htmlPath: values.get("html") ?? ".voice-testops/report.html",
   };

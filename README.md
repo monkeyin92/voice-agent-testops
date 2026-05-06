@@ -236,6 +236,14 @@ You can also keep merchant profiles in separate files and reference them with `m
 
 The repository includes a GitHub Actions workflow at [.github/workflows/voice-testops.yml](.github/workflows/voice-testops.yml). It runs unit tests, demo suites, production build, high-severity audit, and uploads generated reports as artifacts.
 
+Use `--fail-on-severity` when you want CI to block only the failures that matter for release. This keeps minor copy drift visible in the report without treating it like a production-stopping safety issue.
+
+```bash
+npm run voice-test -- \
+  --suite examples/voice-testops/chinese-risk-suite.json \
+  --fail-on-severity critical
+```
+
 Useful commands:
 
 ```bash
