@@ -386,6 +386,49 @@ describe("integration documentation", () => {
     }
   });
 
+  it("documents the first real pilot recap template", () => {
+    const recapPath = "docs/ops/first-real-pilot-recap.zh-CN.md";
+    const readme = readFileSync("README.md", "utf8");
+    const chineseReadme = readFileSync("README.zh-CN.md", "utf8");
+    const readinessReview = readFileSync("docs/ops/external-pilot-readiness-review.zh-CN.md", "utf8");
+    const runbook = readFileSync("docs/ops/external-pilot-runbook.zh-CN.md", "utf8");
+    const tracker = readFileSync("docs/ops/external-pilot-tracker.zh-CN.md", "utf8");
+
+    expect(existsSync(recapPath)).toBe(true);
+    expect(readme).toContain(`[First real pilot recap template](${recapPath})`);
+    expect(chineseReadme).toContain(`[第一个真实试点复盘模板](${recapPath})`);
+    expect(readinessReview).toContain(`[第一个真实试点复盘模板](first-real-pilot-recap.zh-CN.md)`);
+    expect(runbook).toContain(`[第一个真实试点复盘模板](first-real-pilot-recap.zh-CN.md)`);
+    expect(tracker).toContain(`[第一个真实试点复盘模板](first-real-pilot-recap.zh-CN.md)`);
+
+    const recap = readFileSync(recapPath, "utf8");
+    for (const phrase of [
+      "使用方式",
+      "试点事实",
+      "执行命令记录",
+      "starter suite",
+      "bridge 接入",
+      "baseline",
+      "真实失败导入",
+      "regression draft",
+      "commercial report",
+      "pilot recap",
+      "证据清单",
+      "失败复盘",
+      "客户反馈",
+      "后续动作",
+      "Go / No-Go",
+      "npx voice-agent-testops validate",
+      "npx voice-agent-testops doctor",
+      "npx voice-agent-testops run",
+      "npx voice-agent-testops import-calls",
+      "npx voice-agent-testops draft-regressions",
+      "npx voice-agent-testops pilot-report",
+    ]) {
+      expect(recap).toContain(phrase);
+    }
+  });
+
   it("documents the setup contract and copy-paste commands for every supported stack", () => {
     for (const doc of integrationDocs) {
       expect(existsSync(doc.path), `${doc.path} should exist`).toBe(true);
