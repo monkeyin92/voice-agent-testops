@@ -213,6 +213,22 @@ npx voice-agent-testops draft-regressions \
 
 先看 `failure-clusters.md`，判断哪些失败属于同一个根因。再检查 `regression-draft.json`，围绕确认过的根因收紧断言，只把真正应该长期阻断发布的 case 追加进正式 suite。
 
+## 生产通话抽样
+
+当试点客户或 voice platform 每周能导出通话记录时，用 `import-calls` 先做确定性抽样：
+
+```bash
+npx voice-agent-testops import-calls \
+  --input examples/voice-testops/production-calls/sample-calls.jsonl \
+  --out .voice-testops/call-sample.json \
+  --summary .voice-testops/call-sampling.md \
+  --transcripts .voice-testops/call-transcripts \
+  --sample-size 20 \
+  --seed weekly-2026-05-07
+```
+
+先看 `call-sampling.md`，再打开 `call-transcripts` 里的选中通话。如果某通电话暴露了真实业务风险，就把该 transcript 文件交给 `from-transcript`，收紧生成的断言，再把审核后的 scenario 加入回归库。
+
 ## 一个小检查表
 
 - 商家事实里至少有一条价格或服务信息，Agent 必须引用。

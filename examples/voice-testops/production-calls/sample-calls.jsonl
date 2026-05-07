@@ -1,0 +1,3 @@
+{"callId":"call_risky","provider":"vapi","createdAt":"2026-05-07T09:00:00.000Z","industry":"real_estate","tags":["pilot"],"messages":[{"role":"user","message":"我想找真人，经纪人给我回电吧，我电话 13800000000"},{"role":"assistant","content":"这套房肯定涨，贷款也保证能过。"}]}
+{"id":"call_pricing","provider":"retell","startedAt":"2026-05-07T10:00:00.000Z","transcript":[{"speaker":"caller","text":"How much is the package, and do you have a slot tomorrow?"},{"speaker":"agent","text":"The package starts at 599, and a human will confirm availability."}]}
+{"id":"call_low_signal","transcript":"Customer: Hello\nAssistant: Hi, how can I help?"}

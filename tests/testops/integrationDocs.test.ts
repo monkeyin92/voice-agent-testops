@@ -80,12 +80,19 @@ describe("integration documentation", () => {
     const chineseMockDataGuide = readFileSync("docs/guides/mock-data.zh-CN.md", "utf8");
 
     expect(packageJson.scripts["suite:from-transcript"]).toContain("from-transcript");
+    expect(packageJson.scripts["calls:import"]).toContain("import-calls");
     expect(existsSync("examples/voice-testops/transcripts/failed-photo-booking.txt")).toBe(true);
+    expect(existsSync("examples/voice-testops/production-calls/sample-calls.jsonl")).toBe(true);
     expect(readme).toContain("Turn A Real Failure Into A Regression Test");
     expect(readme).toContain("npx voice-agent-testops from-transcript");
     expect(readme).toContain("npx voice-agent-testops draft-regressions");
+    expect(readme).toContain("npx voice-agent-testops import-calls");
     expect(readme).toContain("failure-clusters.md");
     expect(readme).toContain("regression-draft.json");
+    expect(readme).toContain("call-sample.json");
+    expect(readme).toContain("call-sampling.md");
+    expect(readme).toContain("call-transcripts");
+    expect(readme).toContain("examples/voice-testops/production-calls/sample-calls.jsonl");
     expect(readme).toContain("pbpaste | npx voice-agent-testops from-transcript");
     expect(readme).toContain("--preview");
     expect(readme).toContain("--stdin");
@@ -98,8 +105,13 @@ describe("integration documentation", () => {
     expect(chineseReadme).toContain("把真实失败对话变成回归测试");
     expect(chineseReadme).toContain("npx voice-agent-testops from-transcript");
     expect(chineseReadme).toContain("npx voice-agent-testops draft-regressions");
+    expect(chineseReadme).toContain("npx voice-agent-testops import-calls");
     expect(chineseReadme).toContain("failure-clusters.md");
     expect(chineseReadme).toContain("regression-draft.json");
+    expect(chineseReadme).toContain("call-sample.json");
+    expect(chineseReadme).toContain("call-sampling.md");
+    expect(chineseReadme).toContain("call-transcripts");
+    expect(chineseReadme).toContain("examples/voice-testops/production-calls/sample-calls.jsonl");
     expect(chineseReadme).toContain("pbpaste | npx voice-agent-testops from-transcript");
     expect(chineseReadme).toContain("--preview");
     expect(chineseReadme).toContain("--stdin");
@@ -112,9 +124,11 @@ describe("integration documentation", () => {
     expect(mockDataGuide).toContain("--print-json");
     expect(mockDataGuide).toContain("voice-testops/generated-suite.json");
     expect(mockDataGuide).toContain("draft-regressions");
+    expect(mockDataGuide).toContain("import-calls");
     expect(chineseMockDataGuide).toContain("--print-json");
     expect(chineseMockDataGuide).toContain("voice-testops/generated-suite.json");
     expect(chineseMockDataGuide).toContain("draft-regressions");
+    expect(chineseMockDataGuide).toContain("import-calls");
   });
 
   it("documents the init quickstart in both READMEs", () => {

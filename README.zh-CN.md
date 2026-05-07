@@ -13,7 +13,7 @@
 
 它不是语音 Agent 框架，也不替代 OpenClaw、Vapi、Retell、LiveKit、Pipecat 或 Twilio。它更像一条上线前的安全绳：你的 Agent 可以自由变强，但每次变更都要先跑过高风险场景。
 
-[30 秒试跑](#30-秒试跑) · [场景库](#场景库) · [生成 Mock 数据](#生成-mock-数据) · [接入真实-agent](#接入真实-agent) · [把真实失败对话变成回归测试](#把真实失败对话变成回归测试) · [从失败报告生成 Regression 草稿](#从失败报告生成-regression-草稿) · [场景格式](#场景格式)
+[30 秒试跑](#30-秒试跑) · [场景库](#场景库) · [生成 Mock 数据](#生成-mock-数据) · [接入真实-agent](#接入真实-agent) · [把真实失败对话变成回归测试](#把真实失败对话变成回归测试) · [从失败报告生成 Regression 草稿](#从失败报告生成-regression-草稿) · [导入生产通话做抽样监控](#导入生产通话做抽样监控) · [场景格式](#场景格式)
 
 ![Voice Agent TestOps 中文报告预览](docs/assets/report-preview-zh-CN.png)
 
@@ -290,6 +290,22 @@ npx voice-agent-testops draft-regressions \
 ```
 
 `regression-draft.json` 会保留失败 scenario 和复现失败所需的前置轮次。`failure-clusters.md` 会按严重级别、断言代码和失败信息指纹聚类，方便团队先看问题簇，再决定哪些失败要进入长期门禁。两份文件都应该先人工审核，确认后再合并进正式 baseline。
+
+## 导入生产通话做抽样监控
+
+当试点或生产通话已经导出成 JSON / JSONL，可以生成一个确定性的人工复核样本：
+
+```bash
+npx voice-agent-testops import-calls \
+  --input examples/voice-testops/production-calls/sample-calls.jsonl \
+  --out .voice-testops/call-sample.json \
+  --summary .voice-testops/call-sampling.md \
+  --transcripts .voice-testops/call-transcripts \
+  --sample-size 20 \
+  --seed weekly-2026-05-07
+```
+
+`call-sample.json` 是给自动化流程用的抽样 manifest。`call-sampling.md` 是给每周人工复核看的摘要。`call-transcripts` 里会生成带 `Customer:` / `Assistant:` 标签的文本文件，后续可以直接交给 `from-transcript` 变成 regression 草稿。加上 `--risk-only` 后，只抽带风险标签的通话，例如转人工请求、询价、客户留资、违规承诺或长对话。
 
 ## 场景格式
 

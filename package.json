@@ -47,6 +47,7 @@
     "test:watch": "vitest",
     "voice-test": "tsx src/testops/cli.ts",
     "suite:from-transcript": "tsx src/testops/cli.ts from-transcript",
+    "calls:import": "tsx src/testops/cli.ts import-calls",
     "voice-test:openclaw": "scripts/openclaw-docker.sh voice-test",
     "voice-test:photo-demo": "scripts/openclaw-docker.sh voice-test examples/voice-testops/photo-studio-multiturn-suite.json",
     "voice-test:photo-demo:export": "npm run voice-test:photo-demo && npm run report:export",
