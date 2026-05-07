@@ -157,6 +157,14 @@ npm run voice-test -- \
 
 示例代码在 [examples/http-agent-server/server.mjs](examples/http-agent-server/server.mjs)。真正接入时，把里面的 `createTestAgentResponse()` 换成你自己的 Agent 调用即可。
 
+如果你用的是 Vapi 或 Retell，可以先启动平台桥接示例：
+
+```bash
+npm run example:voice-platform-bridge
+```
+
+它会提供 `http://127.0.0.1:4319/test-turn` 给确定性 CI 回归测试，同时提供 `/vapi/webhook` 和 `/retell/webhook` 做平台 webhook smoke test。30 分钟接入步骤见 [Vapi](docs/integrations/vapi.md) 和 [Retell](docs/integrations/retell.md)。
+
 跑完整 suite 之前，可以先用 `doctor` 检查 bridge 是否符合合同：
 
 ```bash

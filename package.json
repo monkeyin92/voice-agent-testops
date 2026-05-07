@@ -28,7 +28,10 @@
     "src/testops",
     "src/server/services/localReceptionist.ts",
     "examples/voice-testops",
+    "examples/http-agent-server",
+    "examples/voice-platform-bridge",
     "docs/guides",
+    "docs/integrations",
     "README.md",
     "README.zh-CN.md"
   ],
@@ -50,6 +53,7 @@
     "sales:demo": "npm run voice-test:photo-demo:export",
     "report:export": "node scripts/export-testops-report.mjs",
     "example:http-agent": "node examples/http-agent-server/server.mjs",
+    "example:voice-platform-bridge": "node examples/voice-platform-bridge/server.mjs",
     "prisma:generate": "prisma generate",
     "prisma:migrate": "prisma migrate dev",
     "prisma:studio": "prisma studio"

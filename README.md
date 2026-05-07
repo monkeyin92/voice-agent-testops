@@ -170,6 +170,14 @@ npm run voice-test -- \
 
 The example lives at [examples/http-agent-server/server.mjs](examples/http-agent-server/server.mjs). Replace its `createTestAgentResponse()` function with your real agent call when you are ready.
 
+Building on Vapi or Retell? Start the platform bridge example instead:
+
+```bash
+npm run example:voice-platform-bridge
+```
+
+It exposes `http://127.0.0.1:4319/test-turn` for deterministic CI runs, plus `/vapi/webhook` and `/retell/webhook` for platform webhook smoke tests. See [Vapi](docs/integrations/vapi.md) and [Retell](docs/integrations/retell.md) for the 30-minute runbooks.
+
 Before running a full suite, ask `doctor` whether your bridge speaks the right contract:
 
 ```bash
