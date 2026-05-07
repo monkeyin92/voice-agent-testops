@@ -309,6 +309,43 @@ describe("integration documentation", () => {
     }
   });
 
+  it("documents the pilot data sanitization and authorization template", () => {
+    const templatePath = "docs/ops/pilot-data-sanitization-authorization.zh-CN.md";
+    const readme = readFileSync("README.md", "utf8");
+    const chineseReadme = readFileSync("README.zh-CN.md", "utf8");
+    const readinessReview = readFileSync("docs/ops/external-pilot-readiness-review.zh-CN.md", "utf8");
+    const runbook = readFileSync("docs/ops/external-pilot-runbook.zh-CN.md", "utf8");
+
+    expect(existsSync(templatePath)).toBe(true);
+    expect(readme).toContain(`[Pilot data sanitization and authorization template](${templatePath})`);
+    expect(chineseReadme).toContain(`[试点数据脱敏和授权模板](${templatePath})`);
+    expect(readinessReview).toContain(`[试点数据脱敏和授权模板](pilot-data-sanitization-authorization.zh-CN.md)`);
+    expect(runbook).toContain(`[试点数据脱敏和授权模板](pilot-data-sanitization-authorization.zh-CN.md)`);
+
+    const template = readFileSync(templatePath, "utf8");
+    for (const phrase of [
+      "使用前声明",
+      "数据分级",
+      "可提供字段",
+      "禁止提供字段",
+      "脱敏替换规则",
+      "授权确认模板",
+      "产物保存和删除",
+      "公开仓库边界",
+      "试点数据授权确认",
+      "中华人民共和国个人信息保护法",
+      "FTC Protecting Personal Information",
+      "NIST De-Identification",
+      "EDPB",
+      "真实姓名",
+      "完整地址",
+      "医疗健康",
+      "金融账户",
+    ]) {
+      expect(template).toContain(phrase);
+    }
+  });
+
   it("documents the setup contract and copy-paste commands for every supported stack", () => {
     for (const doc of integrationDocs) {
       expect(existsSync(doc.path), `${doc.path} should exist`).toBe(true);
