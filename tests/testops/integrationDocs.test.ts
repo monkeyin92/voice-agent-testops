@@ -255,6 +255,32 @@ describe("integration documentation", () => {
     expect(chineseReadme).toContain("GITHUB_STEP_SUMMARY");
   });
 
+  it("documents the external pilot readiness review", () => {
+    const reviewPath = "docs/ops/external-pilot-readiness-review.zh-CN.md";
+    const readme = readFileSync("README.md", "utf8");
+    const chineseReadme = readFileSync("README.zh-CN.md", "utf8");
+    const roadmap = readFileSync("docs/roadmap/2026-05-07-commercial-moat-roadmap.zh-CN.md", "utf8");
+
+    expect(existsSync(reviewPath)).toBe(true);
+    expect(readme).toContain(`[External pilot readiness review](${reviewPath})`);
+    expect(chineseReadme).toContain(`[外部试点就绪复盘](${reviewPath})`);
+    expect(roadmap).toContain(`[外部试点就绪复盘](../ops/external-pilot-readiness-review.zh-CN.md)`);
+
+    const review = readFileSync(reviewPath, "utf8");
+    for (const phrase of [
+      "当前结论",
+      "P0/P1/P2 能力映射",
+      "30 分钟外部试点路径",
+      "Go / No-Go",
+      "阻塞缺口",
+      "非阻塞缺口",
+      "下一步优先级",
+      "验收命令和产物",
+    ]) {
+      expect(review).toContain(phrase);
+    }
+  });
+
   it("documents the setup contract and copy-paste commands for every supported stack", () => {
     for (const doc of integrationDocs) {
       expect(existsSync(doc.path), `${doc.path} should exist`).toBe(true);
