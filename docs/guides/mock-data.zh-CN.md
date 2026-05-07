@@ -96,6 +96,15 @@ npx voice-agent-testops list --industry restaurant
 ```bash
 pbpaste | npx voice-agent-testops from-transcript \
   --stdin \
+  --preview \
+  --merchant-name "光影写真馆"
+```
+
+预览没问题后，再写入文件：
+
+```bash
+pbpaste | npx voice-agent-testops from-transcript \
+  --stdin \
   --out voice-testops/generated-suite.json \
   --merchant-out voice-testops/merchant.json \
   --merchant-name "光影写真馆" \
@@ -121,11 +130,14 @@ pbpaste | npx voice-agent-testops from-transcript \
   --stdin \
   --out voice-testops/generated-suite.json \
   --append \
+  --preview \
   --merchant-out voice-testops/merchants/failed-call.json \
   --merchant-name "光影写真馆" \
   --scenario-id "missed_booking_handoff" \
   --scenario-title "漏掉预约转人工"
 ```
+
+确认预览后，把追加命令里的 `--preview` 去掉，就会真正更新 suite。
 
 这个生成器是确定性的，不调用 LLM。它会提取客户轮次；如果你还没有商家 JSON，它会先推断一份商家资料草稿；然后自动加上可审核的断言：乱承诺、价格事实、留资字段、转人工意图和响应延迟。生成结果只是第一稿，真正放进 CI 之前，应该围绕那次失败的根因把断言收紧。
 

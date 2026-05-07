@@ -1,6 +1,6 @@
 import { execFile, spawn } from "node:child_process";
 import { createServer, type IncomingMessage, type ServerResponse } from "node:http";
-import { mkdir, mkdtemp, readFile, writeFile } from "node:fs/promises";
+import { access, mkdir, mkdtemp, readFile, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import path from "node:path";
 import { promisify } from "node:util";
@@ -459,6 +459,102 @@ describe("voice-test CLI", () => {
       name: "Transcript import draft",
       industry: "restaurant",
     });
+  });
+
+  it("previews a transcript import without requiring output paths", async () => {
+    const result = await runCliWithInput(
+      [
+        "from-transcript",
+        "--stdin",
+        "--preview",
+        "--merchant-name",
+        "Transcript import draft",
+      ],
+      [
+        "Customer: Do you have a table for six this Saturday?",
+        "Assistant: Yes, you can come directly. It is 388 per person.",
+      ].join("\n"),
+    );
+
+    expect(result.code).toBe(0);
+    expect(result.stdout).toContain("Preview: no files written");
+    expect(result.stdout).toContain("Action: generate new suite");
+    expect(result.stdout).toContain("Scenario: generated_transcript_regression - Generated transcript regression");
+    expect(result.stdout).toContain("Merchant: Transcript import draft (restaurant)");
+    expect(result.stdout).toContain("Customer turns: 1");
+    expect(result.stdout).toContain("Assertions: 5");
+  });
+
+  it("previews append mode without changing the existing suite or merchant files", async () => {
+    const tempDir = await mkdtemp(path.join(tmpdir(), "voice-testops-cli-"));
+    const merchantDir = path.join(tempDir, "merchants");
+    await mkdir(merchantDir);
+    const suitePath = path.join(tempDir, "suite.json");
+    const baseMerchantPath = path.join(merchantDir, "photo.json");
+    const generatedMerchantPath = path.join(merchantDir, "restaurant.json");
+    const transcriptPath = path.join(tempDir, "restaurant-call.txt");
+    await writeFile(baseMerchantPath, JSON.stringify(merchant, null, 2), "utf8");
+    await writeFile(
+      suitePath,
+      JSON.stringify(
+        {
+          name: "Living regression library",
+          scenarios: [
+            {
+              id: "existing_pricing",
+              title: "Existing pricing guard",
+              source: "website",
+              merchantRef: "merchants/photo.json",
+              turns: [
+                {
+                  user: "How much is a portrait session?",
+                  expect: [{ type: "must_contain_any", phrases: ["599", "1299"] }],
+                },
+              ],
+            },
+          ],
+        },
+        null,
+        2,
+      ),
+      "utf8",
+    );
+    await writeFile(
+      transcriptPath,
+      [
+        "Customer: Do you have a table for six this Saturday?",
+        "Assistant: Yes, you can come directly. It is 388 per person.",
+      ].join("\n"),
+      "utf8",
+    );
+
+    const result = await runCli([
+      "from-transcript",
+      "--input",
+      transcriptPath,
+      "--out",
+      suitePath,
+      "--append",
+      "--preview",
+      "--merchant-out",
+      generatedMerchantPath,
+      "--merchant-name",
+      "Transcript import draft",
+      "--scenario-id",
+      "restaurant_table_failure",
+    ]);
+
+    const rawSuite = JSON.parse(await readFile(suitePath, "utf8")) as {
+      scenarios: Array<{ id: string }>;
+    };
+    expect(result.code).toBe(0);
+    expect(result.stdout).toContain("Preview: no files written");
+    expect(result.stdout).toContain(`Action: append to ${suitePath}`);
+    expect(result.stdout).toContain("Existing scenarios: 1");
+    expect(result.stdout).toContain("Result scenarios: 2");
+    expect(result.stdout).toContain("Scenario: restaurant_table_failure - Generated transcript regression");
+    expect(rawSuite.scenarios).toHaveLength(1);
+    await expectFileMissing(generatedMerchantPath);
   });
 
   it("runs suites through the publishable bin with the run subcommand", async () => {
@@ -1026,4 +1122,8 @@ async function execCliWithInput(
 
     child.stdin.end(input);
   });
+}
+
+async function expectFileMissing(filePath: string): Promise<void> {
+  await expect(access(filePath)).rejects.toThrow();
 }

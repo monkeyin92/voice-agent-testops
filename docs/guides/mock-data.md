@@ -96,6 +96,15 @@ When you already have a bad conversation, paste the transcript and generate a dr
 ```bash
 pbpaste | npx voice-agent-testops from-transcript \
   --stdin \
+  --preview \
+  --merchant-name "Lumen Portrait Studio"
+```
+
+When the preview looks right, write the files:
+
+```bash
+pbpaste | npx voice-agent-testops from-transcript \
+  --stdin \
   --out voice-testops/generated-suite.json \
   --merchant-out voice-testops/merchant.json \
   --merchant-name "Lumen Portrait Studio" \
@@ -121,11 +130,14 @@ pbpaste | npx voice-agent-testops from-transcript \
   --stdin \
   --out voice-testops/generated-suite.json \
   --append \
+  --preview \
   --merchant-out voice-testops/merchants/failed-call.json \
   --merchant-name "Lumen Portrait Studio" \
   --scenario-id "missed_booking_handoff" \
   --scenario-title "Missed booking handoff"
 ```
+
+Remove `--preview` from the append command when you are ready to update the suite.
 
 The transcript generator is deterministic. It does not call an LLM; it extracts customer turns, infers a draft merchant profile when no merchant file is available, and adds reviewable assertions for unsafe promises, pricing facts, lead fields, handoff intent, and latency. Treat the generated suite as a first draft, then tighten the assertions around the exact failure you want to prevent from coming back.
 

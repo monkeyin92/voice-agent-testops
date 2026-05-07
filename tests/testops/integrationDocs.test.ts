@@ -62,6 +62,7 @@ describe("integration documentation", () => {
     expect(readme).toContain("Turn A Real Failure Into A Regression Test");
     expect(readme).toContain("npx voice-agent-testops from-transcript");
     expect(readme).toContain("pbpaste | npx voice-agent-testops from-transcript");
+    expect(readme).toContain("--preview");
     expect(readme).toContain("--stdin");
     expect(readme).toContain("--input examples/voice-testops/transcripts/failed-photo-booking.txt");
     expect(readme).toContain("--append");
@@ -70,6 +71,7 @@ describe("integration documentation", () => {
     expect(chineseReadme).toContain("把真实失败对话变成回归测试");
     expect(chineseReadme).toContain("npx voice-agent-testops from-transcript");
     expect(chineseReadme).toContain("pbpaste | npx voice-agent-testops from-transcript");
+    expect(chineseReadme).toContain("--preview");
     expect(chineseReadme).toContain("--stdin");
     expect(chineseReadme).toContain("--input examples/voice-testops/transcripts/failed-photo-booking.txt");
     expect(chineseReadme).toContain("--append");

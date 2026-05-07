@@ -479,14 +479,29 @@ async function generateSuiteFromTranscript(argv: string[]): Promise<number> {
     source: args.source,
   });
   const suiteOutput = args.merchantOutPath
-    ? buildSuiteWithMerchantRef(suite, relativeMerchantRef(args.outPath, args.merchantOutPath))
+    ? buildSuiteWithMerchantRef(
+        suite,
+        args.outPath ? relativeMerchantRef(args.outPath, args.merchantOutPath) : args.merchantOutPath,
+      )
     : suite;
-  const output = args.append ? await appendGeneratedScenarios(args.outPath, suiteOutput) : suiteOutput;
+  const appendCounts =
+    args.append && args.outPath ? await countAppendScenarios(args.outPath, suiteOutput) : undefined;
+  if (args.preview) {
+    printFromTranscriptPreview({
+      args,
+      suite,
+      merchant,
+      appendCounts,
+    });
+    return 0;
+  }
+
+  const output = args.append ? await appendGeneratedScenarios(args.outPath ?? "", suiteOutput) : suiteOutput;
 
   if (args.merchantOutPath) {
     await writeReport(args.merchantOutPath, `${JSON.stringify(merchant, null, 2)}\n`);
   }
-  await writeReport(args.outPath, `${JSON.stringify(output, null, 2)}\n`);
+  await writeReport(args.outPath ?? "", `${JSON.stringify(output, null, 2)}\n`);
   console.log(`${args.append ? "Appended scenario" : "Generated suite"}: ${args.outPath}`);
   if (args.readFromStdin) {
     console.log("Transcript: read from stdin");
@@ -507,7 +522,8 @@ type FromTranscriptArgs = {
   merchantPath?: string;
   merchantOutPath?: string;
   append: boolean;
-  outPath: string;
+  preview: boolean;
+  outPath?: string;
   merchantName?: string;
   industry?: Industry;
   name?: string;
@@ -540,7 +556,7 @@ function parseFromTranscriptArgs(argv: string[]): FromTranscriptArgs {
     }
 
     const name = arg.slice(2);
-    if (name === "stdin" || name === "append") {
+    if (name === "stdin" || name === "append" || name === "preview") {
       flags.add(name);
       continue;
     }
@@ -562,6 +578,7 @@ function parseFromTranscriptArgs(argv: string[]): FromTranscriptArgs {
   const merchantPath = values.get("merchant");
   const merchantOutPath = values.get("merchant-out");
   const append = flags.has("append");
+  const preview = flags.has("preview");
   const outPath = values.get("out");
 
   if (readFromStdin && transcriptPath) {
@@ -571,8 +588,11 @@ function parseFromTranscriptArgs(argv: string[]): FromTranscriptArgs {
     throw new Error("--transcript, --input, or --stdin is required");
   }
 
-  if (!outPath) {
+  if (!preview && !outPath) {
     throw new Error("--out is required");
+  }
+  if (append && !outPath) {
+    throw new Error("--append requires --out");
   }
 
   const source = leadSourceSchema.parse(values.get("source") ?? "website");
@@ -583,6 +603,7 @@ function parseFromTranscriptArgs(argv: string[]): FromTranscriptArgs {
     merchantPath,
     merchantOutPath,
     append,
+    preview,
     outPath,
     merchantName: values.get("merchant-name"),
     industry: values.has("industry") ? industrySchema.parse(values.get("industry")) : undefined,
@@ -593,11 +614,25 @@ function parseFromTranscriptArgs(argv: string[]): FromTranscriptArgs {
   };
 }
 
-async function appendGeneratedScenarios(suitePath: string, generatedSuite: unknown): Promise<unknown> {
-  const existingSuite = JSON.parse(await readFile(await resolveReadablePath(suitePath), "utf8")) as unknown;
-  if (!isJsonObject(existingSuite) || !Array.isArray(existingSuite.scenarios)) {
-    throw new Error(`Existing suite must include a scenarios array: ${suitePath}`);
+type AppendCounts = {
+  existing: number;
+  added: number;
+};
+
+async function countAppendScenarios(suitePath: string, generatedSuite: unknown): Promise<AppendCounts> {
+  const existingSuite = await readRawSuiteWithScenarios(suitePath);
+  if (!isJsonObject(generatedSuite) || !Array.isArray(generatedSuite.scenarios)) {
+    throw new Error("Generated suite must include a scenarios array");
   }
+
+  return {
+    existing: existingSuite.scenarios.length,
+    added: generatedSuite.scenarios.length,
+  };
+}
+
+async function appendGeneratedScenarios(suitePath: string, generatedSuite: unknown): Promise<unknown> {
+  const existingSuite = await readRawSuiteWithScenarios(suitePath);
   if (!isJsonObject(generatedSuite) || !Array.isArray(generatedSuite.scenarios)) {
     throw new Error("Generated suite must include a scenarios array");
   }
@@ -606,6 +641,15 @@ async function appendGeneratedScenarios(suitePath: string, generatedSuite: unkno
     ...existingSuite,
     scenarios: [...existingSuite.scenarios, ...generatedSuite.scenarios],
   };
+}
+
+async function readRawSuiteWithScenarios(suitePath: string): Promise<Record<string, unknown> & { scenarios: unknown[] }> {
+  const existingSuite = JSON.parse(await readFile(await resolveReadablePath(suitePath), "utf8")) as unknown;
+  if (!isJsonObject(existingSuite) || !Array.isArray(existingSuite.scenarios)) {
+    throw new Error(`Existing suite must include a scenarios array: ${suitePath}`);
+  }
+
+  return existingSuite as Record<string, unknown> & { scenarios: unknown[] };
 }
 
 function buildSuiteWithMerchantRef(suite: VoiceTestSuite, merchantRef: string): unknown {
@@ -624,6 +668,37 @@ function isJsonObject(value: unknown): value is Record<string, unknown> {
 
 function relativeMerchantRef(suitePath: string, merchantPath: string): string {
   return path.relative(path.dirname(suitePath), merchantPath).split(path.sep).join(path.posix.sep);
+}
+
+function printFromTranscriptPreview(options: {
+  args: FromTranscriptArgs;
+  suite: VoiceTestSuite;
+  merchant: { name: string; industry: string };
+  appendCounts?: AppendCounts;
+}): void {
+  const scenario = options.suite.scenarios[0];
+  const assertions = scenario.turns.reduce((count, turn) => count + turn.expect.length, 0);
+
+  console.log("Preview: no files written");
+  console.log(
+    options.args.append && options.args.outPath
+      ? `Action: append to ${options.args.outPath}`
+      : "Action: generate new suite",
+  );
+  if (options.args.readFromStdin) {
+    console.log("Transcript: read from stdin");
+  }
+  if (options.appendCounts) {
+    console.log(`Existing scenarios: ${options.appendCounts.existing}`);
+    console.log(`Result scenarios: ${options.appendCounts.existing + options.appendCounts.added}`);
+  }
+  console.log(`Scenario: ${scenario.id} - ${scenario.title}`);
+  console.log(`Merchant: ${options.merchant.name} (${options.merchant.industry})`);
+  if (options.args.merchantOutPath) {
+    console.log(`Merchant draft target: ${options.args.merchantOutPath}`);
+  }
+  console.log(`Customer turns: ${scenario.turns.length}`);
+  console.log(`Assertions: ${assertions}`);
 }
 
 async function readFromStdin(): Promise<string> {

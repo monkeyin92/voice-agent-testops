@@ -210,6 +210,15 @@ npm run voice-test -- \
 ```bash
 pbpaste | npx voice-agent-testops from-transcript \
   --stdin \
+  --preview \
+  --merchant-name "光影写真馆"
+```
+
+预览没问题后，再写入文件：
+
+```bash
+pbpaste | npx voice-agent-testops from-transcript \
+  --stdin \
   --out voice-testops/suite.json \
   --merchant-out voice-testops/merchant.json \
   --merchant-name "光影写真馆" \
@@ -235,11 +244,14 @@ pbpaste | npx voice-agent-testops from-transcript \
   --stdin \
   --out voice-testops/suite.json \
   --append \
+  --preview \
   --merchant-out voice-testops/merchants/failed-call.json \
   --merchant-name "光影写真馆" \
   --scenario-id "missed_booking_handoff" \
   --scenario-title "漏掉预约转人工"
 ```
+
+确认预览后，把追加命令里的 `--preview` 去掉，就会真正修改 suite。
 
 这个生成器不调用 LLM，只做确定性规则提取：客户轮次、商家资料草稿、乱承诺拦截、价格事实、留资字段、转人工意图和延迟断言。生成结果应该先人工检查，再把 suite 放进 CI 作为上线门禁。
 
