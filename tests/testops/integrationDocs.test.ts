@@ -13,8 +13,13 @@ const integrationDocs = [
       "summary",
       "tools",
       "state",
+      "audio",
+      "voiceMetrics",
       "tool_called",
       "backend_state_equals",
+      "audio_replay_present",
+      "voice_metric_max",
+      "voice_metric_min",
     ],
   },
   {

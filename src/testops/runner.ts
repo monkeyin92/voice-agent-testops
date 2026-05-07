@@ -1,8 +1,8 @@
 import type { ConversationMessage } from "../server/services/agentAdapter";
-import type { VoiceAgentExecutor, VoiceAgentToolCall } from "./agents";
+import type { VoiceAgentAudioReplay, VoiceAgentExecutor, VoiceAgentToolCall, VoiceAgentVoiceMetrics } from "./agents";
 import { makeTestMerchant } from "./agents";
 import { createRuleBasedSemanticJudge, type VoiceSemanticJudge } from "./semanticJudge";
-import type { VoiceTestAssertion, VoiceTestScenario, VoiceTestSeverity, VoiceTestSuite } from "./schema";
+import type { VoiceMetricName, VoiceTestAssertion, VoiceTestScenario, VoiceTestSeverity, VoiceTestSuite } from "./schema";
 
 export type VoiceTestClock = {
   now: () => number;
@@ -25,6 +25,8 @@ export type VoiceTestTurnResult = {
   failures: VoiceTestFailure[];
   tools?: VoiceAgentToolCall[];
   state?: Record<string, unknown>;
+  audio?: VoiceAgentAudioReplay;
+  voiceMetrics?: VoiceAgentVoiceMetrics;
 };
 
 export type VoiceTestScenarioResult = {
@@ -193,6 +195,8 @@ async function runScenario(
       failures,
       ...(output.tools ? { tools: output.tools } : {}),
       ...(output.state ? { state: output.state } : {}),
+      ...(output.audio ? { audio: output.audio } : {}),
+      ...(output.voiceMetrics ? { voiceMetrics: output.voiceMetrics } : {}),
     });
 
     onProgress?.({
@@ -289,6 +293,12 @@ function evaluateAssertion(
       return evaluateBackendStatePresentAssertion(assertion, output.state);
     case "backend_state_equals":
       return evaluateBackendStateEqualsAssertion(assertion, output.state);
+    case "audio_replay_present":
+      return evaluateAudioReplayPresentAssertion(assertion, output.audio);
+    case "voice_metric_max":
+      return evaluateVoiceMetricMaxAssertion(assertion, output.voiceMetrics);
+    case "voice_metric_min":
+      return evaluateVoiceMetricMinAssertion(assertion, output.voiceMetrics);
   }
 }
 
@@ -370,6 +380,87 @@ function evaluateBackendStateEqualsAssertion(
       ];
 }
 
+function evaluateAudioReplayPresentAssertion(
+  assertion: Extract<VoiceTestAssertion, { type: "audio_replay_present" }>,
+  audio: VoiceAgentAudioReplay | undefined,
+): VoiceTestFailure[] {
+  return typeof audio?.url === "string" && audio.url.trim().length > 0
+    ? []
+    : [
+        {
+          code: "audio_replay_missing",
+          message: "缺少音频 replay：agent 输出需要包含 audio.url",
+          severity: assertion.severity,
+        },
+      ];
+}
+
+function evaluateVoiceMetricMaxAssertion(
+  assertion: Extract<VoiceTestAssertion, { type: "voice_metric_max" }>,
+  metrics: VoiceAgentVoiceMetrics | undefined,
+): VoiceTestFailure[] {
+  const actual = getVoiceMetric(metrics, assertion.metric);
+  if (!actual.exists) {
+    return [
+      {
+        code: "voice_metric_missing",
+        message: `语音指标缺失：${assertion.metric}`,
+        severity: assertion.severity,
+      },
+    ];
+  }
+
+  return actual.value <= assertion.value
+    ? []
+    : [
+        {
+          code: "voice_metric_exceeded",
+          message: `语音指标 ${assertion.metric} 为 ${formatMetricValue(assertion.metric, actual.value)}，超过阈值 ${formatMetricValue(
+            assertion.metric,
+            assertion.value,
+          )}`,
+          severity: assertion.severity,
+        },
+      ];
+}
+
+function evaluateVoiceMetricMinAssertion(
+  assertion: Extract<VoiceTestAssertion, { type: "voice_metric_min" }>,
+  metrics: VoiceAgentVoiceMetrics | undefined,
+): VoiceTestFailure[] {
+  const actual = getVoiceMetric(metrics, assertion.metric);
+  if (!actual.exists) {
+    return [
+      {
+        code: "voice_metric_missing",
+        message: `语音指标缺失：${assertion.metric}`,
+        severity: assertion.severity,
+      },
+    ];
+  }
+
+  return actual.value >= assertion.value
+    ? []
+    : [
+        {
+          code: "voice_metric_below_minimum",
+          message: `语音指标 ${assertion.metric} 为 ${formatMetricValue(assertion.metric, actual.value)}，低于阈值 ${formatMetricValue(
+            assertion.metric,
+            assertion.value,
+          )}`,
+          severity: assertion.severity,
+        },
+      ];
+}
+
+function getVoiceMetric(
+  metrics: VoiceAgentVoiceMetrics | undefined,
+  metric: VoiceMetricName,
+): { exists: true; value: number } | { exists: false } {
+  const value = metrics?.[metric];
+  return typeof value === "number" && Number.isFinite(value) ? { exists: true, value } : { exists: false };
+}
+
 function getPathValue(state: Record<string, unknown> | undefined, path: string): { exists: boolean; value?: unknown } {
   let current: unknown = state;
 
@@ -432,6 +523,14 @@ function deepEqual(left: unknown, right: unknown): boolean {
   }
 
   return false;
+}
+
+function formatMetricValue(metric: VoiceMetricName, value: number): string {
+  if (metric === "asrConfidence") {
+    return `${Math.round(value * 100)}%`;
+  }
+
+  return metric.endsWith("Ms") ? `${value}ms` : String(value);
 }
 
 function isRecord(value: unknown): value is Record<string, unknown> {

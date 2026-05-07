@@ -79,12 +79,27 @@ Return the words your agent would speak, plus optional structured evidence for a
       "intent": "pricing",
       "status": "captured"
     }
+  },
+  "audio": {
+    "url": "https://your-agent.example.com/replays/call-123-turn-1.wav",
+    "label": "call-123 turn 1",
+    "mimeType": "audio/wav",
+    "durationMs": 4200
+  },
+  "voiceMetrics": {
+    "timeToFirstWordMs": 640,
+    "asrLatencyMs": 180,
+    "ttsLatencyMs": 320,
+    "silenceMs": 850,
+    "interruptionCount": 0,
+    "asrConfidence": 0.93
   }
 }
 ```
 
 `spoken` is required. `summary` is optional, but it unlocks lead-field and intent assertions such as `lead_field_present` and `lead_intent`.
 `tools` is optional; return it when you want assertions such as `tool_called` to verify function/tool usage. `state` is optional; return a small test-safe backend snapshot when you want `backend_state_present` or `backend_state_equals` to verify CRM, booking, handoff, or lead state.
+`audio` is optional; return a replay URL when you want `audio_replay_present` and report playback. `voiceMetrics` is optional; return numeric telemetry when you want `voice_metric_max` or `voice_metric_min` to gate time-to-first-word, silence, interruption count, ASR/TTS latency, or ASR confidence.
 
 ## Bridge shape
 
@@ -105,6 +120,15 @@ async function createTestAgentResponse(turn) {
     state: {
       lead: agentResult.leadRecord,
       booking: agentResult.bookingDraft,
+    },
+    audio: agentResult.audioReplay,
+    voiceMetrics: {
+      timeToFirstWordMs: agentResult.timings.timeToFirstWordMs,
+      asrLatencyMs: agentResult.timings.asrLatencyMs,
+      ttsLatencyMs: agentResult.timings.ttsLatencyMs,
+      silenceMs: agentResult.timings.silenceMs,
+      interruptionCount: agentResult.timings.interruptionCount,
+      asrConfidence: agentResult.asrConfidence,
     },
   };
 }

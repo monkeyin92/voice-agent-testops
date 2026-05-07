@@ -235,11 +235,20 @@ Response shape:
     "questions": ["单人写真多少钱"],
     "nextAction": "人工确认档期后跟进",
     "transcript": []
+  },
+  "audio": {
+    "url": "https://your-agent.example.com/replays/call-123-turn-1.wav",
+    "durationMs": 4200
+  },
+  "voiceMetrics": {
+    "timeToFirstWordMs": 640,
+    "silenceMs": 850,
+    "asrConfidence": 0.93
   }
 }
 ```
 
-`spoken` is required. `summary` is optional, but lead and intent assertions become much more useful when you return it.
+`spoken` is required. `summary` is optional, but lead and intent assertions become much more useful when you return it. `audio` and `voiceMetrics` are also optional; return them when you want replay links in the report or voice-native assertions such as `audio_replay_present`, `voice_metric_max`, and `voice_metric_min`.
 
 ### OpenClaw-compatible Endpoint
 
@@ -433,8 +442,12 @@ You can also keep merchant profiles in separate files and reference them with `m
 | `tool_called` | Require a returned tool/function call, optionally with a matching argument subset |
 | `backend_state_present` | Require a path to exist in the returned backend `state` snapshot |
 | `backend_state_equals` | Require a backend `state` path to equal an expected JSON value |
+| `audio_replay_present` | Require a returned replay URL so reviewers can listen to the failed or sampled turn |
+| `voice_metric_max` | Require a returned voice metric to stay at or below a threshold |
+| `voice_metric_min` | Require a returned voice metric to stay at or above a threshold |
 
 For `tool_called` and backend-state assertions, your test bridge should return optional `tools` and `state` fields in addition to `spoken` and `summary`. This is useful when the spoken answer is correct but the agent forgot to create a lead, update CRM state, draft a booking, or mark a handoff.
+For audio and voice-metric assertions, return optional `audio` and `voiceMetrics` fields from the bridge. This catches voice-specific failures like slow time-to-first-word, long silence, low ASR confidence, or missing replay evidence even when the text transcript looks acceptable.
 
 ## CI
 

@@ -138,6 +138,48 @@ describe("parseVoiceTestSuite", () => {
     );
   });
 
+  it("accepts audio replay and voice metric assertions", () => {
+    const suite = parseVoiceTestSuite({
+      name: "语音体验评测",
+      scenarios: [
+        {
+          id: "voice_native_metrics",
+          title: "语音原生指标",
+          source: "website",
+          merchant,
+          turns: [
+            {
+              user: "我现在说完了，你多久能回应",
+              expect: [
+                { type: "audio_replay_present", severity: "minor" },
+                {
+                  type: "voice_metric_max",
+                  metric: "timeToFirstWordMs",
+                  value: 900,
+                  severity: "major",
+                },
+                {
+                  type: "voice_metric_min",
+                  metric: "asrConfidence",
+                  value: 0.85,
+                  severity: "critical",
+                },
+              ],
+            },
+          ],
+        },
+      ],
+    });
+
+    expect(suite.scenarios[0].turns[0].expect).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({ type: "audio_replay_present", severity: "minor" }),
+        expect.objectContaining({ type: "voice_metric_max", metric: "timeToFirstWordMs", value: 900 }),
+        expect.objectContaining({ type: "voice_metric_min", metric: "asrConfidence", value: 0.85 }),
+      ]),
+    );
+  });
+
   it("rejects scenarios without customer turns", () => {
     expect(() =>
       parseVoiceTestSuite({

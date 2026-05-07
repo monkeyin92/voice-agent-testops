@@ -1,4 +1,5 @@
 import type { VoiceTestRunResult } from "./runner";
+import type { VoiceMetricName } from "./schema";
 
 export type ReportLocale = "zh-CN" | "en";
 
@@ -30,6 +31,9 @@ type ReportCopy = {
   noRisk: string;
   riskItemPrefix: string;
   repairLabel: string;
+  audioReplay: string;
+  voiceMetrics: string;
+  metricLabels: Record<VoiceMetricName, string>;
   passedSummary: (result: VoiceTestRunResult, passedTurns: number) => string;
   repairAdvice: (code: string) => string;
 };
@@ -66,6 +70,17 @@ const zhCopy: ReportCopy = {
   noRisk: "本次未发现高风险回复。继续用更多真实客户问题做回归，可以逐步扩大试点范围。",
   riskItemPrefix: "风险项",
   repairLabel: "建议修复话术",
+  audioReplay: "音频 replay",
+  voiceMetrics: "语音指标",
+  metricLabels: {
+    timeToFirstWordMs: "首字响应",
+    turnLatencyMs: "整轮延迟",
+    asrLatencyMs: "ASR 延迟",
+    ttsLatencyMs: "TTS 延迟",
+    silenceMs: "长沉默",
+    interruptionCount: "打断次数",
+    asrConfidence: "ASR 置信度",
+  },
   passedSummary: (result, passedTurns) =>
     `<li>${result.summary.scenarios} 个场景完成体检。</li><li>${passedTurns} 轮对话通过断言。</li><li>${result.summary.assertions} 条断言用于检查价格、档期、转人工、留资和安全边界。</li>`,
   repairAdvice: repairAdviceForZh,
@@ -103,10 +118,31 @@ const enCopy: ReportCopy = {
   noRisk: "No high-risk reply found in this run. Keep expanding coverage with more real customer questions before launch.",
   riskItemPrefix: "Risk",
   repairLabel: "Suggested fix",
+  audioReplay: "Audio replay",
+  voiceMetrics: "Voice metrics",
+  metricLabels: {
+    timeToFirstWordMs: "Time to first word",
+    turnLatencyMs: "Turn latency",
+    asrLatencyMs: "ASR latency",
+    ttsLatencyMs: "TTS latency",
+    silenceMs: "Silence",
+    interruptionCount: "Interruptions",
+    asrConfidence: "ASR confidence",
+  },
   passedSummary: (result, passedTurns) =>
     `<li>${result.summary.scenarios} scenario${result.summary.scenarios === 1 ? "" : "s"} completed.</li><li>${passedTurns} conversation turn${passedTurns === 1 ? "" : "s"} passed.</li><li>${result.summary.assertions} assertions checked pricing, availability, handoff, lead capture, and safety boundaries.</li>`,
   repairAdvice: repairAdviceForEn,
 };
+
+const voiceMetricOrder: VoiceMetricName[] = [
+  "timeToFirstWordMs",
+  "turnLatencyMs",
+  "asrLatencyMs",
+  "ttsLatencyMs",
+  "silenceMs",
+  "asrConfidence",
+  "interruptionCount",
+];
 
 function copyFor(locale: ReportLocale): ReportCopy {
   return locale === "en" ? enCopy : zhCopy;
@@ -139,6 +175,14 @@ export function renderMarkdownSummary(result: VoiceTestRunResult): string {
     lines.push(`- ${scenario.title} / turn ${turn.index + 1}`);
     if (scenario.businessRisk) {
       lines.push(`  - Business risk: ${scenario.businessRisk}`);
+    }
+    const audioReplay = renderMarkdownAudioReplay(turn);
+    if (audioReplay) {
+      lines.push(`  - ${audioReplay}`);
+    }
+    const voiceMetrics = renderMarkdownVoiceMetrics(turn);
+    if (voiceMetrics) {
+      lines.push(`  - ${voiceMetrics}`);
     }
     for (const failure of turn.failures) {
       lines.push(`  - \`${failure.code}\` (${failure.severity}): ${failure.message}`);
@@ -217,6 +261,7 @@ export function renderHtmlReport(result: VoiceTestRunResult, options: { locale?:
                   })}</div>
                   <div class="bubble customer"><span>${copy.customer}</span><p>${escapeHtml(turn.user)}</p></div>
                   <div class="bubble agent"><span>${copy.agent}</span><p>${escapeHtml(turn.assistant)}</p></div>
+                  ${renderVoiceEvidence(turn, copy)}
                   ${renderFailures(turn.failures, copy)}
                 </article>
               `,
@@ -277,6 +322,13 @@ export function renderHtmlReport(result: VoiceTestRunResult, options: { locale?:
     .failure { margin: 12px 0 0; padding: 12px; border-radius: 8px; background: var(--red-bg); color: var(--red); }
     .failure strong { color: var(--red); }
     .repair { margin-top: 8px; color: #5b241f; }
+    .voice-evidence { margin-top: 12px; padding-top: 12px; border-top: 1px solid var(--line); }
+    .voice-replay strong, .voice-metric-heading { display: block; color: var(--muted); font-size: 12px; font-weight: 700; margin-bottom: 6px; }
+    .voice-replay audio { width: 100%; max-width: 560px; display: block; margin: 8px 0 4px; }
+    .voice-metrics { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px; }
+    .voice-metric { display: inline-flex; gap: 6px; align-items: baseline; border: 1px solid var(--line); border-radius: 8px; padding: 6px 8px; background: #fff; font-size: 13px; }
+    .voice-metric span { color: var(--muted); }
+    .voice-metric strong { color: var(--ink); }
     @media (max-width: 820px) { .hero-grid, .insights { grid-template-columns: 1fr; } .summary { grid-template-columns: repeat(2, minmax(0, 1fr)); } .bubble { max-width: 100%; } }
   </style>
 </head>
@@ -308,6 +360,57 @@ export function renderHtmlReport(result: VoiceTestRunResult, options: { locale?:
 </body>
 </html>
 `;
+}
+
+function renderVoiceEvidence(
+  turn: VoiceTestRunResult["scenarios"][number]["turns"][number],
+  copy: ReportCopy,
+): string {
+  const audioReplay = renderHtmlAudioReplay(turn, copy);
+  const metrics = renderHtmlVoiceMetrics(turn, copy);
+
+  if (!audioReplay && !metrics) {
+    return "";
+  }
+
+  return `<div class="voice-evidence">${audioReplay}${metrics}</div>`;
+}
+
+function renderHtmlAudioReplay(
+  turn: VoiceTestRunResult["scenarios"][number]["turns"][number],
+  copy: ReportCopy,
+): string {
+  const url = turn.audio?.url;
+  if (typeof url !== "string" || url.trim().length === 0) {
+    return "";
+  }
+
+  const details = [turn.audio?.label, formatDuration(turn.audio?.durationMs)].filter(Boolean).join(" · ");
+
+  return `<div class="voice-replay"><strong>${copy.audioReplay}</strong><audio controls src="${escapeHtml(
+    url,
+  )}"></audio>${details ? `<span class="muted">${escapeHtml(details)}</span>` : ""}</div>`;
+}
+
+function renderHtmlVoiceMetrics(
+  turn: VoiceTestRunResult["scenarios"][number]["turns"][number],
+  copy: ReportCopy,
+): string {
+  const metrics = collectVoiceMetricEntries(turn);
+  if (metrics.length === 0) {
+    return "";
+  }
+
+  return `<div class="voice-metrics" aria-label="${escapeHtml(copy.voiceMetrics)}"><span class="voice-metric-heading">${
+    copy.voiceMetrics
+  }</span>${metrics
+    .map(
+      ([metric, value]) =>
+        `<span class="voice-metric"><span>${escapeHtml(copy.metricLabels[metric])}</span><strong>${escapeHtml(
+          formatMetricValue(metric, value),
+        )}</strong></span>`,
+    )
+    .join("")}</div>`;
 }
 
 function renderFailures(
@@ -351,6 +454,43 @@ function runTimeSeconds(result: VoiceTestRunResult): string {
   }
 
   return (durationMs / 1000).toFixed(3);
+}
+
+function renderMarkdownAudioReplay(turn: VoiceTestRunResult["scenarios"][number]["turns"][number]): string | undefined {
+  const url = turn.audio?.url;
+  return typeof url === "string" && url.trim().length > 0 ? `Audio replay: ${url}` : undefined;
+}
+
+function renderMarkdownVoiceMetrics(turn: VoiceTestRunResult["scenarios"][number]["turns"][number]): string | undefined {
+  const metrics = collectVoiceMetricEntries(turn);
+  if (metrics.length === 0) {
+    return undefined;
+  }
+
+  return `Voice metrics: ${metrics.map(([metric, value]) => `${metric}=${formatMetricValue(metric, value)}`).join(", ")}`;
+}
+
+function collectVoiceMetricEntries(
+  turn: VoiceTestRunResult["scenarios"][number]["turns"][number],
+): Array<[VoiceMetricName, number]> {
+  return voiceMetricOrder.flatMap((metric) => {
+    const value = turn.voiceMetrics?.[metric];
+    return typeof value === "number" && Number.isFinite(value) ? [[metric, value] as [VoiceMetricName, number]] : [];
+  });
+}
+
+function formatMetricValue(metric: VoiceMetricName, value: number): string {
+  if (metric === "asrConfidence") {
+    return `${Math.round(value * 100)}%`;
+  }
+
+  return metric.endsWith("Ms") ? `${value}ms` : String(value);
+}
+
+function formatDuration(durationMs: number | undefined): string | undefined {
+  return typeof durationMs === "number" && Number.isFinite(durationMs) && durationMs >= 0
+    ? `${(durationMs / 1000).toFixed(1)}s`
+    : undefined;
 }
 
 function renderRiskSummary(

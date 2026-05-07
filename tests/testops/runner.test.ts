@@ -359,6 +359,117 @@ describe("runVoiceTestSuite", () => {
     ]);
   });
 
+  it("passes audio replay and voice metric assertions when evidence matches", async () => {
+    const suite = parseVoiceTestSuite({
+      name: "语音体验门禁",
+      scenarios: [
+        {
+          id: "voice_replay_pass",
+          title: "有录音且语音指标达标",
+          source: "website",
+          merchant,
+          turns: [
+            {
+              user: "你听得到我吗",
+              expect: [
+                { type: "audio_replay_present", severity: "minor" },
+                { type: "voice_metric_max", metric: "timeToFirstWordMs", value: 800, severity: "major" },
+                { type: "voice_metric_max", metric: "silenceMs", value: 1200, severity: "major" },
+                { type: "voice_metric_min", metric: "asrConfidence", value: 0.85, severity: "critical" },
+              ],
+            },
+          ],
+        },
+      ],
+    });
+
+    const result = await runVoiceTestSuite(suite, async () => ({
+      spoken: "听得到，我可以继续帮你确认。",
+      summary: {
+        source: "website",
+        intent: "service_info",
+        level: "low",
+        need: "测试语音连接",
+        questions: ["你听得到我吗"],
+        nextAction: "继续接待",
+        transcript: [],
+      },
+      audio: {
+        url: "https://voice.example.test/replays/call-123-turn-1.wav",
+        label: "call-123 turn 1",
+        mimeType: "audio/wav",
+        durationMs: 4200,
+      },
+      voiceMetrics: {
+        timeToFirstWordMs: 640,
+        silenceMs: 850,
+        asrConfidence: 0.93,
+      },
+    }));
+
+    expect(result.passed).toBe(true);
+    expect(result.scenarios[0].turns[0]).toMatchObject({
+      audio: {
+        url: "https://voice.example.test/replays/call-123-turn-1.wav",
+        durationMs: 4200,
+      },
+      voiceMetrics: {
+        timeToFirstWordMs: 640,
+        silenceMs: 850,
+        asrConfidence: 0.93,
+      },
+    });
+  });
+
+  it("reports actionable failures for missing replay and voice metric breaches", async () => {
+    const suite = parseVoiceTestSuite({
+      name: "语音体验失败门禁",
+      scenarios: [
+        {
+          id: "voice_replay_failure",
+          title: "缺少录音且语音体验超阈值",
+          source: "website",
+          merchant,
+          turns: [
+            {
+              user: "我刚才说了地址，你是不是没听清",
+              expect: [
+                { type: "audio_replay_present", severity: "minor" },
+                { type: "voice_metric_max", metric: "timeToFirstWordMs", value: 800, severity: "major" },
+                { type: "voice_metric_min", metric: "asrConfidence", value: 0.85, severity: "critical" },
+              ],
+            },
+          ],
+        },
+      ],
+    });
+
+    const result = await runVoiceTestSuite(suite, async () => ({
+      spoken: "麻烦您再说一遍。",
+      summary: {
+        source: "website",
+        intent: "service_info",
+        level: "medium",
+        need: "客户认为 agent 没听清地址",
+        questions: ["我刚才说了地址，你是不是没听清"],
+        nextAction: "澄清地址",
+        transcript: [],
+      },
+      audio: { url: "   " },
+      voiceMetrics: {
+        timeToFirstWordMs: 1450,
+        asrConfidence: 0.72,
+      },
+    }));
+
+    expect(result.passed).toBe(false);
+    expect(result.scenarios[0].turns[0].failures.map((failure) => failure.code)).toEqual([
+      "audio_replay_missing",
+      "voice_metric_exceeded",
+      "voice_metric_below_minimum",
+    ]);
+  });
+
   it("reports per-turn progress while running a suite", async () => {
     const suite = parseVoiceTestSuite({
       name: "销售演示套件",

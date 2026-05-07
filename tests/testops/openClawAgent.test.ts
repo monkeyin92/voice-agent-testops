@@ -138,6 +138,14 @@ describe("createOpenClawAgent", () => {
                   },
                   tools: [{ name: "create_lead", arguments: { intent: "pricing" } }],
                   state: { lead: { intent: "pricing", status: "captured" } },
+                  audio: {
+                    url: "https://voice.example.test/replays/call-123-turn-1.wav",
+                    durationMs: 3800,
+                  },
+                  voiceMetrics: {
+                    timeToFirstWordMs: 520,
+                    asrConfidence: 0.91,
+                  },
                 }),
               },
             ],
@@ -164,6 +172,11 @@ describe("createOpenClawAgent", () => {
     expect(output.summary?.intent).toBe("pricing");
     expect(output.tools).toEqual([{ name: "create_lead", arguments: { intent: "pricing" } }]);
     expect(output.state).toEqual({ lead: { intent: "pricing", status: "captured" } });
+    expect(output.audio).toEqual({
+      url: "https://voice.example.test/replays/call-123-turn-1.wav",
+      durationMs: 3800,
+    });
+    expect(output.voiceMetrics).toEqual({ timeToFirstWordMs: 520, asrConfidence: 0.91 });
   });
 
   it("fails fast when OpenClaw returns a response without spoken text", async () => {
