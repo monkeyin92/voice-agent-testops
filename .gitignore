@@ -9,3 +9,5 @@ coverage/
 .playwright-mcp/
 .voice-testops/
 next-env.d.ts
+# CocoIndex Code (ccc)
+/.cocoindex_code/
