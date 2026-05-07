@@ -54,7 +54,7 @@ npx voice-agent-testops list --industry restaurant
 
 3. 写断言。
 
-   `must_contain_any` 用来要求 Agent 说出批准过的事实，`must_not_match` 用来禁止乱承诺，`lead_intent` 用来检查意图分类，`lead_field_present` 用来检查结构化留资，`max_latency_ms` 用来检查响应速度。`semantic_judge` 用来检查更高层的业务语义，比如是否变相承诺收益、是否应该转人工、是否把未确认事项交给专业人员确认。`tool_called`、`backend_state_present` 和 `backend_state_equals` 用来检查工具调用和后端状态。真正会阻断上线的风险标成 `critical`，轻微文案漂移可以留作 `minor`。
+   `must_contain_any` 用来要求 Agent 说出批准过的事实，`must_not_match` 用来禁止乱承诺，`lead_intent` 用来检查意图分类，`lead_field_present` 用来检查结构化留资，`max_latency_ms` 用来检查响应速度。`semantic_judge` 用来检查更高层的业务语义，比如是否变相承诺收益、是否应该转人工、是否把未确认事项交给专业人员确认。`tool_called`、`backend_state_present` 和 `backend_state_equals` 用来检查工具调用和后端状态。`audio_replay_present`、`voice_metric_max` 和 `voice_metric_min` 用来检查录音 replay、首字响应、长沉默、ASR 置信度等语音原生指标。真正会阻断上线的风险标成 `critical`，轻微文案漂移可以留作 `minor`。
 
    `semantic_judge` 不是用来替代确定性断言的。金额、手机号、意图枚举、延迟这类能明确计算的检查，仍然优先用规则断言；语义评测负责补上正则脚本抓不稳的风险。
 

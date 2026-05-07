@@ -1046,6 +1046,15 @@ describe("voice-test CLI", () => {
     const backendStateEqualsVariant = assertionVariants.find(
       (variant) => variant.properties?.type?.const === "backend_state_equals",
     );
+    const audioReplayVariant = assertionVariants.find(
+      (variant) => variant.properties?.type?.const === "audio_replay_present",
+    );
+    const voiceMetricMaxVariant = assertionVariants.find(
+      (variant) => variant.properties?.type?.const === "voice_metric_max",
+    );
+    const voiceMetricMinVariant = assertionVariants.find(
+      (variant) => variant.properties?.type?.const === "voice_metric_min",
+    );
 
     expect(result.code).toBe(0);
     expect(result.stdout).toContain(`Wrote JSON Schema: ${schemaPath}`);
@@ -1065,6 +1074,9 @@ describe("voice-test CLI", () => {
         "tool_called",
         "backend_state_present",
         "backend_state_equals",
+        "audio_replay_present",
+        "voice_metric_max",
+        "voice_metric_min",
       ]),
     );
     expect(leadIntentVariant?.properties?.intent?.enum).toContain("handoff");
@@ -1073,6 +1085,9 @@ describe("voice-test CLI", () => {
     expect(toolCalledVariant?.properties?.arguments).toBeDefined();
     expect(backendStatePresentVariant?.properties?.path).toBeDefined();
     expect(backendStateEqualsVariant?.properties?.value).toBeDefined();
+    expect(audioReplayVariant?.properties?.severity).toBeDefined();
+    expect(voiceMetricMaxVariant?.properties?.metric?.enum).toContain("timeToFirstWordMs");
+    expect(voiceMetricMinVariant?.properties?.metric?.enum).toContain("asrConfidence");
   });
 
   it("prints the suite JSON Schema to stdout when no output path is provided", async () => {

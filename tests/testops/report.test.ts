@@ -152,6 +152,75 @@ describe("renderHtmlReport", () => {
     expect(html).toContain("语义断言未通过");
     expect(html).toContain("按评测理由复盘回复，收紧提示词、业务事实或转人工条件。");
   });
+
+  it("renders audio replay controls and voice metrics when turn evidence is present", () => {
+    const result: VoiceTestRunResult = {
+      id: "run_voice",
+      suiteName: "Voice-native launch check",
+      passed: true,
+      startedAt: "2026-05-03T10:00:00.000Z",
+      finishedAt: "2026-05-03T10:01:00.000Z",
+      summary: { scenarios: 1, turns: 1, assertions: 3, failures: 0 },
+      scenarios: [
+        {
+          id: "voice_metrics",
+          title: "Voice evidence",
+          passed: true,
+          turns: [
+            {
+              index: 0,
+              user: "Can you hear me?",
+              assistant: "Yes, I can hear you.",
+              latencyMs: 720,
+              passed: true,
+              assertions: 3,
+              failures: [],
+              audio: {
+                url: "https://voice.example.test/replays/call-1-turn-1.wav?token=<secret>",
+                label: "call 1 turn 1",
+                durationMs: 4100,
+              },
+              voiceMetrics: {
+                timeToFirstWordMs: 620,
+                asrConfidence: 0.94,
+                interruptionCount: 0,
+              },
+            },
+          ],
+        },
+      ],
+    };
+
+    const html = renderHtmlReport(result, { locale: "en" });
+    const markdown = renderMarkdownSummary({
+      ...result,
+      passed: false,
+      summary: { ...result.summary, failures: 1 },
+      scenarios: [
+        {
+          ...result.scenarios[0],
+          passed: false,
+          turns: [
+            {
+              ...result.scenarios[0].turns[0],
+              passed: false,
+              failures: [{ code: "voice_metric_exceeded", message: "time to first word too slow", severity: "major" }],
+            },
+          ],
+        },
+      ],
+    });
+
+    expect(html).toContain("Audio replay");
+    expect(html).toContain("<audio controls");
+    expect(html).toContain("https://voice.example.test/replays/call-1-turn-1.wav?token=&lt;secret&gt;");
+    expect(html).toContain("Time to first word");
+    expect(html).toContain("620ms");
+    expect(html).toContain("ASR confidence");
+    expect(html).toContain("94%");
+    expect(markdown).toContain("Audio replay: https://voice.example.test/replays/call-1-turn-1.wav?token=<secret>");
+    expect(markdown).toContain("Voice metrics: timeToFirstWordMs=620ms, asrConfidence=94%, interruptionCount=0");
+  });
 });
 
 describe("CI report renderers", () => {

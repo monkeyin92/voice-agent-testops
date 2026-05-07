@@ -7,6 +7,16 @@ const severityProperty: JsonSchema = {
   description: "How seriously this assertion should count in reports and severity gates.",
 };
 
+const voiceMetricEnum = [
+  "timeToFirstWordMs",
+  "turnLatencyMs",
+  "asrLatencyMs",
+  "ttsLatencyMs",
+  "silenceMs",
+  "interruptionCount",
+  "asrConfidence",
+];
+
 export function buildVoiceTestSuiteJsonSchema(): JsonSchema {
   return {
     $schema: "https://json-schema.org/draft/2020-12/schema",
@@ -329,6 +339,54 @@ function buildAssertionSchema(): JsonSchema {
           },
           value: {
             description: "Expected JSON value at the selected backend state path.",
+          },
+          severity: severityProperty,
+        },
+      },
+      {
+        title: "audio_replay_present",
+        type: "object",
+        additionalProperties: false,
+        required: ["type"],
+        properties: {
+          type: { const: "audio_replay_present" },
+          severity: severityProperty,
+        },
+      },
+      {
+        title: "voice_metric_max",
+        type: "object",
+        additionalProperties: false,
+        required: ["type", "metric", "value"],
+        properties: {
+          type: { const: "voice_metric_max" },
+          metric: {
+            type: "string",
+            enum: voiceMetricEnum,
+            description: "Numeric voice metric returned in voiceMetrics that must be less than or equal to value.",
+          },
+          value: {
+            type: "number",
+            minimum: 0,
+          },
+          severity: severityProperty,
+        },
+      },
+      {
+        title: "voice_metric_min",
+        type: "object",
+        additionalProperties: false,
+        required: ["type", "metric", "value"],
+        properties: {
+          type: { const: "voice_metric_min" },
+          metric: {
+            type: "string",
+            enum: voiceMetricEnum,
+            description: "Numeric voice metric returned in voiceMetrics that must be greater than or equal to value.",
+          },
+          value: {
+            type: "number",
+            minimum: 0,
           },
           severity: severityProperty,
         },

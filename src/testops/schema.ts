@@ -14,6 +14,17 @@ export const semanticJudgeRubricSchema = z.enum([
 ]);
 export type SemanticJudgeRubric = z.infer<typeof semanticJudgeRubricSchema>;
 
+export const voiceMetricNameSchema = z.enum([
+  "timeToFirstWordMs",
+  "turnLatencyMs",
+  "asrLatencyMs",
+  "ttsLatencyMs",
+  "silenceMs",
+  "interruptionCount",
+  "asrConfidence",
+]);
+export type VoiceMetricName = z.infer<typeof voiceMetricNameSchema>;
+
 type JsonValue = string | number | boolean | null | JsonValue[] | { [key: string]: JsonValue };
 const jsonValueSchema: z.ZodType<JsonValue> = z.lazy(() =>
   z.union([z.string(), z.number(), z.boolean(), z.null(), z.array(jsonValueSchema), z.record(z.string(), jsonValueSchema)]),
@@ -68,6 +79,22 @@ export const voiceTestAssertionSchema = z.discriminatedUnion("type", [
     type: z.literal("backend_state_equals"),
     path: backendStatePathSchema,
     value: jsonValueSchema,
+    severity: assertionSeverity,
+  }),
+  z.object({
+    type: z.literal("audio_replay_present"),
+    severity: assertionSeverity,
+  }),
+  z.object({
+    type: z.literal("voice_metric_max"),
+    metric: voiceMetricNameSchema,
+    value: z.number().nonnegative(),
+    severity: assertionSeverity,
+  }),
+  z.object({
+    type: z.literal("voice_metric_min"),
+    metric: voiceMetricNameSchema,
+    value: z.number().nonnegative(),
     severity: assertionSeverity,
   }),
 ]);

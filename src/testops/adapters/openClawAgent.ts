@@ -76,6 +76,9 @@ function buildCustomPayload(input: OpenClawTurnInput) {
       summary: "optional LeadSummary-compatible JSON",
       tools: "optional array of tool calls: [{ name, arguments, result }]",
       state: "optional backend state snapshot used by backend_state assertions",
+      audio: "optional replay metadata: { url, label, mimeType, durationMs }",
+      voiceMetrics:
+        "optional numeric metrics: { timeToFirstWordMs, turnLatencyMs, asrLatencyMs, ttsLatencyMs, silenceMs, interruptionCount, asrConfidence }",
     },
   };
 }
@@ -143,6 +146,8 @@ function parseVoiceAgentJson(text: string | undefined): VoiceAgentTurnOutput | u
       ...(isRecord(parsed.summary) ? { summary: parsed.summary } : {}),
       ...(Array.isArray(parsed.tools) ? { tools: parsed.tools } : {}),
       ...(isRecord(parsed.state) ? { state: parsed.state } : {}),
+      ...(isRecord(parsed.audio) ? { audio: parsed.audio } : {}),
+      ...(isRecord(parsed.voiceMetrics) ? { voiceMetrics: parsed.voiceMetrics } : {}),
     } as VoiceAgentTurnOutput;
   } catch {
     return undefined;
