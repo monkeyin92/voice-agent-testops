@@ -550,6 +550,7 @@ If your team has ever watched a voice agent sound confident at exactly the wrong
 - [External pilot readiness review](docs/ops/external-pilot-readiness-review.zh-CN.md)
 - [External pilot runbook](docs/ops/external-pilot-runbook.zh-CN.md)
 - [Pilot data sanitization and authorization template](docs/ops/pilot-data-sanitization-authorization.zh-CN.md)
+- [External pilot tracker](docs/ops/external-pilot-tracker.zh-CN.md)
 - [Generic HTTP Agent](docs/integrations/http.md)
 - [OpenClaw](docs/integrations/openclaw.md)
 - [Vapi](docs/integrations/vapi.md)

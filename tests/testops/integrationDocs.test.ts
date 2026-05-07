@@ -346,6 +346,46 @@ describe("integration documentation", () => {
     }
   });
 
+  it("documents the external pilot tracking table", () => {
+    const trackerPath = "docs/ops/external-pilot-tracker.zh-CN.md";
+    const readme = readFileSync("README.md", "utf8");
+    const chineseReadme = readFileSync("README.zh-CN.md", "utf8");
+    const readinessReview = readFileSync("docs/ops/external-pilot-readiness-review.zh-CN.md", "utf8");
+    const runbook = readFileSync("docs/ops/external-pilot-runbook.zh-CN.md", "utf8");
+    const validationChecklist = readFileSync("docs/growth/voice-agent-testops-validation.md", "utf8");
+
+    expect(existsSync(trackerPath)).toBe(true);
+    expect(readme).toContain(`[External pilot tracker](${trackerPath})`);
+    expect(chineseReadme).toContain(`[外部试跑记录表](${trackerPath})`);
+    expect(readinessReview).toContain(`[外部试跑记录表](external-pilot-tracker.zh-CN.md)`);
+    expect(runbook).toContain(`[外部试跑记录表](external-pilot-tracker.zh-CN.md)`);
+    expect(validationChecklist).toContain(`[外部试跑记录表](../ops/external-pilot-tracker.zh-CN.md)`);
+
+    const tracker = readFileSync(trackerPath, "utf8");
+    for (const phrase of [
+      "使用方式",
+      "试跑记录表",
+      "字段字典",
+      "失败类型枚举",
+      "状态枚举",
+      "每周复盘",
+      "Go / No-Go 判定",
+      "接入方式",
+      "跑通耗时",
+      "首次失败类型",
+      "是否生成 regression",
+      "是否愿意继续试点",
+      "付费兴趣",
+      "下一步动作",
+      "HTTP",
+      "OpenClaw",
+      "Vapi",
+      "Retell",
+    ]) {
+      expect(tracker).toContain(phrase);
+    }
+  });
+
   it("documents the setup contract and copy-paste commands for every supported stack", () => {
     for (const doc of integrationDocs) {
       expect(existsSync(doc.path), `${doc.path} should exist`).toBe(true);
