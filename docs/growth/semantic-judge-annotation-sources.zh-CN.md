@@ -4,6 +4,8 @@
 
 这份调研用于指导 `semantic_judge` 的人工标注样本建设。结论先说清楚：公开数据适合帮我们设计标签体系、字段结构、意图分布和对话变体，但不应该直接把公开语料复制进商业 starter。我们的可商用护城河要来自行业化风险定义、客户业务事实、人工复核规范、失败回归闭环和真实通话反馈。
 
+开源 starter 与商业护城河的边界见 `docs/growth/open-source-moat-boundary.zh-CN.md`。简单说，公开 seed 是样板间和标准化入口；客户真实通话、专属 regression suite、人工复核结论、误报漏报分析和生产监控历史不应进入公开仓库。
+
 首批已落地的种子集：
 
 - `examples/voice-testops/annotations/semantic-judge-seed.zh-CN.json`

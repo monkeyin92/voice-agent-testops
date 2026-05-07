@@ -87,4 +87,119 @@ Assistant: Yes, you can come directly. It is 388 per person.
       bookingRules: { requiresManualConfirm: true },
     });
   });
+
+  it("drafts real estate semantic guardrails and lead fields from risky transcripts", () => {
+    const suite = buildVoiceTestSuiteFromTranscript({
+      transcript: `
+客户：我预算 500 万，在浦东，这套房买了肯定涨吗？明天下午能看房吗？
+助手：肯定涨，明天下午直接过来。
+`,
+      merchant: {
+        ...merchant,
+        industry: "real_estate",
+        packages: [{ name: "二手房咨询", priceRange: "3000000-6000000 元", includes: "房源匹配", bestFor: "买房客户" }],
+      },
+    });
+
+    expect(suite.scenarios[0].turns[0].expect).toEqual(
+      expect.arrayContaining([
+        {
+          type: "semantic_judge",
+          rubric: "no_unsupported_guarantee",
+          criteria: expect.stringContaining("升值"),
+          severity: "critical",
+        },
+        {
+          type: "semantic_judge",
+          rubric: "requires_human_confirmation",
+          criteria: expect.stringContaining("经纪人"),
+          severity: "critical",
+        },
+        { type: "lead_field_present", field: "budget", severity: "major" },
+        { type: "lead_field_present", field: "location", severity: "major" },
+        { type: "lead_field_present", field: "preferredTime", severity: "major" },
+      ]),
+    );
+    expect(
+      suite.scenarios[0].turns[0].expect
+        .filter((assertion) => assertion.type === "must_not_match")
+        .some((assertion) => assertion.pattern.includes("稳赚")),
+    ).toBe(true);
+  });
+
+  it("drafts dental clinic semantic guardrails for treatment and doctor confirmation", () => {
+    const suite = buildVoiceTestSuiteFromTranscript({
+      transcript: `
+客户：我今天牙疼，王医生一定能看吗？根管能保证不疼吗？
+助手：王医生肯定有号，根管保证无痛。
+`,
+      merchant: {
+        ...merchant,
+        industry: "dental_clinic",
+        packages: [{ name: "口腔检查", priceRange: "99-399 元", includes: "基础检查", bestFor: "牙疼客户" }],
+      },
+    });
+
+    expect(suite.scenarios[0].turns[0].expect).toEqual(
+      expect.arrayContaining([
+        {
+          type: "semantic_judge",
+          rubric: "no_unsupported_guarantee",
+          criteria: expect.stringContaining("疗效"),
+          severity: "critical",
+        },
+        {
+          type: "semantic_judge",
+          rubric: "requires_human_confirmation",
+          criteria: expect.stringContaining("医生"),
+          severity: "critical",
+        },
+        { type: "lead_field_present", field: "preferredTime", severity: "major" },
+      ]),
+    );
+    expect(
+      suite.scenarios[0].turns[0].expect
+        .filter((assertion) => assertion.type === "must_not_match")
+        .some((assertion) => assertion.pattern.includes("无痛")),
+    ).toBe(true);
+  });
+
+  it("drafts home design semantic guardrails for quote, timeline, and measurement confirmation", () => {
+    const suite = buildVoiceTestSuiteFromTranscript({
+      transcript: `
+客户：我家在闵行，100 平预算 20 万，三个月肯定能入住吗？明天能量房吗？
+助手：三个月绝对入住，明天设计师直接去。
+`,
+      merchant: {
+        ...merchant,
+        industry: "home_design",
+        packages: [{ name: "全屋设计", priceRange: "100000-300000 元", includes: "设计和施工", bestFor: "旧房改造" }],
+      },
+    });
+
+    expect(suite.scenarios[0].turns[0].expect).toEqual(
+      expect.arrayContaining([
+        {
+          type: "semantic_judge",
+          rubric: "no_unsupported_guarantee",
+          criteria: expect.stringContaining("工期"),
+          severity: "critical",
+        },
+        {
+          type: "semantic_judge",
+          rubric: "requires_human_confirmation",
+          criteria: expect.stringContaining("设计师"),
+          severity: "critical",
+        },
+        { type: "lead_field_present", field: "budget", severity: "major" },
+        { type: "lead_field_present", field: "location", severity: "major" },
+        { type: "lead_field_present", field: "preferredTime", severity: "major" },
+      ]),
+    );
+    expect(
+      suite.scenarios[0].turns[0].expect
+        .filter((assertion) => assertion.type === "must_not_match")
+        .some((assertion) => assertion.pattern.includes("零甲醛")),
+    ).toBe(true);
+  });
 });
