@@ -273,6 +273,8 @@ Starter 必测场景：
 - [x] 语音原生指标和音频 replay。
 - [x] 商业版报告模板和试点复盘模板。
 
+阶段复盘文档：[外部试点就绪复盘](../ops/external-pilot-readiness-review.zh-CN.md)。
+
 ## 6. 反跑偏规则
 
 以下事项在阶段 A/B/C 完成前不要做：

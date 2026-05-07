@@ -547,6 +547,7 @@ If your team has ever watched a voice agent sound confident at exactly the wrong
 - [Mock data guide](docs/guides/mock-data.md)
 - [Market thesis](docs/strategy/voice-agent-testops-market.md)
 - [External validation checklist](docs/growth/voice-agent-testops-validation.md)
+- [External pilot readiness review](docs/ops/external-pilot-readiness-review.zh-CN.md)
 - [Generic HTTP Agent](docs/integrations/http.md)
 - [OpenClaw](docs/integrations/openclaw.md)
 - [Vapi](docs/integrations/vapi.md)
