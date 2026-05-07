@@ -328,7 +328,8 @@ npx voice-agent-testops run \
   --suite voice-testops/suite.json \
   --baseline .voice-testops-baseline/report.json \
   --diff-markdown .voice-testops/diff.md \
-  --fail-on-new
+  --fail-on-new \
+  --fail-on-severity critical
 ```
 
 也可以不重新跑 suite，直接对比两个已经保存的 JSON 报告：
@@ -338,10 +339,11 @@ npx voice-agent-testops compare \
   --baseline .voice-testops-baseline/report.json \
   --current .voice-testops/report.json \
   --diff-markdown .voice-testops/diff.md \
-  --fail-on-new
+  --fail-on-new \
+  --fail-on-severity critical
 ```
 
-生成的 workflow 会把最新 push 的 `.voice-testops/report.json` 缓存在 `.voice-testops-baseline/report.json`。首轮没有 baseline 时，它仍用 critical gate；后续有 baseline 时会切到 `--fail-on-new`，只在新增风险出现时失败。它会生成 `.voice-testops/diff.md`，列出新增、已修复和仍存在的风险，并把 `.voice-testops/summary.md` 和 `.voice-testops/diff.md` 一起追加到 `GITHUB_STEP_SUMMARY`；同时通过 `actions/upload-artifact` 上传 `.voice-testops/report.json`、`.voice-testops/report.html`、`.voice-testops/summary.md`、`.voice-testops/junit.xml` 和 `.voice-testops/diff.md`。
+生成的 workflow 会把最新 push 的 `.voice-testops/report.json` 缓存在 `.voice-testops-baseline/report.json`。首轮没有 baseline 时，它仍阻断当前 critical 失败；后续有 baseline 时会切到 `--fail-on-new --fail-on-severity critical`，只在新增 critical 风险出现时失败。新增 minor/major 漂移仍会写入 `.voice-testops/diff.md`，但不会挡发布。diff 会列出新增、已修复和仍存在的风险，并把 `.voice-testops/summary.md` 和 `.voice-testops/diff.md` 一起追加到 `GITHUB_STEP_SUMMARY`；同时通过 `actions/upload-artifact` 上传 `.voice-testops/report.json`、`.voice-testops/report.html`、`.voice-testops/summary.md`、`.voice-testops/junit.xml` 和 `.voice-testops/diff.md`。
 
 CI 里可以用 `--fail-on-severity critical` 只阻断高危失败。这样轻微文案漂移会留在报告里，但不会和乱报价、漏手机号、错误转人工这类上线事故混在一起。
 

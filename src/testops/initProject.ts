@@ -614,7 +614,7 @@ ${doctorStep}
           GATE_ARGS="--fail-on-severity critical"
           if [ -f .voice-testops-baseline/report.json ]; then
             BASELINE_ARGS="--baseline .voice-testops-baseline/report.json --diff-markdown .voice-testops/diff.md"
-            GATE_ARGS="--fail-on-new"
+            GATE_ARGS="--fail-on-new --fail-on-severity critical"
           fi
           ${buildWorkflowRunCommand(options)} $BASELINE_ARGS $GATE_ARGS
 

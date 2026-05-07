@@ -193,6 +193,33 @@ describe("voice-test CLI", () => {
     expect(result.stdout).toContain("New failure gate: failed (1 new failures)");
   });
 
+  it("allows newly introduced minor baseline failures when the new failure gate is scoped to critical", async () => {
+    const tempDir = await mkdtemp(path.join(tmpdir(), "voice-testops-cli-"));
+    const suitePath = await writeMinorFailureSuite(tempDir);
+    const baselinePath = path.join(tempDir, "baseline.json");
+    await writeJsonReport(
+      baselinePath,
+      "Previous run",
+      "old_blocked_promise",
+      "Old blocked promise",
+      "forbidden_pattern_matched",
+      "old absolute promise",
+    );
+
+    const result = await runCli([
+      "--suite",
+      suitePath,
+      "--baseline",
+      baselinePath,
+      "--fail-on-new",
+      "--fail-on-severity",
+      "critical",
+    ]);
+
+    expect(result.code).toBe(0);
+    expect(result.stdout).toContain("New failure gate: passed (0 new failures at or above critical)");
+  });
+
   it("compares two existing JSON reports without running a suite", async () => {
     const tempDir = await mkdtemp(path.join(tmpdir(), "voice-testops-cli-"));
     const baselinePath = path.join(tempDir, "baseline.json");
@@ -236,6 +263,43 @@ describe("voice-test CLI", () => {
     expect(markdown).toContain("Current run");
     expect(markdown).toContain("New missing phone / turn 1");
     expect(markdown).toContain("Old blocked promise / turn 1");
+  });
+
+  it("fails compare when a current report introduces new critical failures", async () => {
+    const tempDir = await mkdtemp(path.join(tmpdir(), "voice-testops-cli-"));
+    const baselinePath = path.join(tempDir, "baseline.json");
+    const currentPath = path.join(tempDir, "current.json");
+    await writeJsonReport(
+      baselinePath,
+      "Previous run",
+      "minor_copy_regression",
+      "Minor wording regression",
+      "expected_phrase_missing",
+      "old missing phrase",
+      "minor",
+    );
+    await writeJsonReport(
+      currentPath,
+      "Current run",
+      "unsafe_promise",
+      "Unsafe promise",
+      "semantic_judge_failed",
+      "new unsupported guarantee",
+    );
+
+    const result = await runCli([
+      "compare",
+      "--baseline",
+      baselinePath,
+      "--current",
+      currentPath,
+      "--fail-on-new",
+      "--fail-on-severity",
+      "critical",
+    ]);
+
+    expect(result.code).toBe(1);
+    expect(result.stdout).toContain("New failure gate: failed (1 new failures at or above critical)");
   });
 
   it("generates a regression suite from a transcript file", async () => {
@@ -1028,7 +1092,7 @@ describe("voice-test CLI", () => {
     expect(workflow).toContain(".voice-testops-baseline/report.json");
     expect(workflow).toContain("GATE_ARGS=\"--fail-on-severity critical\"");
     expect(workflow).toContain("BASELINE_ARGS=\"--baseline .voice-testops-baseline/report.json --diff-markdown .voice-testops/diff.md\"");
-    expect(workflow).toContain("GATE_ARGS=\"--fail-on-new\"");
+    expect(workflow).toContain("GATE_ARGS=\"--fail-on-new --fail-on-severity critical\"");
     expect(workflow).toContain("cat .voice-testops/summary.md >> \"$GITHUB_STEP_SUMMARY\"");
     expect(workflow).toContain("cat .voice-testops/diff.md >> \"$GITHUB_STEP_SUMMARY\"");
     expect(workflow).toContain("actions/cache/save@v4");

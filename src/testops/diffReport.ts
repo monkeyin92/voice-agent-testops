@@ -15,6 +15,7 @@ export type VoiceTestRunDiff = {
   currentSuiteName: string;
   summary: {
     newFailures: number;
+    newCriticalFailures: number;
     resolvedFailures: number;
     unchangedFailures: number;
   };
@@ -40,6 +41,7 @@ export function diffVoiceTestReports(
     currentSuiteName: current.suiteName,
     summary: {
       newFailures: newFailures.length,
+      newCriticalFailures: newFailures.filter((failure) => failure.severity === "critical").length,
       resolvedFailures: resolvedFailures.length,
       unchangedFailures: unchangedFailures.length,
     },
@@ -56,7 +58,7 @@ export function renderMarkdownDiff(diff: VoiceTestRunDiff): string {
     `**Baseline:** ${diff.baselineSuiteName}`,
     `**Current:** ${diff.currentSuiteName}`,
     "",
-    `New failures: ${diff.summary.newFailures} · Resolved failures: ${diff.summary.resolvedFailures} · Unchanged failures: ${diff.summary.unchangedFailures}`,
+    `New failures: ${diff.summary.newFailures} · New critical failures: ${diff.summary.newCriticalFailures} · Resolved failures: ${diff.summary.resolvedFailures} · Unchanged failures: ${diff.summary.unchangedFailures}`,
     "",
   ];
 
