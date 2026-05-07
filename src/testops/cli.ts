@@ -308,10 +308,14 @@ async function runSuite(argv: string[]): Promise<number> {
     await writeReport(args.junitPath, renderJunitReport(result));
   }
   let newFailureCount: number | undefined;
+  let gatedNewFailureCount: number | undefined;
   if (args.baselinePath && args.diffMarkdownPath) {
     const baseline = await readVoiceTestReport(args.baselinePath, "Baseline");
     const diff = diffVoiceTestReports(baseline, result);
     newFailureCount = diff.summary.newFailures;
+    gatedNewFailureCount = args.failOnSeverity
+      ? countFailureRecordsAtOrAboveSeverity(diff.newFailures, args.failOnSeverity)
+      : newFailureCount;
     await writeReport(args.diffMarkdownPath, renderMarkdownDiff(diff));
   }
 
@@ -333,8 +337,8 @@ async function runSuite(argv: string[]): Promise<number> {
   }
 
   if (args.failOnNew) {
-    const newFailures = newFailureCount ?? 0;
-    console.log(`New failure gate: ${newFailures === 0 ? "passed" : "failed"} (${newFailures} new failures)`);
+    const newFailures = gatedNewFailureCount ?? newFailureCount ?? 0;
+    console.log(formatNewFailureGate(newFailures, args.failOnSeverity));
     return newFailures === 0 ? 0 : 1;
   }
 
@@ -367,10 +371,11 @@ async function compareReports(argv: string[]): Promise<number> {
   }
 
   if (args.failOnNew) {
-    console.log(
-      `New failure gate: ${diff.summary.newFailures === 0 ? "passed" : "failed"} (${diff.summary.newFailures} new failures)`,
-    );
-    return diff.summary.newFailures === 0 ? 0 : 1;
+    const newFailures = args.failOnSeverity
+      ? countFailureRecordsAtOrAboveSeverity(diff.newFailures, args.failOnSeverity)
+      : diff.summary.newFailures;
+    console.log(formatNewFailureGate(newFailures, args.failOnSeverity));
+    return newFailures === 0 ? 0 : 1;
   }
 
   return 0;
@@ -381,6 +386,7 @@ type CompareArgs = {
   currentPath: string;
   diffMarkdownPath?: string;
   failOnNew: boolean;
+  failOnSeverity?: VoiceTestSeverity;
 };
 
 function parseCompareArgs(argv: string[]): CompareArgs {
@@ -399,7 +405,7 @@ function parseCompareArgs(argv: string[]): CompareArgs {
       continue;
     }
 
-    if (name !== "baseline" && name !== "current" && name !== "diff-markdown") {
+    if (name !== "baseline" && name !== "current" && name !== "diff-markdown" && name !== "fail-on-severity") {
       throw new Error(`Unknown compare option: --${name}`);
     }
 
@@ -421,12 +427,22 @@ function parseCompareArgs(argv: string[]): CompareArgs {
   if (!currentPath) {
     throw new Error("--current is required");
   }
+  const failOnSeverity = values.get("fail-on-severity");
+  if (
+    failOnSeverity !== undefined &&
+    failOnSeverity !== "critical" &&
+    failOnSeverity !== "major" &&
+    failOnSeverity !== "minor"
+  ) {
+    throw new Error("--fail-on-severity must be critical, major, or minor");
+  }
 
   return {
     baselinePath,
     currentPath,
     diffMarkdownPath: values.get("diff-markdown"),
     failOnNew: flags.has("fail-on-new"),
+    failOnSeverity,
   };
 }
 
@@ -758,6 +774,22 @@ function countFailuresAtOrAboveSeverity(result: VoiceTestRunResult, threshold: V
       ),
     0,
   );
+}
+
+function countFailureRecordsAtOrAboveSeverity(
+  failures: Array<{ severity: VoiceTestSeverity }>,
+  threshold: VoiceTestSeverity,
+): number {
+  const thresholdRank = severityRank[threshold];
+  return failures.filter((failure) => severityRank[failure.severity] >= thresholdRank).length;
+}
+
+function formatNewFailureGate(newFailures: number, threshold: VoiceTestSeverity | undefined): string {
+  if (!threshold) {
+    return `New failure gate: ${newFailures === 0 ? "passed" : "failed"} (${newFailures} new failures)`;
+  }
+
+  return `New failure gate: ${newFailures === 0 ? "passed" : "failed"} (${newFailures} new failures at or above ${threshold})`;
 }
 
 main(process.argv.slice(2))

@@ -424,7 +424,8 @@ npx voice-agent-testops run \
   --suite voice-testops/suite.json \
   --baseline .voice-testops-baseline/report.json \
   --diff-markdown .voice-testops/diff.md \
-  --fail-on-new
+  --fail-on-new \
+  --fail-on-severity critical
 ```
 
 You can also compare two saved JSON reports without rerunning the suite:
@@ -434,10 +435,11 @@ npx voice-agent-testops compare \
   --baseline .voice-testops-baseline/report.json \
   --current .voice-testops/report.json \
   --diff-markdown .voice-testops/diff.md \
-  --fail-on-new
+  --fail-on-new \
+  --fail-on-severity critical
 ```
 
-The generated workflow caches the latest push report as `.voice-testops-baseline/report.json`. On the first run it gates on critical failures. On later runs it switches to `--fail-on-new`, writes `.voice-testops/diff.md` with new, resolved, and unchanged failures, then appends both `.voice-testops/summary.md` and `.voice-testops/diff.md` to `GITHUB_STEP_SUMMARY`. It also uploads `.voice-testops/report.json`, `.voice-testops/report.html`, `.voice-testops/summary.md`, `.voice-testops/junit.xml`, and `.voice-testops/diff.md` through `actions/upload-artifact`.
+The generated workflow caches the latest push report as `.voice-testops-baseline/report.json`. On the first run it gates on current critical failures. On later runs it switches to `--fail-on-new --fail-on-severity critical`, so newly introduced critical failures block release while new minor or major drift remains visible in `.voice-testops/diff.md`. The diff lists new, resolved, and unchanged failures, then appends both `.voice-testops/summary.md` and `.voice-testops/diff.md` to `GITHUB_STEP_SUMMARY`. It also uploads `.voice-testops/report.json`, `.voice-testops/report.html`, `.voice-testops/summary.md`, `.voice-testops/junit.xml`, and `.voice-testops/diff.md` through `actions/upload-artifact`.
 
 Use `--fail-on-severity` when you want CI to block only the failures that matter for release. This keeps minor copy drift visible in the report without treating it like a production-stopping safety issue.
 

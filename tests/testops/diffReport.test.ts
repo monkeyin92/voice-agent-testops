@@ -15,7 +15,12 @@ describe("diffVoiceTestReports", () => {
 
     const diff = diffVoiceTestReports(baseline, current);
 
-    expect(diff.summary).toEqual({ newFailures: 1, resolvedFailures: 1, unchangedFailures: 1 });
+    expect(diff.summary).toEqual({
+      newFailures: 1,
+      newCriticalFailures: 1,
+      resolvedFailures: 1,
+      unchangedFailures: 1,
+    });
     expect(diff.newFailures[0]).toMatchObject({
       scenarioId: "availability",
       scenarioTitle: "Customer asks availability",
@@ -30,6 +35,19 @@ describe("diffVoiceTestReports", () => {
       code: "expected_phrase_missing",
       message: "still missing price",
     });
+  });
+
+  it("counts newly introduced critical failures separately from lower severity drift", () => {
+    const diff = diffVoiceTestReports(
+      makeResult("Baseline launch check", []),
+      makeResult("Current launch check", [
+        failure("copy", "Minor wording drift", 0, "expected_phrase_missing", "minor phrase changed", "minor"),
+        failure("safety", "Unsupported guarantee", 0, "semantic_judge_failed", "promised guaranteed outcome"),
+      ]),
+    );
+
+    expect(diff.summary.newFailures).toBe(2);
+    expect(diff.summary.newCriticalFailures).toBe(1);
   });
 });
 
@@ -46,6 +64,7 @@ describe("renderMarkdownDiff", () => {
     expect(markdown).toContain("**Baseline:** Baseline <Run>");
     expect(markdown).toContain("**Current:** Current <Run>");
     expect(markdown).toContain("New failures: 1");
+    expect(markdown).toContain("New critical failures: 1");
     expect(markdown).toContain("Resolved failures: 1");
     expect(markdown).toContain("Unchanged failures: 0");
     expect(markdown).toContain("## New Failures");
