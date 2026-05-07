@@ -20,6 +20,14 @@ import {
   buildRegressionSuiteDraft,
   renderFailureClusterMarkdown,
 } from "./regressionDraft";
+import {
+  buildProductionCallSample,
+  parseProductionCallImport,
+  renderProductionCallSamplingMarkdown,
+  renderProductionCallTranscript,
+  type ProductionCallRecord,
+  type ProductionCallSample,
+} from "./productionCallImport";
 import { runVoiceTestSuite, type VoiceTestRunResult } from "./runner";
 import type { VoiceTestSeverity, VoiceTestSuite } from "./schema";
 import { loadVoiceTestSuite } from "./suiteLoader";
@@ -58,6 +66,10 @@ async function main(argv: string[]): Promise<number> {
 
   if (argv[0] === "draft-regressions") {
     return draftRegressions(argv.slice(1));
+  }
+
+  if (argv[0] === "import-calls") {
+    return importProductionCalls(argv.slice(1));
   }
 
   if (argv[0] === "schema") {
@@ -411,6 +423,44 @@ async function draftRegressions(argv: string[]): Promise<number> {
   return 0;
 }
 
+async function importProductionCalls(argv: string[]): Promise<number> {
+  const args = parseImportCallsArgs(argv);
+  const imported = parseProductionCallImport(await readFile(await resolveReadablePath(args.inputPath), "utf8"));
+  const sample = buildProductionCallSample(imported.records, {
+    sampleSize: args.sampleSize,
+    seed: args.seed,
+    riskOnly: args.riskOnly,
+    rejected: imported.rejected,
+  });
+  const sampleWithTranscriptPaths = addTranscriptPaths(sample, args.transcriptsDir);
+
+  if (args.transcriptsDir) {
+    for (const call of sampleWithTranscriptPaths.selectedCalls) {
+      await writeReport(call.transcriptPath ?? "", renderProductionCallTranscript(call));
+    }
+  }
+
+  await writeReport(args.outPath, `${JSON.stringify(buildProductionCallManifest(args, sampleWithTranscriptPaths), null, 2)}\n`);
+  if (args.summaryPath) {
+    await writeReport(args.summaryPath, renderProductionCallSamplingMarkdown(sampleWithTranscriptPaths));
+  }
+
+  console.log(`Production calls: ${args.inputPath}`);
+  console.log(`Production call sample: ${args.outPath}`);
+  if (args.summaryPath) {
+    console.log(`Sampling summary: ${args.summaryPath}`);
+  }
+  if (args.transcriptsDir) {
+    console.log(`Transcript files: ${args.transcriptsDir}`);
+  }
+  console.log(`Selected calls: ${sampleWithTranscriptPaths.selectedCalls.length}/${sampleWithTranscriptPaths.totalCalls}`);
+  if (sampleWithTranscriptPaths.rejectedCalls.length > 0) {
+    console.log(`Rejected records: ${sampleWithTranscriptPaths.rejectedCalls.length}`);
+  }
+
+  return 0;
+}
+
 type CompareArgs = {
   baselinePath: string;
   currentPath: string;
@@ -425,6 +475,140 @@ type DraftRegressionsArgs = {
   outPath: string;
   clustersPath?: string;
 };
+
+type ImportCallsArgs = {
+  inputPath: string;
+  outPath: string;
+  summaryPath?: string;
+  transcriptsDir?: string;
+  sampleSize: number;
+  seed: string;
+  riskOnly: boolean;
+};
+
+type ProductionCallManifest = {
+  generatedAt: string;
+  sourcePath: string;
+  seed: string;
+  sampleSize: number;
+  totalCalls: number;
+  selectedCalls: Array<{
+    id: string;
+    provider?: string;
+    startedAt?: string;
+    source: string;
+    industry?: string;
+    riskTags: string[];
+    customerTurns: number;
+    assistantTurns: number;
+    transcriptPath?: string;
+  }>;
+  rejectedCalls: Array<{ index: number; reason: string }>;
+  riskTagCounts: Array<{ tag: string; count: number }>;
+};
+
+function parseImportCallsArgs(argv: string[]): ImportCallsArgs {
+  const values = new Map<string, string>();
+  const flags = new Set<string>();
+  const knownValues = new Set(["input", "out", "summary", "transcripts", "sample-size", "seed"]);
+
+  for (let index = 0; index < argv.length; index += 1) {
+    const arg = argv[index];
+    if (!arg.startsWith("--")) {
+      throw new Error(`Unexpected argument: ${arg}`);
+    }
+
+    const name = arg.slice(2);
+    if (name === "risk-only") {
+      flags.add(name);
+      continue;
+    }
+    if (!knownValues.has(name)) {
+      throw new Error(`Unknown import-calls option: --${name}`);
+    }
+
+    const value = argv[index + 1];
+    if (!value || value.startsWith("--")) {
+      throw new Error(`${arg} requires a value`);
+    }
+
+    values.set(name, value);
+    index += 1;
+  }
+
+  const inputPath = values.get("input");
+  if (!inputPath) {
+    throw new Error("--input is required");
+  }
+  const outPath = values.get("out");
+  if (!outPath) {
+    throw new Error("--out is required");
+  }
+
+  const sampleSize = Number.parseInt(values.get("sample-size") ?? "20", 10);
+  if (!Number.isInteger(sampleSize) || sampleSize <= 0) {
+    throw new Error("--sample-size must be a positive integer");
+  }
+
+  return {
+    inputPath,
+    outPath,
+    summaryPath: values.get("summary"),
+    transcriptsDir: values.get("transcripts"),
+    sampleSize,
+    seed: values.get("seed") ?? "default",
+    riskOnly: flags.has("risk-only"),
+  };
+}
+
+function addTranscriptPaths(sample: ProductionCallSample, transcriptsDir: string | undefined): ProductionCallSample {
+  if (!transcriptsDir) {
+    return sample;
+  }
+
+  return {
+    ...sample,
+    selectedCalls: sample.selectedCalls.map((call) => ({
+      ...call,
+      transcriptPath: path.join(transcriptsDir, `${safeFileName(call.id)}.txt`),
+    })),
+  };
+}
+
+function buildProductionCallManifest(
+  args: ImportCallsArgs,
+  sample: ProductionCallSample,
+): ProductionCallManifest {
+  return {
+    generatedAt: new Date().toISOString(),
+    sourcePath: args.inputPath,
+    seed: sample.seed,
+    sampleSize: sample.sampleSize,
+    totalCalls: sample.totalCalls,
+    selectedCalls: sample.selectedCalls.map(summarizeProductionCall),
+    rejectedCalls: sample.rejectedCalls,
+    riskTagCounts: sample.riskTagCounts,
+  };
+}
+
+function summarizeProductionCall(call: ProductionCallRecord): ProductionCallManifest["selectedCalls"][number] {
+  return {
+    id: call.id,
+    provider: call.provider,
+    startedAt: call.startedAt,
+    source: call.source,
+    industry: call.industry,
+    riskTags: call.riskTags,
+    customerTurns: call.transcript.filter((message) => message.role === "customer").length,
+    assistantTurns: call.transcript.filter((message) => message.role === "assistant").length,
+    transcriptPath: call.transcriptPath,
+  };
+}
+
+function safeFileName(value: string): string {
+  const normalized = value.replace(/[^a-zA-Z0-9._-]+/g, "_").replace(/^_+|_+$/g, "");
+  return normalized || "call";
+}
 
 function parseDraftRegressionsArgs(argv: string[]): DraftRegressionsArgs {
   const values = parseKeyValueArgs(argv);

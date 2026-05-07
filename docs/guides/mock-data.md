@@ -176,6 +176,22 @@ npx voice-agent-testops draft-regressions \
 
 Review `failure-clusters.md` first to see which failures share the same root cause. Then inspect `regression-draft.json`, tighten the assertions around the approved root cause, and append only the cases that should become permanent release gates.
 
+## Sampling Production Calls
+
+Use `import-calls` when you have a weekly export from a pilot customer or voice platform:
+
+```bash
+npx voice-agent-testops import-calls \
+  --input examples/voice-testops/production-calls/sample-calls.jsonl \
+  --out .voice-testops/call-sample.json \
+  --summary .voice-testops/call-sampling.md \
+  --transcripts .voice-testops/call-transcripts \
+  --sample-size 20 \
+  --seed weekly-2026-05-07
+```
+
+Review `call-sampling.md` first, then open the selected files in `call-transcripts`. If a call reveals a real business risk, pass that transcript file into `from-transcript`, tighten the generated assertions, and add the reviewed scenario to the regression library.
+
 ## A Small Checklist
 
 - The merchant facts include at least one price or service fact the agent must quote.

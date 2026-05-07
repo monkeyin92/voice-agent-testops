@@ -307,6 +307,57 @@ describe("voice-test CLI", () => {
     expect(clusters).toContain("Minor wording regression / turn 1");
   });
 
+  it("imports production calls into a deterministic sampling review", async () => {
+    const tempDir = await mkdtemp(path.join(tmpdir(), "voice-testops-cli-"));
+    const inputPath = path.join(tempDir, "calls.jsonl");
+    const outPath = path.join(tempDir, "call-sample.json");
+    const summaryPath = path.join(tempDir, "call-sampling.md");
+    const transcriptsDir = path.join(tempDir, "call-transcripts");
+    await writeFile(inputPath, productionCallJsonl(), "utf8");
+
+    const result = await runCli([
+      "import-calls",
+      "--input",
+      inputPath,
+      "--out",
+      outPath,
+      "--summary",
+      summaryPath,
+      "--transcripts",
+      transcriptsDir,
+      "--sample-size",
+      "2",
+      "--seed",
+      "weekly-2026-05-07",
+    ]);
+
+    const manifest = JSON.parse(await readFile(outPath, "utf8")) as {
+      totalCalls: number;
+      selectedCalls: Array<{ id: string; riskTags: string[]; transcriptPath?: string }>;
+      rejectedCalls: Array<{ index: number; reason: string }>;
+      riskTagCounts: Array<{ tag: string; count: number }>;
+    };
+    const markdown = await readFile(summaryPath, "utf8");
+    const riskyTranscript = await readFile(path.join(transcriptsDir, "call_risky.txt"), "utf8");
+
+    expect(result.code).toBe(0);
+    expect(result.stdout).toContain(`Production call sample: ${outPath}`);
+    expect(result.stdout).toContain(`Sampling summary: ${summaryPath}`);
+    expect(result.stdout).toContain(`Transcript files: ${transcriptsDir}`);
+    expect(result.stdout).toContain("Selected calls: 2/3");
+    expect(manifest.totalCalls).toBe(3);
+    expect(manifest.selectedCalls.map((call) => call.id)).toEqual(["call_risky", "call_pricing"]);
+    expect(manifest.selectedCalls[0].riskTags).toContain("unsupported_promise");
+    expect(manifest.selectedCalls[0].transcriptPath).toBe(path.join(transcriptsDir, "call_risky.txt"));
+    expect(manifest.rejectedCalls).toEqual([{ index: 3, reason: "Call record must include transcript messages" }]);
+    expect(manifest.riskTagCounts).toEqual(expect.arrayContaining([{ tag: "unsupported_promise", count: 1 }]));
+    expect(markdown).toContain("# Voice Agent TestOps Production Call Sampling Monitor");
+    expect(markdown).toContain("call_risky");
+    expect(markdown).toContain("unsupported_promise");
+    expect(riskyTranscript).toContain("Customer: 我想找真人，经纪人给我回电吧，我电话 13800000000");
+    expect(riskyTranscript).toContain("Assistant: 这套房肯定涨，贷款也保证能过。");
+  });
+
   it("fails compare when a current report introduces new critical failures", async () => {
     const tempDir = await mkdtemp(path.join(tmpdir(), "voice-testops-cli-"));
     const baselinePath = path.join(tempDir, "baseline.json");
@@ -1280,6 +1331,36 @@ async function writeJsonReport(
     ),
     "utf8",
   );
+}
+
+function productionCallJsonl(): string {
+  return [
+    JSON.stringify({
+      callId: "call_risky",
+      provider: "vapi",
+      createdAt: "2026-05-07T09:00:00.000Z",
+      industry: "real_estate",
+      messages: [
+        { role: "user", message: "我想找真人，经纪人给我回电吧，我电话 13800000000" },
+        { role: "assistant", content: "这套房肯定涨，贷款也保证能过。" },
+      ],
+    }),
+    JSON.stringify({
+      id: "call_pricing",
+      transcript: [
+        { speaker: "caller", text: "How much is the package, and do you have a slot tomorrow?" },
+        { speaker: "agent", text: "The package starts at 599, and a human will confirm availability." },
+      ],
+    }),
+    JSON.stringify({
+      id: "call_low_signal",
+      transcript: "Customer: Hello\nAssistant: Hi, how can I help?",
+    }),
+    JSON.stringify({
+      id: "call_bad",
+      transcript: [],
+    }),
+  ].join("\n");
 }
 
 async function startDoctorServer(

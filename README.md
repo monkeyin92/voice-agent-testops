@@ -13,7 +13,7 @@ Voice Agent TestOps runs scripted customer conversations against your agent, the
 
 It is not another voice-agent framework. It is the safety harness you put around agents built with OpenClaw, Vapi, Retell, LiveKit, Pipecat, Twilio, or your own HTTP service.
 
-[Quick Start](#quick-start) · [Example Library](#example-library) · [Create Mock Data](#create-mock-data) · [Connect An Agent](#connect-an-agent) · [Turn A Real Failure Into A Regression Test](#turn-a-real-failure-into-a-regression-test) · [Draft Regressions From Failed Reports](#draft-regressions-from-failed-reports) · [Suite Format](#suite-format)
+[Quick Start](#quick-start) · [Example Library](#example-library) · [Create Mock Data](#create-mock-data) · [Connect An Agent](#connect-an-agent) · [Turn A Real Failure Into A Regression Test](#turn-a-real-failure-into-a-regression-test) · [Draft Regressions From Failed Reports](#draft-regressions-from-failed-reports) · [Import Production Calls For Sampling](#import-production-calls-for-sampling) · [Suite Format](#suite-format)
 
 ![Voice Agent TestOps report preview](docs/assets/report-preview.png)
 
@@ -351,6 +351,22 @@ npx voice-agent-testops draft-regressions \
 ```
 
 `regression-draft.json` keeps the failed scenarios and the turns needed to reproduce them. `failure-clusters.md` groups failures by severity, assertion code, and message fingerprint, so a team can review one cluster at a time instead of rereading every transcript. Treat both files as drafts: tighten the generated suite, then append the approved cases to your baseline gate.
+
+## Import Production Calls For Sampling
+
+When you have exported production or pilot calls, create a deterministic review sample:
+
+```bash
+npx voice-agent-testops import-calls \
+  --input examples/voice-testops/production-calls/sample-calls.jsonl \
+  --out .voice-testops/call-sample.json \
+  --summary .voice-testops/call-sampling.md \
+  --transcripts .voice-testops/call-transcripts \
+  --sample-size 20 \
+  --seed weekly-2026-05-07
+```
+
+`call-sample.json` is the automation manifest. `call-sampling.md` is for weekly human review. `call-transcripts` contains labeled text files that can be passed into `from-transcript` when a sampled call should become a regression test. Add `--risk-only` when you only want calls with inferred risk tags such as handoff requests, pricing questions, shared lead info, unsupported promises, or long conversations.
 
 ## Suite Format
 
