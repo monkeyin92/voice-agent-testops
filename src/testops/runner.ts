@@ -1,6 +1,7 @@
 import type { ConversationMessage } from "../server/services/agentAdapter";
 import type { VoiceAgentExecutor } from "./agents";
 import { makeTestMerchant } from "./agents";
+import { createRuleBasedSemanticJudge, type VoiceSemanticJudge } from "./semanticJudge";
 import type { VoiceTestAssertion, VoiceTestScenario, VoiceTestSeverity, VoiceTestSuite } from "./schema";
 
 export type VoiceTestClock = {
@@ -72,6 +73,7 @@ export type VoiceTestProgressEvent =
 export type VoiceTestRunOptions = {
   clock?: VoiceTestClock;
   onProgress?: (event: VoiceTestProgressEvent) => void;
+  semanticJudge?: VoiceSemanticJudge;
 };
 
 const systemClock: VoiceTestClock = {
@@ -85,11 +87,14 @@ export async function runVoiceTestSuite(
   options: VoiceTestRunOptions = {},
 ): Promise<VoiceTestRunResult> {
   const clock = options.clock ?? systemClock;
+  const semanticJudge = options.semanticJudge ?? createRuleBasedSemanticJudge();
   const startedAt = clock.iso();
   const scenarioResults: VoiceTestScenarioResult[] = [];
 
   for (const [scenarioIndex, scenario] of suite.scenarios.entries()) {
-    scenarioResults.push(await runScenario(suite.name, scenario, agent, clock, scenarioIndex, options.onProgress));
+    scenarioResults.push(
+      await runScenario(suite.name, scenario, agent, clock, scenarioIndex, options.onProgress, semanticJudge),
+    );
   }
 
   const assertions = scenarioResults.reduce(
@@ -125,6 +130,7 @@ async function runScenario(
   clock: VoiceTestClock,
   scenarioIndex: number,
   onProgress: VoiceTestRunOptions["onProgress"],
+  semanticJudge: VoiceSemanticJudge,
 ): Promise<VoiceTestScenarioResult> {
   const merchant = makeTestMerchant(scenario.merchant, `test_${scenario.id}`);
   const messages: ConversationMessage[] = [];
@@ -166,7 +172,13 @@ async function runScenario(
     };
     messages.push(assistantMessage);
 
-    const failures = turn.expect.flatMap((assertion) => evaluateAssertion(assertion, output.spoken, latencyMs, output.summary));
+    const failures = (
+      await Promise.all(
+        turn.expect.map((assertion) =>
+          evaluateAssertion(assertion, output.spoken, latencyMs, output.summary, turn.user, semanticJudge),
+        ),
+      )
+    ).flat();
     const passed = failures.length === 0;
 
     turnResults.push({
@@ -206,7 +218,9 @@ function evaluateAssertion(
   spoken: string,
   latencyMs: number,
   summary: Awaited<ReturnType<VoiceAgentExecutor>>["summary"],
-): VoiceTestFailure[] {
+  user: string,
+  semanticJudge: VoiceSemanticJudge,
+): Promise<VoiceTestFailure[]> | VoiceTestFailure[] {
   switch (assertion.type) {
     case "must_contain_any": {
       const matched = assertion.phrases.some((phrase) => spoken.includes(phrase));
@@ -264,5 +278,29 @@ function evaluateAssertion(
               severity: assertion.severity,
             },
           ];
+    case "semantic_judge":
+      return evaluateSemanticJudgeAssertion(assertion, spoken, user, summary, semanticJudge);
   }
+}
+
+async function evaluateSemanticJudgeAssertion(
+  assertion: Extract<VoiceTestAssertion, { type: "semantic_judge" }>,
+  spoken: string,
+  user: string,
+  summary: Awaited<ReturnType<VoiceAgentExecutor>>["summary"],
+  semanticJudge: VoiceSemanticJudge,
+): Promise<VoiceTestFailure[]> {
+  const result = await semanticJudge({ assertion, spoken, user, summary });
+
+  return result.passed
+    ? []
+    : [
+        {
+          code: "semantic_judge_failed",
+          message: `语义断言未通过（${assertion.rubric}）：${result.reason}${
+            result.evidence ? `；证据：${result.evidence}` : ""
+          }`,
+          severity: assertion.severity,
+        },
+      ];
 }

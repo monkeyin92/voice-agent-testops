@@ -138,6 +138,20 @@ describe("renderHtmlReport", () => {
     expect(html).toContain("业务风险");
     expect(html).toContain("避免在客户面前输出未经确认的绝对承诺。");
   });
+
+  it("renders repair advice for semantic judge failures", () => {
+    const result = failedResult();
+    result.scenarios[0].turns[0].failures[0] = {
+      code: "semantic_judge_failed",
+      message: "语义断言未通过（no_unsupported_guarantee）：回复包含未被业务事实支持的绝对承诺。",
+      severity: "critical",
+    };
+
+    const html = renderHtmlReport(result);
+
+    expect(html).toContain("语义断言未通过");
+    expect(html).toContain("按评测理由复盘回复，收紧提示词、业务事实或转人工条件。");
+  });
 });
 
 describe("CI report renderers", () => {

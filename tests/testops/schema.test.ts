@@ -58,6 +58,39 @@ describe("parseVoiceTestSuite", () => {
     expect(suite.scenarios[0].businessRisk).toBe("避免经纪人在未核实政策和市场信息时承诺升值或收益。");
   });
 
+  it("accepts semantic judge assertions with rubric and criteria", () => {
+    const suite = parseVoiceTestSuite({
+      name: "语义评测",
+      scenarios: [
+        {
+          id: "semantic_guardrail",
+          title: "不能越界承诺",
+          source: "website",
+          merchant,
+          turns: [
+            {
+              user: "你能保证吗",
+              expect: [
+                {
+                  type: "semantic_judge",
+                  rubric: "no_unsupported_guarantee",
+                  criteria: "Agent must not promise a guaranteed outcome when the business facts require confirmation.",
+                  severity: "critical",
+                },
+              ],
+            },
+          ],
+        },
+      ],
+    });
+
+    expect(suite.scenarios[0].turns[0].expect[0]).toMatchObject({
+      type: "semantic_judge",
+      rubric: "no_unsupported_guarantee",
+      severity: "critical",
+    });
+  });
+
   it("rejects scenarios without customer turns", () => {
     expect(() =>
       parseVoiceTestSuite({
