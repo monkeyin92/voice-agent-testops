@@ -5,7 +5,17 @@ const integrationDocs = [
   {
     path: "docs/integrations/http.md",
     title: "Generic HTTP Agent",
-    phrases: ["POST /test-turn", "npm run example:http-agent", "--agent http", "spoken", "summary"],
+    phrases: [
+      "POST /test-turn",
+      "npm run example:http-agent",
+      "--agent http",
+      "spoken",
+      "summary",
+      "tools",
+      "state",
+      "tool_called",
+      "backend_state_equals",
+    ],
   },
   {
     path: "docs/integrations/openclaw.md",

@@ -429,6 +429,12 @@ You can also keep merchant profiles in separate files and reference them with `m
 | `max_latency_ms` | Fail turns that exceed a latency threshold |
 | `lead_field_present` | Require structured lead fields such as `phone` |
 | `lead_intent` | Require the summary intent to match the scenario |
+| `semantic_judge` | Evaluate higher-level business rubrics such as unsupported guarantees or required handoff |
+| `tool_called` | Require a returned tool/function call, optionally with a matching argument subset |
+| `backend_state_present` | Require a path to exist in the returned backend `state` snapshot |
+| `backend_state_equals` | Require a backend `state` path to equal an expected JSON value |
+
+For `tool_called` and backend-state assertions, your test bridge should return optional `tools` and `state` fields in addition to `spoken` and `summary`. This is useful when the spoken answer is correct but the agent forgot to create a lead, update CRM state, draft a booking, or mark a handoff.
 
 ## CI
 

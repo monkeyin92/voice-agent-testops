@@ -186,7 +186,7 @@ summary: ok
 Doctor passed
 ```
 
-通用 HTTP endpoint 接收一轮测试输入，并返回 `{ spoken, summary }`。`spoken` 必填，`summary` 可选；如果返回结构化摘要，留资和意图断言会更有价值。
+通用 HTTP endpoint 接收一轮测试输入，并返回 `{ spoken, summary, tools, state }`。`spoken` 必填，`summary` 可选；如果返回结构化摘要，留资和意图断言会更有价值。`tools` 和 `state` 也是可选的，用来支持 `tool_called`、`backend_state_present` 和 `backend_state_equals`，检查 Agent 是否真的调用工具、写入 CRM/预约/转人工状态。
 
 ### OpenClaw-compatible Endpoint
 
@@ -310,6 +310,8 @@ npx voice-agent-testops import-calls \
 ## 场景格式
 
 Suite 就是 JSON。它描述商家资料、客户对话，以及每一轮必须满足的断言。
+
+常用断言包括：`must_contain_any`、`must_not_match`、`max_latency_ms`、`lead_field_present`、`lead_intent`、`semantic_judge`、`tool_called`、`backend_state_present` 和 `backend_state_equals`。前几类检查回复和摘要，后三类检查工具调用和后端状态。
 
 ```json
 {

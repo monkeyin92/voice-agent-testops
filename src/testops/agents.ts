@@ -15,9 +15,17 @@ export type VoiceAgentTurnInput = {
 export type VoiceAgentTurnOutput = {
   spoken: string;
   summary?: LeadSummary;
+  tools?: VoiceAgentToolCall[];
+  state?: Record<string, unknown>;
 };
 
 export type VoiceAgentExecutor = (input: VoiceAgentTurnInput) => Promise<VoiceAgentTurnOutput>;
+
+export type VoiceAgentToolCall = {
+  name: string;
+  arguments?: Record<string, unknown>;
+  result?: unknown;
+};
 
 export function makeTestMerchant(config: MerchantConfig, id: string): Merchant {
   const createdAt = new Date("2026-05-03T00:00:00.000Z");

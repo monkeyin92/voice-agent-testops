@@ -1039,6 +1039,13 @@ describe("voice-test CLI", () => {
     const assertionVariants = scenarioProperties?.turns?.items?.properties?.expect?.items?.oneOf ?? [];
     const leadIntentVariant = assertionVariants.find((variant) => variant.properties?.type?.const === "lead_intent");
     const semanticJudgeVariant = assertionVariants.find((variant) => variant.properties?.type?.const === "semantic_judge");
+    const toolCalledVariant = assertionVariants.find((variant) => variant.properties?.type?.const === "tool_called");
+    const backendStatePresentVariant = assertionVariants.find(
+      (variant) => variant.properties?.type?.const === "backend_state_present",
+    );
+    const backendStateEqualsVariant = assertionVariants.find(
+      (variant) => variant.properties?.type?.const === "backend_state_equals",
+    );
 
     expect(result.code).toBe(0);
     expect(result.stdout).toContain(`Wrote JSON Schema: ${schemaPath}`);
@@ -1055,10 +1062,17 @@ describe("voice-test CLI", () => {
         "lead_field_present",
         "lead_intent",
         "semantic_judge",
+        "tool_called",
+        "backend_state_present",
+        "backend_state_equals",
       ]),
     );
     expect(leadIntentVariant?.properties?.intent?.enum).toContain("handoff");
     expect(semanticJudgeVariant?.properties?.rubric?.enum).toContain("no_unsupported_guarantee");
+    expect(toolCalledVariant?.properties?.name).toBeDefined();
+    expect(toolCalledVariant?.properties?.arguments).toBeDefined();
+    expect(backendStatePresentVariant?.properties?.path).toBeDefined();
+    expect(backendStateEqualsVariant?.properties?.value).toBeDefined();
   });
 
   it("prints the suite JSON Schema to stdout when no output path is provided", async () => {

@@ -1,5 +1,5 @@
 import type { ConversationMessage } from "../server/services/agentAdapter";
-import type { VoiceAgentExecutor } from "./agents";
+import type { VoiceAgentExecutor, VoiceAgentToolCall } from "./agents";
 import { makeTestMerchant } from "./agents";
 import { createRuleBasedSemanticJudge, type VoiceSemanticJudge } from "./semanticJudge";
 import type { VoiceTestAssertion, VoiceTestScenario, VoiceTestSeverity, VoiceTestSuite } from "./schema";
@@ -23,6 +23,8 @@ export type VoiceTestTurnResult = {
   passed: boolean;
   assertions: number;
   failures: VoiceTestFailure[];
+  tools?: VoiceAgentToolCall[];
+  state?: Record<string, unknown>;
 };
 
 export type VoiceTestScenarioResult = {
@@ -175,7 +177,7 @@ async function runScenario(
     const failures = (
       await Promise.all(
         turn.expect.map((assertion) =>
-          evaluateAssertion(assertion, output.spoken, latencyMs, output.summary, turn.user, semanticJudge),
+          evaluateAssertion(assertion, output, latencyMs, turn.user, semanticJudge),
         ),
       )
     ).flat();
@@ -189,6 +191,8 @@ async function runScenario(
       passed,
       assertions: turn.expect.length,
       failures,
+      ...(output.tools ? { tools: output.tools } : {}),
+      ...(output.state ? { state: output.state } : {}),
     });
 
     onProgress?.({
@@ -215,15 +219,14 @@ async function runScenario(
 
 function evaluateAssertion(
   assertion: VoiceTestAssertion,
-  spoken: string,
+  output: Awaited<ReturnType<VoiceAgentExecutor>>,
   latencyMs: number,
-  summary: Awaited<ReturnType<VoiceAgentExecutor>>["summary"],
   user: string,
   semanticJudge: VoiceSemanticJudge,
 ): Promise<VoiceTestFailure[]> | VoiceTestFailure[] {
   switch (assertion.type) {
     case "must_contain_any": {
-      const matched = assertion.phrases.some((phrase) => spoken.includes(phrase));
+      const matched = assertion.phrases.some((phrase) => output.spoken.includes(phrase));
       return matched
         ? []
         : [
@@ -236,7 +239,7 @@ function evaluateAssertion(
     }
     case "must_not_match": {
       const pattern = new RegExp(assertion.pattern);
-      return pattern.test(spoken)
+      return pattern.test(output.spoken)
         ? [
             {
               code: "forbidden_pattern_matched",
@@ -257,7 +260,7 @@ function evaluateAssertion(
           ]
         : [];
     case "lead_field_present": {
-      const value = summary?.[assertion.field];
+      const value = output.summary?.[assertion.field];
       return typeof value === "string" && value.trim().length > 0
         ? []
         : [
@@ -269,18 +272,170 @@ function evaluateAssertion(
           ];
     }
     case "lead_intent":
-      return summary?.intent === assertion.intent
+      return output.summary?.intent === assertion.intent
         ? []
         : [
             {
               code: "lead_intent_mismatch",
-              message: `线索意图应为 ${assertion.intent}，实际为 ${summary?.intent ?? "missing"}`,
+              message: `线索意图应为 ${assertion.intent}，实际为 ${output.summary?.intent ?? "missing"}`,
               severity: assertion.severity,
             },
           ];
     case "semantic_judge":
-      return evaluateSemanticJudgeAssertion(assertion, spoken, user, summary, semanticJudge);
+      return evaluateSemanticJudgeAssertion(assertion, output.spoken, user, output.summary, semanticJudge);
+    case "tool_called":
+      return evaluateToolCalledAssertion(assertion, output.tools ?? []);
+    case "backend_state_present":
+      return evaluateBackendStatePresentAssertion(assertion, output.state);
+    case "backend_state_equals":
+      return evaluateBackendStateEqualsAssertion(assertion, output.state);
   }
+}
+
+function evaluateToolCalledAssertion(
+  assertion: Extract<VoiceTestAssertion, { type: "tool_called" }>,
+  tools: VoiceAgentToolCall[],
+): VoiceTestFailure[] {
+  const matchingByName = tools.filter((tool) => tool.name === assertion.name);
+  if (matchingByName.length < assertion.minCount) {
+    return [
+      {
+        code: "tool_call_missing",
+        message: `工具调用不足：${assertion.name} 需要至少 ${assertion.minCount} 次，实际 ${matchingByName.length} 次`,
+        severity: assertion.severity,
+      },
+    ];
+  }
+
+  if (!assertion.arguments) {
+    return [];
+  }
+
+  const matchingArguments = matchingByName.filter((tool) =>
+    deepContains(tool.arguments ?? {}, assertion.arguments ?? {}),
+  );
+
+  return matchingArguments.length >= assertion.minCount
+    ? []
+    : [
+        {
+          code: "tool_arguments_mismatch",
+          message: `工具 ${assertion.name} 没有匹配预期参数子集：${JSON.stringify(assertion.arguments)}`,
+          severity: assertion.severity,
+        },
+      ];
+}
+
+function evaluateBackendStatePresentAssertion(
+  assertion: Extract<VoiceTestAssertion, { type: "backend_state_present" }>,
+  state: Record<string, unknown> | undefined,
+): VoiceTestFailure[] {
+  const actual = getPathValue(state, assertion.path);
+  return actual.exists
+    ? []
+    : [
+        {
+          code: "backend_state_missing",
+          message: `后端状态缺少路径：${assertion.path}`,
+          severity: assertion.severity,
+        },
+      ];
+}
+
+function evaluateBackendStateEqualsAssertion(
+  assertion: Extract<VoiceTestAssertion, { type: "backend_state_equals" }>,
+  state: Record<string, unknown> | undefined,
+): VoiceTestFailure[] {
+  const actual = getPathValue(state, assertion.path);
+  if (!actual.exists) {
+    return [
+      {
+        code: "backend_state_missing",
+        message: `后端状态缺少路径：${assertion.path}`,
+        severity: assertion.severity,
+      },
+    ];
+  }
+
+  return deepEqual(actual.value, assertion.value)
+    ? []
+    : [
+        {
+          code: "backend_state_mismatch",
+          message: `后端状态 ${assertion.path} 应为 ${JSON.stringify(assertion.value)}，实际为 ${JSON.stringify(
+            actual.value,
+          )}`,
+          severity: assertion.severity,
+        },
+      ];
+}
+
+function getPathValue(state: Record<string, unknown> | undefined, path: string): { exists: boolean; value?: unknown } {
+  let current: unknown = state;
+
+  for (const segment of path.split(".")) {
+    if (!isRecord(current) || !Object.prototype.hasOwnProperty.call(current, segment)) {
+      return { exists: false };
+    }
+    current = current[segment];
+  }
+
+  return { exists: true, value: current };
+}
+
+function deepContains(actual: unknown, expected: unknown): boolean {
+  if (isRecord(expected)) {
+    if (!isRecord(actual)) {
+      return false;
+    }
+
+    return Object.entries(expected).every(([key, expectedValue]) =>
+      Object.prototype.hasOwnProperty.call(actual, key) && deepContains(actual[key], expectedValue),
+    );
+  }
+
+  if (Array.isArray(expected)) {
+    if (!Array.isArray(actual) || actual.length < expected.length) {
+      return false;
+    }
+
+    return expected.every((expectedValue, index) => deepContains(actual[index], expectedValue));
+  }
+
+  return deepEqual(actual, expected);
+}
+
+function deepEqual(left: unknown, right: unknown): boolean {
+  if (Object.is(left, right)) {
+    return true;
+  }
+
+  if (Array.isArray(left) || Array.isArray(right)) {
+    if (!Array.isArray(left) || !Array.isArray(right) || left.length !== right.length) {
+      return false;
+    }
+
+    return left.every((leftValue, index) => deepEqual(leftValue, right[index]));
+  }
+
+  if (isRecord(left) || isRecord(right)) {
+    if (!isRecord(left) || !isRecord(right)) {
+      return false;
+    }
+
+    const leftKeys = Object.keys(left);
+    const rightKeys = Object.keys(right);
+    return (
+      leftKeys.length === rightKeys.length &&
+      leftKeys.every((key) => Object.prototype.hasOwnProperty.call(right, key) && deepEqual(left[key], right[key]))
+    );
+  }
+
+  return false;
+}
+
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === "object" && value !== null && !Array.isArray(value);
 }
 
 async function evaluateSemanticJudgeAssertion(
