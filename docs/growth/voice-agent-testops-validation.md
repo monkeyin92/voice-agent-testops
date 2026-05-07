@@ -50,6 +50,8 @@ npm run voice-test -- --suite examples/voice-testops/failing-demo-suite.json --j
 
 详细执行表已升级到：[外部试跑记录表](../ops/external-pilot-tracker.zh-CN.md)。这里保留简版视图，用于快速看 7 天验证目标是否推进。
 
+最新外联状态见：[外部试点跟进记录](2026-05-07-outreach-followup.md)。
+
 | 日期 | 对象 | Agent 类型 | 接入方式 | 是否跑通 | 跑通耗时 | 首次失败类型 | 是否生成 regression | 是否愿意继续试点 | 备注 |
 |---|---|---|---|---|---:|---|---|---|---|
 |  |  |  |  |  |  |  |  |  |  |

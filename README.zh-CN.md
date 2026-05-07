@@ -427,6 +427,7 @@ npm audit --audit-level=high
 
 - [贡献指南](CONTRIBUTING.md)
 - [商业化护城河路线图](docs/roadmap/2026-05-07-commercial-moat-roadmap.zh-CN.md)
+- [外部试点跟进记录](docs/growth/2026-05-07-outreach-followup.md)
 - [外部试点就绪复盘](docs/ops/external-pilot-readiness-review.zh-CN.md)
 - [外部试点 Runbook](docs/ops/external-pilot-runbook.zh-CN.md)
 - [试点数据脱敏和授权模板](docs/ops/pilot-data-sanitization-authorization.zh-CN.md)

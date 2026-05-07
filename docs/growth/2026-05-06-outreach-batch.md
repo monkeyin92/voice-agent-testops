@@ -66,11 +66,19 @@ npm run voice-test -- \
 
 | 日期 | 目标 | 入口 | 是否已发送 | 是否回复 | 是否跑通 | 阻塞点 | 下一步 |
 |---|---|---|---|---|---|---|---|
-| 2026-05-06 | Vapi ecosystem | [VapiAI/example-voice-test-script#2](https://github.com/VapiAI/example-voice-test-script/issues/2) | 是 |  |  |  | 等待回复 |
-| 2026-05-06 | Retell ecosystem | [RetellAI/retell-custom-llm-node-demo#12](https://github.com/RetellAI/retell-custom-llm-node-demo/issues/12) | 是 |  |  |  | 等待回复 |
-| 2026-05-06 | LiveKit Agents JS | [livekit/agents-js#1400](https://github.com/livekit/agents-js/issues/1400) | 是 |  |  |  | 等待回复 |
-| 2026-05-06 | Pipecat bot developers | [pipecat-ai/pipecat-client-web#207](https://github.com/pipecat-ai/pipecat-client-web/issues/207) | 是 |  |  |  | 等待回复 |
-| 2026-05-06 | Streamcore server | [streamcoreai/streamcore-server#4](https://github.com/streamcoreai/streamcore-server/issues/4) | 是 |  |  |  | 等待回复 |
+| 2026-05-06 | Vapi ecosystem | [VapiAI/example-voice-test-script#2](https://github.com/VapiAI/example-voice-test-script/issues/2) | 是 | 否 | 否 | 暂无回复 | 等待回复 |
+| 2026-05-06 | Retell ecosystem | [RetellAI/retell-custom-llm-node-demo#12](https://github.com/RetellAI/retell-custom-llm-node-demo/issues/12) | 是 | 否 | 否 | 暂无回复 | 等待回复 |
+| 2026-05-06 | LiveKit Agents JS | [livekit/agents-js#1400](https://github.com/livekit/agents-js/issues/1400) | 是 | 否 | 否 | 暂无回复 | 等待回复 |
+| 2026-05-06 | Pipecat bot developers | [pipecat-ai/pipecat-client-web#207](https://github.com/pipecat-ai/pipecat-client-web/issues/207) | 是 | 否 | 否 | 暂无回复 | 等待回复 |
+| 2026-05-06 | Streamcore server | [streamcoreai/streamcore-server#4](https://github.com/streamcoreai/streamcore-server/issues/4) | 是 | 否 | 否 | 暂无回复 | 等待回复 |
+
+截至 2026-05-07 17:15 CST，以上 5 个 issue 均为 open、0 comments，`updatedAt` 仍停留在创建时间附近。
+
+## 第二批补充目标
+
+| 日期 | 目标 | 入口 | 为什么匹配 | 动作 | 下一步 |
+|---|---|---|---|---|---|
+| 2026-05-07 | Kevin Hu insurance Vapi prototype | [kev-hu/vapi-voice-agent#1](https://github.com/kev-hu/vapi-voice-agent/issues/1) | Vapi 保险客服原型，有 sample call transcripts、身份验证、coverage/eligibility 边界、claim status、address update 和 warm transfer 风险 | 已发出轻量试点邀请，提供 endpoint、3 条脱敏 transcript 或 public sample-call dry run 三种选项 | 等待回复；如果同意 dry run，优先用公开 sample-call 做 transcript 路径试跑 |
 
 ## 今天的验收
 
