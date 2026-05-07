@@ -310,6 +310,45 @@ describe("integration documentation", () => {
     }
   });
 
+  it("documents the Kevin Hu public sample dry run", () => {
+    const dryRunPath = "docs/growth/2026-05-07-kev-hu-public-sample-dry-run.md";
+    const readme = readFileSync("README.md", "utf8");
+    const chineseReadme = readFileSync("README.zh-CN.md", "utf8");
+    const followup = readFileSync("docs/growth/2026-05-07-outreach-followup.md", "utf8");
+
+    expect(existsSync(dryRunPath)).toBe(true);
+    expect(readme).toContain(`[Kevin Hu public sample dry run](${dryRunPath})`);
+    expect(chineseReadme).toContain(`[Kevin Hu 公开样本 dry run](${dryRunPath})`);
+    expect(followup).toContain(`[Kevin Hu public sample dry run](2026-05-07-kev-hu-public-sample-dry-run.md)`);
+
+    const dryRun = readFileSync(dryRunPath, "utf8");
+    for (const phrase of [
+      "Public sample dry run",
+      "not endorsed",
+      "MIT License",
+      "demo/sample-call.md",
+      "kev-hu/vapi-voice-agent#1",
+      "from-transcript",
+      "--source website",
+      "Customer turns: 14",
+      "Assertions: 42",
+      "Failures: 13",
+      "Severity gate: passed",
+      "lead_intent_mismatch",
+      "current starter library has no insurance industry profile",
+      "real_estate",
+      "coverage / eligibility",
+      "failed verification",
+      "regression-draft.json",
+      "failure-clusters.md",
+      "commercial-report.md",
+      "pilot-recap.md",
+      "raw transcript was not committed",
+    ]) {
+      expect(dryRun).toContain(phrase);
+    }
+  });
+
   it("documents the external pilot runbook", () => {
     const runbookPath = "docs/ops/external-pilot-runbook.zh-CN.md";
     const readme = readFileSync("README.md", "utf8");
