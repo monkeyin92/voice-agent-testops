@@ -167,6 +167,8 @@
 - 是否生成 regression。
 - 是否愿意继续试点。
 
+当前文档：[外部试跑记录表](external-pilot-tracker.zh-CN.md)。
+
 ### P3-4：第一个真实试点复盘
 
 目标不是新增功能，而是拿 1 个真实 endpoint 完整跑通：

@@ -240,4 +240,5 @@ npx voice-agent-testops draft-regressions \
 完成一次外部试点后，把结果更新到外部验证清单：
 
 - [外部验证清单](../growth/voice-agent-testops-validation.md)
+- [外部试跑记录表](external-pilot-tracker.zh-CN.md)
 - [外部试点就绪复盘](external-pilot-readiness-review.zh-CN.md)
