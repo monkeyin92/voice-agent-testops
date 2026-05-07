@@ -267,7 +267,19 @@ This runs the photo-studio multi-turn suite and exports a customer-ready report.
 
 ## Turn A Real Failure Into A Regression Test
 
-Paste a real failed conversation into a transcript file, then generate a starter suite:
+Paste a failed call and generate a starter suite plus an editable merchant draft:
+
+```bash
+pbpaste | npx voice-agent-testops from-transcript \
+  --stdin \
+  --out voice-testops/suite.json \
+  --merchant-out voice-testops/merchant.json \
+  --merchant-name "Lumen Portrait Studio" \
+  --name "Generated transcript regression" \
+  --source website
+```
+
+Prefer a transcript file? Use `--input`:
 
 ```bash
 npx voice-agent-testops from-transcript \
@@ -278,7 +290,7 @@ npx voice-agent-testops from-transcript \
   --source website
 ```
 
-The generator is deterministic. It does not call an LLM; it extracts customer turns, infers a draft merchant profile when you do not have one yet, and adds reviewable assertions for unsafe promises, pricing facts, lead fields, handoff intent, and latency. Treat the generated file as a first draft, then tighten it before using it as a release gate.
+The generator is deterministic. It does not call an LLM; it extracts customer turns, infers a draft merchant profile when you do not have one yet, and adds reviewable assertions for unsafe promises, pricing facts, lead fields, handoff intent, and latency. Treat the generated files as a first draft, then tighten them before using the suite as a release gate.
 
 If you already keep approved business facts in JSON, add `--merchant examples/voice-testops/merchants/guangying-photo.json`. That gives the generated suite better price and service assertions from day one.
 

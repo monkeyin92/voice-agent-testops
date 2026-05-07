@@ -205,7 +205,19 @@ npm run voice-test -- \
 
 ## 把真实失败对话变成回归测试
 
-如果你已经遇到过一次真实失败，把 transcript 保存成文本文件，然后生成一个可编辑的 suite：
+如果你已经遇到过一次真实失败，可以直接复制 transcript，生成一个可编辑的 suite 和商家资料草稿：
+
+```bash
+pbpaste | npx voice-agent-testops from-transcript \
+  --stdin \
+  --out voice-testops/suite.json \
+  --merchant-out voice-testops/merchant.json \
+  --merchant-name "光影写真馆" \
+  --name "Generated transcript regression" \
+  --source website
+```
+
+如果 transcript 已经保存成文本文件，可以用 `--input`：
 
 ```bash
 npx voice-agent-testops from-transcript \
@@ -216,7 +228,7 @@ npx voice-agent-testops from-transcript \
   --source website
 ```
 
-这个生成器不调用 LLM，只做确定性规则提取：客户轮次、商家资料草稿、乱承诺拦截、价格事实、留资字段、转人工意图和延迟断言。生成结果应该先人工检查，再放进 CI 作为上线门禁。
+这个生成器不调用 LLM，只做确定性规则提取：客户轮次、商家资料草稿、乱承诺拦截、价格事实、留资字段、转人工意图和延迟断言。生成结果应该先人工检查，再把 suite 放进 CI 作为上线门禁。
 
 如果你已经有审核过的商家事实 JSON，可以再加 `--merchant examples/voice-testops/merchants/guangying-photo.json`。这样生成出来的价格和服务断言会更贴近真实业务。
 

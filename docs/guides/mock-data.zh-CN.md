@@ -91,7 +91,19 @@ npx voice-agent-testops list --industry restaurant
 
 ## 把真实通话变成 suite
 
-如果已经有一段失败对话，把 transcript 保存下来，然后生成一个可编辑的草稿：
+如果已经有一段失败对话，可以直接复制 transcript，生成一个可编辑的草稿：
+
+```bash
+pbpaste | npx voice-agent-testops from-transcript \
+  --stdin \
+  --out voice-testops/generated-suite.json \
+  --merchant-out voice-testops/merchant.json \
+  --merchant-name "光影写真馆" \
+  --name "Generated transcript regression" \
+  --source website
+```
+
+如果 transcript 已经保存成文本文件，可以用 `--input`：
 
 ```bash
 npx voice-agent-testops from-transcript \

@@ -16,7 +16,7 @@ import { buildVoiceTestSuiteJsonSchema } from "./jsonSchema";
 import { resolveReadablePath } from "./packagePaths";
 import { renderHtmlReport, renderJsonReport, renderJunitReport, renderMarkdownSummary } from "./report";
 import { runVoiceTestSuite, type VoiceTestRunResult } from "./runner";
-import type { VoiceTestSeverity } from "./schema";
+import type { VoiceTestSeverity, VoiceTestSuite } from "./schema";
 import { loadVoiceTestSuite } from "./suiteLoader";
 import { buildDraftMerchantFromTranscript, buildVoiceTestSuiteFromTranscript } from "./transcriptSuite";
 
@@ -460,7 +460,9 @@ async function readVoiceTestReport(filePath: string, label: string): Promise<Voi
 
 async function generateSuiteFromTranscript(argv: string[]): Promise<number> {
   const args = parseFromTranscriptArgs(argv);
-  const transcript = await readFile(await resolveReadablePath(args.transcriptPath), "utf8");
+  const transcript = args.readFromStdin
+    ? await readFromStdin()
+    : await readFile(await resolveReadablePath(args.transcriptPath ?? ""), "utf8");
   const merchant = args.merchantPath
     ? merchantConfigSchema.parse(JSON.parse(await readFile(await resolveReadablePath(args.merchantPath), "utf8")))
     : buildDraftMerchantFromTranscript({
@@ -476,10 +478,22 @@ async function generateSuiteFromTranscript(argv: string[]): Promise<number> {
     scenarioTitle: args.scenarioTitle,
     source: args.source,
   });
+  const suiteOutput = args.merchantOutPath
+    ? buildSuiteWithMerchantRef(suite, relativeMerchantRef(args.outPath, args.merchantOutPath))
+    : suite;
 
-  await writeReport(args.outPath, `${JSON.stringify(suite, null, 2)}\n`);
+  if (args.merchantOutPath) {
+    await writeReport(args.merchantOutPath, `${JSON.stringify(merchant, null, 2)}\n`);
+  }
+  await writeReport(args.outPath, `${JSON.stringify(suiteOutput, null, 2)}\n`);
   console.log(`Generated suite: ${args.outPath}`);
-  if (!args.merchantPath) {
+  if (args.readFromStdin) {
+    console.log("Transcript: read from stdin");
+  }
+  if (args.merchantOutPath) {
+    console.log(`${args.merchantPath ? "Merchant profile" : "Merchant draft"}: ${args.merchantOutPath}`);
+  }
+  if (!args.merchantPath && !args.merchantOutPath) {
     console.log("Merchant draft: generated from transcript");
   }
   console.log(`Customer turns: ${suite.scenarios[0].turns.length}`);
@@ -487,8 +501,10 @@ async function generateSuiteFromTranscript(argv: string[]): Promise<number> {
 }
 
 type FromTranscriptArgs = {
-  transcriptPath: string;
+  transcriptPath?: string;
+  readFromStdin: boolean;
   merchantPath?: string;
+  merchantOutPath?: string;
   outPath: string;
   merchantName?: string;
   industry?: Industry;
@@ -499,13 +515,57 @@ type FromTranscriptArgs = {
 };
 
 function parseFromTranscriptArgs(argv: string[]): FromTranscriptArgs {
-  const values = parseKeyValueArgs(argv);
+  const values = new Map<string, string>();
+  const flags = new Set<string>();
+  const knownValues = new Set([
+    "transcript",
+    "input",
+    "merchant",
+    "merchant-out",
+    "out",
+    "merchant-name",
+    "industry",
+    "name",
+    "scenario-id",
+    "scenario-title",
+    "source",
+  ]);
+
+  for (let index = 0; index < argv.length; index += 1) {
+    const arg = argv[index];
+    if (!arg.startsWith("--")) {
+      throw new Error(`Unexpected argument: ${arg}`);
+    }
+
+    const name = arg.slice(2);
+    if (name === "stdin") {
+      flags.add(name);
+      continue;
+    }
+    if (!knownValues.has(name)) {
+      throw new Error(`Unknown from-transcript option: --${name}`);
+    }
+
+    const value = argv[index + 1];
+    if (!value || value.startsWith("--")) {
+      throw new Error(`${arg} requires a value`);
+    }
+
+    values.set(name, value);
+    index += 1;
+  }
+
+  const readFromStdin = flags.has("stdin");
   const transcriptPath = values.get("transcript") ?? values.get("input");
   const merchantPath = values.get("merchant");
+  const merchantOutPath = values.get("merchant-out");
   const outPath = values.get("out");
 
-  if (!transcriptPath) {
-    throw new Error("--transcript or --input is required");
+  if (readFromStdin && transcriptPath) {
+    throw new Error("--stdin cannot be combined with --transcript or --input");
+  }
+  if (!readFromStdin && !transcriptPath) {
+    throw new Error("--transcript, --input, or --stdin is required");
   }
 
   if (!outPath) {
@@ -516,7 +576,9 @@ function parseFromTranscriptArgs(argv: string[]): FromTranscriptArgs {
 
   return {
     transcriptPath,
+    readFromStdin,
     merchantPath,
+    merchantOutPath,
     outPath,
     merchantName: values.get("merchant-name"),
     industry: values.has("industry") ? industrySchema.parse(values.get("industry")) : undefined,
@@ -525,6 +587,32 @@ function parseFromTranscriptArgs(argv: string[]): FromTranscriptArgs {
     scenarioTitle: values.get("scenario-title"),
     source,
   };
+}
+
+function buildSuiteWithMerchantRef(suite: VoiceTestSuite, merchantRef: string): unknown {
+  return {
+    ...suite,
+    scenarios: suite.scenarios.map(({ merchant: _merchant, ...scenario }) => ({
+      ...scenario,
+      merchantRef,
+    })),
+  };
+}
+
+function relativeMerchantRef(suitePath: string, merchantPath: string): string {
+  return path.relative(path.dirname(suitePath), merchantPath).split(path.sep).join(path.posix.sep);
+}
+
+async function readFromStdin(): Promise<string> {
+  return new Promise((resolve, reject) => {
+    let content = "";
+    process.stdin.setEncoding("utf8");
+    process.stdin.on("data", (chunk: string) => {
+      content += chunk;
+    });
+    process.stdin.on("error", reject);
+    process.stdin.on("end", () => resolve(content));
+  });
 }
 
 function parseKeyValueArgs(argv: string[]): Map<string, string> {

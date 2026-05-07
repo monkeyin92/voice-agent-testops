@@ -91,7 +91,19 @@ npx voice-agent-testops list --industry restaurant
 
 ## Turning Real Calls Into Suites
 
-When you already have a bad conversation, save the transcript and generate a draft:
+When you already have a bad conversation, paste the transcript and generate a draft:
+
+```bash
+pbpaste | npx voice-agent-testops from-transcript \
+  --stdin \
+  --out voice-testops/generated-suite.json \
+  --merchant-out voice-testops/merchant.json \
+  --merchant-name "Lumen Portrait Studio" \
+  --name "Generated transcript regression" \
+  --source website
+```
+
+If the transcript is already saved as a file, use `--input`:
 
 ```bash
 npx voice-agent-testops from-transcript \

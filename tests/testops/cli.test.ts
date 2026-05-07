@@ -1,4 +1,4 @@
-import { execFile } from "node:child_process";
+import { execFile, spawn } from "node:child_process";
 import { createServer, type IncomingMessage, type ServerResponse } from "node:http";
 import { mkdtemp, readFile, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
@@ -309,6 +309,74 @@ describe("voice-test CLI", () => {
       industry: "restaurant",
       packages: [{ priceRange: "388" }],
     });
+  });
+
+  it("reads transcript text from stdin", async () => {
+    const tempDir = await mkdtemp(path.join(tmpdir(), "voice-testops-cli-"));
+    const outPath = path.join(tempDir, "generated-suite.json");
+
+    const result = await runCliWithInput(
+      [
+        "from-transcript",
+        "--stdin",
+        "--out",
+        outPath,
+        "--merchant-name",
+        "Transcript import draft",
+      ],
+      [
+        "Customer: Do you have a table for six this Saturday?",
+        "Assistant: Yes, you can come directly. It is 388 per person.",
+      ].join("\n"),
+    );
+
+    const generated = JSON.parse(await readFile(outPath, "utf8")) as unknown;
+    const suite = parseVoiceTestSuite(generated);
+    expect(result.code).toBe(0);
+    expect(result.stdout).toContain("Transcript: read from stdin");
+    expect(suite.scenarios[0].merchant).toMatchObject({
+      name: "Transcript import draft",
+      industry: "restaurant",
+    });
+  });
+
+  it("writes generated merchant drafts separately when merchant-out is provided", async () => {
+    const tempDir = await mkdtemp(path.join(tmpdir(), "voice-testops-cli-"));
+    const transcriptPath = path.join(tempDir, "restaurant-call.txt");
+    const outPath = path.join(tempDir, "suite.json");
+    const merchantPath = path.join(tempDir, "merchant.json");
+    await writeFile(
+      transcriptPath,
+      [
+        "Customer: Do you have a table for six this Saturday?",
+        "Assistant: Yes, you can come directly. It is 388 per person.",
+      ].join("\n"),
+      "utf8",
+    );
+
+    const result = await runCli([
+      "from-transcript",
+      "--input",
+      transcriptPath,
+      "--out",
+      outPath,
+      "--merchant-out",
+      merchantPath,
+      "--merchant-name",
+      "Transcript import draft",
+    ]);
+
+    const rawSuite = JSON.parse(await readFile(outPath, "utf8")) as {
+      scenarios: Array<{ merchant?: unknown; merchantRef?: string }>;
+    };
+    const rawMerchant = JSON.parse(await readFile(merchantPath, "utf8")) as unknown;
+    const resolvedSuite = await loadVoiceTestSuite(outPath);
+    expect(result.code).toBe(0);
+    expect(result.stdout).toContain(`Merchant draft: ${merchantPath}`);
+    expect(rawSuite.scenarios[0].merchant).toBeUndefined();
+    expect(rawSuite.scenarios[0].merchantRef).toBe("merchant.json");
+    expect(rawMerchant).toMatchObject({ name: "Transcript import draft", industry: "restaurant" });
+    expect(resolvedSuite.scenarios[0].merchant.name).toBe("Transcript import draft");
   });
 
   it("runs suites through the publishable bin with the run subcommand", async () => {
@@ -818,6 +886,13 @@ async function runCli(args: string[], cwd = process.cwd()): Promise<CliResult> {
   return execCli(tsxPath, [cliPath, ...args], cwd);
 }
 
+async function runCliWithInput(args: string[], input: string, cwd = process.cwd()): Promise<CliResult> {
+  const cliPath = path.resolve("src/testops/cli.ts");
+  const tsxPath = path.resolve("node_modules/.bin/tsx");
+
+  return execCliWithInput(tsxPath, [cliPath, ...args], input, cwd);
+}
+
 async function runBin(args: string[], cwd = process.cwd()): Promise<CliResult> {
   return execCli(process.execPath, [path.resolve("bin/voice-agent-testops.mjs"), ...args], cwd);
 }
@@ -838,4 +913,35 @@ async function execCli(command: string, args: string[], cwd = process.cwd()): Pr
       stderr: result.stderr ?? "",
     };
   }
+}
+
+async function execCliWithInput(
+  command: string,
+  args: string[],
+  input: string,
+  cwd = process.cwd(),
+): Promise<CliResult> {
+  return new Promise((resolve) => {
+    const child = spawn(command, args, {
+      cwd,
+      env: { ...process.env, OPENCLAW_API_KEY: "" },
+      stdio: ["pipe", "pipe", "pipe"],
+    });
+    let stdout = "";
+    let stderr = "";
+
+    child.stdout.setEncoding("utf8");
+    child.stderr.setEncoding("utf8");
+    child.stdout.on("data", (chunk: string) => {
+      stdout += chunk;
+    });
+    child.stderr.on("data", (chunk: string) => {
+      stderr += chunk;
+    });
+    child.on("close", (code) => {
+      resolve({ code: code ?? 1, stdout, stderr });
+    });
+
+    child.stdin.end(input);
+  });
 }
