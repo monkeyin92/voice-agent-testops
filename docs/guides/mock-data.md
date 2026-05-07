@@ -112,6 +112,25 @@ pbpaste | npx voice-agent-testops from-transcript \
   --source website
 ```
 
+For scriptable mock-data generation, keep stdout as pure JSON:
+
+```bash
+pbpaste | npx voice-agent-testops from-transcript \
+  --stdin \
+  --print-json \
+  --merchant-name "Lumen Portrait Studio" \
+  > voice-testops/generated-suite.json
+```
+
+You can also inspect the generated shape without touching the filesystem:
+
+```bash
+pbpaste | npx voice-agent-testops from-transcript \
+  --stdin \
+  --print-json \
+  --merchant-name "Lumen Portrait Studio" | jq '.scenarios[0].turns | length'
+```
+
 If the transcript is already saved as a file, use `--input`:
 
 ```bash

@@ -498,6 +498,11 @@ async function generateSuiteFromTranscript(argv: string[]): Promise<number> {
 
   const output = args.append ? await appendGeneratedScenarios(args.outPath ?? "", suiteOutput) : suiteOutput;
 
+  if (args.printJson) {
+    process.stdout.write(`${JSON.stringify(output, null, 2)}\n`);
+    return 0;
+  }
+
   if (args.merchantOutPath) {
     await writeReport(args.merchantOutPath, `${JSON.stringify(merchant, null, 2)}\n`);
   }
@@ -523,6 +528,7 @@ type FromTranscriptArgs = {
   merchantOutPath?: string;
   append: boolean;
   preview: boolean;
+  printJson: boolean;
   outPath?: string;
   merchantName?: string;
   industry?: Industry;
@@ -556,7 +562,7 @@ function parseFromTranscriptArgs(argv: string[]): FromTranscriptArgs {
     }
 
     const name = arg.slice(2);
-    if (name === "stdin" || name === "append" || name === "preview") {
+    if (name === "stdin" || name === "append" || name === "preview" || name === "print-json") {
       flags.add(name);
       continue;
     }
@@ -579,6 +585,7 @@ function parseFromTranscriptArgs(argv: string[]): FromTranscriptArgs {
   const merchantOutPath = values.get("merchant-out");
   const append = flags.has("append");
   const preview = flags.has("preview");
+  const printJson = flags.has("print-json");
   const outPath = values.get("out");
 
   if (readFromStdin && transcriptPath) {
@@ -588,7 +595,10 @@ function parseFromTranscriptArgs(argv: string[]): FromTranscriptArgs {
     throw new Error("--transcript, --input, or --stdin is required");
   }
 
-  if (!preview && !outPath) {
+  if (preview && printJson) {
+    throw new Error("--preview cannot be combined with --print-json");
+  }
+  if (!preview && !printJson && !outPath) {
     throw new Error("--out is required");
   }
   if (append && !outPath) {
@@ -604,6 +614,7 @@ function parseFromTranscriptArgs(argv: string[]): FromTranscriptArgs {
     merchantOutPath,
     append,
     preview,
+    printJson,
     outPath,
     merchantName: values.get("merchant-name"),
     industry: values.has("industry") ? industrySchema.parse(values.get("industry")) : undefined,

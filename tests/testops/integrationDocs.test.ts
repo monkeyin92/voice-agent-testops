@@ -56,6 +56,8 @@ describe("integration documentation", () => {
     const packageJson = JSON.parse(readFileSync("package.json", "utf8")) as { scripts: Record<string, string> };
     const readme = readFileSync("README.md", "utf8");
     const chineseReadme = readFileSync("README.zh-CN.md", "utf8");
+    const mockDataGuide = readFileSync("docs/guides/mock-data.md", "utf8");
+    const chineseMockDataGuide = readFileSync("docs/guides/mock-data.zh-CN.md", "utf8");
 
     expect(packageJson.scripts["suite:from-transcript"]).toContain("from-transcript");
     expect(existsSync("examples/voice-testops/transcripts/failed-photo-booking.txt")).toBe(true);
@@ -68,6 +70,8 @@ describe("integration documentation", () => {
     expect(readme).toContain("--append");
     expect(readme).toContain("--merchant-out voice-testops/merchant.json");
     expect(readme).toContain("--merchant-name \"Lumen Portrait Studio\"");
+    expect(readme).toContain("--print-json");
+    expect(readme).toContain("jq '.scenarios[0].turns | length'");
     expect(chineseReadme).toContain("把真实失败对话变成回归测试");
     expect(chineseReadme).toContain("npx voice-agent-testops from-transcript");
     expect(chineseReadme).toContain("pbpaste | npx voice-agent-testops from-transcript");
@@ -77,6 +81,12 @@ describe("integration documentation", () => {
     expect(chineseReadme).toContain("--append");
     expect(chineseReadme).toContain("--merchant-out voice-testops/merchant.json");
     expect(chineseReadme).toContain("--merchant-name \"光影写真馆\"");
+    expect(chineseReadme).toContain("--print-json");
+    expect(chineseReadme).toContain("jq '.scenarios[0].turns | length'");
+    expect(mockDataGuide).toContain("--print-json");
+    expect(mockDataGuide).toContain("voice-testops/generated-suite.json");
+    expect(chineseMockDataGuide).toContain("--print-json");
+    expect(chineseMockDataGuide).toContain("voice-testops/generated-suite.json");
   });
 
   it("documents the init quickstart in both READMEs", () => {

@@ -112,6 +112,25 @@ pbpaste | npx voice-agent-testops from-transcript \
   --source website
 ```
 
+如果要把 mock 数据生成接进脚本，可以让 stdout 只输出纯 JSON：
+
+```bash
+pbpaste | npx voice-agent-testops from-transcript \
+  --stdin \
+  --print-json \
+  --merchant-name "光影写真馆" \
+  > voice-testops/generated-suite.json
+```
+
+也可以不碰文件，先看生成出的结构大小：
+
+```bash
+pbpaste | npx voice-agent-testops from-transcript \
+  --stdin \
+  --print-json \
+  --merchant-name "光影写真馆" | jq '.scenarios[0].turns | length'
+```
+
 如果 transcript 已经保存成文本文件，可以用 `--input`：
 
 ```bash

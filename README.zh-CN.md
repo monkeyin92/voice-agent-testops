@@ -226,6 +226,17 @@ pbpaste | npx voice-agent-testops from-transcript \
   --source website
 ```
 
+如果你想把生成结果交给脚本处理，而不是马上写文件，可以直接打印干净的 JSON：
+
+```bash
+pbpaste | npx voice-agent-testops from-transcript \
+  --stdin \
+  --print-json \
+  --merchant-name "光影写真馆" | jq '.scenarios[0].turns | length'
+```
+
+`--print-json` 会让 stdout 保持机器可读，不写 suite 或商家文件。它适合接 `jq`、CI 小脚本，或者把审核过的草稿重定向进你自己的生成流程。
+
 如果 transcript 已经保存成文本文件，可以用 `--input`：
 
 ```bash

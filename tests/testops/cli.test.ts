@@ -340,6 +340,32 @@ describe("voice-test CLI", () => {
     });
   });
 
+  it("prints generated transcript suite JSON to stdout without requiring output files", async () => {
+    const result = await runCliWithInput(
+      [
+        "from-transcript",
+        "--stdin",
+        "--print-json",
+        "--merchant-name",
+        "Transcript import draft",
+      ],
+      [
+        "Customer: Do you have a table for six this Saturday?",
+        "Assistant: Yes, you can come directly. It is 388 per person.",
+      ].join("\n"),
+    );
+
+    expect(result.code).toBe(0);
+    const generated = JSON.parse(result.stdout) as unknown;
+    const suite = parseVoiceTestSuite(generated);
+    expect(result.stdout).not.toContain("Generated suite:");
+    expect(result.stdout).not.toContain("Transcript: read from stdin");
+    expect(suite.scenarios[0].merchant).toMatchObject({
+      name: "Transcript import draft",
+      industry: "restaurant",
+    });
+  });
+
   it("writes generated merchant drafts separately when merchant-out is provided", async () => {
     const tempDir = await mkdtemp(path.join(tmpdir(), "voice-testops-cli-"));
     const transcriptPath = path.join(tempDir, "restaurant-call.txt");
@@ -485,6 +511,26 @@ describe("voice-test CLI", () => {
     expect(result.stdout).toContain("Assertions: 5");
   });
 
+  it("rejects combining transcript preview and printed JSON output", async () => {
+    const result = await runCliWithInput(
+      [
+        "from-transcript",
+        "--stdin",
+        "--preview",
+        "--print-json",
+        "--merchant-name",
+        "Transcript import draft",
+      ],
+      [
+        "Customer: Do you have a table for six this Saturday?",
+        "Assistant: Yes, you can come directly. It is 388 per person.",
+      ].join("\n"),
+    );
+
+    expect(result.code).toBe(1);
+    expect(result.stderr).toContain("--preview cannot be combined with --print-json");
+  });
+
   it("previews append mode without changing the existing suite or merchant files", async () => {
     const tempDir = await mkdtemp(path.join(tmpdir(), "voice-testops-cli-"));
     const merchantDir = path.join(tempDir, "merchants");
@@ -553,6 +599,82 @@ describe("voice-test CLI", () => {
     expect(result.stdout).toContain("Existing scenarios: 1");
     expect(result.stdout).toContain("Result scenarios: 2");
     expect(result.stdout).toContain("Scenario: restaurant_table_failure - Generated transcript regression");
+    expect(rawSuite.scenarios).toHaveLength(1);
+    await expectFileMissing(generatedMerchantPath);
+  });
+
+  it("prints appended transcript suite JSON to stdout without mutating files", async () => {
+    const tempDir = await mkdtemp(path.join(tmpdir(), "voice-testops-cli-"));
+    const merchantDir = path.join(tempDir, "merchants");
+    await mkdir(merchantDir);
+    const suitePath = path.join(tempDir, "suite.json");
+    const baseMerchantPath = path.join(merchantDir, "photo.json");
+    const generatedMerchantPath = path.join(merchantDir, "restaurant.json");
+    const transcriptPath = path.join(tempDir, "restaurant-call.txt");
+    await writeFile(baseMerchantPath, JSON.stringify(merchant, null, 2), "utf8");
+    await writeFile(
+      suitePath,
+      JSON.stringify(
+        {
+          name: "Living regression library",
+          scenarios: [
+            {
+              id: "existing_pricing",
+              title: "Existing pricing guard",
+              source: "website",
+              merchantRef: "merchants/photo.json",
+              turns: [
+                {
+                  user: "How much is a portrait session?",
+                  expect: [{ type: "must_contain_any", phrases: ["599", "1299"] }],
+                },
+              ],
+            },
+          ],
+        },
+        null,
+        2,
+      ),
+      "utf8",
+    );
+    await writeFile(
+      transcriptPath,
+      [
+        "Customer: Do you have a table for six this Saturday?",
+        "Assistant: Yes, you can come directly. It is 388 per person.",
+      ].join("\n"),
+      "utf8",
+    );
+
+    const result = await runCli([
+      "from-transcript",
+      "--input",
+      transcriptPath,
+      "--out",
+      suitePath,
+      "--append",
+      "--print-json",
+      "--merchant-out",
+      generatedMerchantPath,
+      "--merchant-name",
+      "Transcript import draft",
+      "--scenario-id",
+      "restaurant_table_failure",
+    ]);
+
+    expect(result.code).toBe(0);
+    const printedSuite = JSON.parse(result.stdout) as {
+      scenarios: Array<{ id: string; merchantRef?: string }>;
+    };
+    const rawSuite = JSON.parse(await readFile(suitePath, "utf8")) as {
+      scenarios: Array<{ id: string }>;
+    };
+    expect(result.stdout).not.toContain("Appended scenario:");
+    expect(printedSuite.scenarios).toHaveLength(2);
+    expect(printedSuite.scenarios[1]).toMatchObject({
+      id: "restaurant_table_failure",
+      merchantRef: "merchants/restaurant.json",
+    });
     expect(rawSuite.scenarios).toHaveLength(1);
     await expectFileMissing(generatedMerchantPath);
   });

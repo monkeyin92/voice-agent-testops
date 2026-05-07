@@ -288,6 +288,17 @@ pbpaste | npx voice-agent-testops from-transcript \
   --source website
 ```
 
+Need the suite as data instead of files? Print clean JSON to stdout and pipe it into whatever comes next:
+
+```bash
+pbpaste | npx voice-agent-testops from-transcript \
+  --stdin \
+  --print-json \
+  --merchant-name "Lumen Portrait Studio" | jq '.scenarios[0].turns | length'
+```
+
+`--print-json` keeps stdout machine-readable and does not write suite or merchant files. It is handy for CI glue, `jq`, or redirecting a reviewed draft into your own generator.
+
 Prefer a transcript file? Use `--input`:
 
 ```bash
