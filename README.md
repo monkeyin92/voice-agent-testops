@@ -377,6 +377,21 @@ npx voice-agent-testops import-calls \
 
 `call-sample.json` is the automation manifest. `call-sampling.md` is for weekly human review. `call-transcripts` contains labeled text files that can be passed into `from-transcript` when a sampled call should become a regression test. Add `--risk-only` when you only want calls with inferred risk tags such as handoff requests, pricing questions, shared lead info, unsupported promises, or long conversations.
 
+## Create Pilot Deliverables
+
+After a test run, generate customer-facing pilot artifacts from the JSON report:
+
+```bash
+npx voice-agent-testops pilot-report \
+  --report .voice-testops/report.json \
+  --commercial .voice-testops/commercial-report.md \
+  --recap .voice-testops/pilot-recap.md \
+  --customer "Anju Realty" \
+  --period "Pilot week 1"
+```
+
+`commercial-report.md` summarizes launch readiness, severity breakdown, evidence links, and next pilot steps. `pilot-recap.md` is a meeting template for decisions, action owners, and regression assets to add next.
+
 ## Suite Format
 
 Suites are just JSON. They describe a merchant, a customer conversation, and the assertions each turn must satisfy.

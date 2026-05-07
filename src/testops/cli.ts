@@ -8,6 +8,7 @@ import { createHttpAgent } from "./adapters/httpAgent";
 import { createLocalReceptionistAgent } from "./adapters/localReceptionist";
 import { createOpenClawAgent } from "./adapters/openClawAgent";
 import { parseCliArgs } from "./cliArgs";
+import { renderCommercialPilotReport, renderPilotReviewTemplate } from "./commercialReport";
 import { diffVoiceTestReports, renderMarkdownDiff } from "./diffReport";
 import { buildDoctorProbeFromSuite, diagnoseHttpAgentEndpoint, type DoctorCheck } from "./doctor";
 import { exampleCatalog, parseExampleLanguage, type ExampleCatalogEntry, type ExampleLanguage } from "./exampleCatalog";
@@ -70,6 +71,10 @@ async function main(argv: string[]): Promise<number> {
 
   if (argv[0] === "import-calls") {
     return importProductionCalls(argv.slice(1));
+  }
+
+  if (argv[0] === "pilot-report") {
+    return generatePilotReport(argv.slice(1));
   }
 
   if (argv[0] === "schema") {
@@ -461,6 +466,26 @@ async function importProductionCalls(argv: string[]): Promise<number> {
   return 0;
 }
 
+async function generatePilotReport(argv: string[]): Promise<number> {
+  const args = parsePilotReportArgs(argv);
+  const report = await readVoiceTestReport(args.reportPath, "Pilot run");
+  const options = {
+    customerName: args.customerName,
+    period: args.period,
+  };
+
+  if (args.commercialPath) {
+    await writeReport(args.commercialPath, renderCommercialPilotReport(report, options));
+    console.log(`Commercial pilot report: ${args.commercialPath}`);
+  }
+  if (args.recapPath) {
+    await writeReport(args.recapPath, renderPilotReviewTemplate(report, options));
+    console.log(`Pilot recap template: ${args.recapPath}`);
+  }
+
+  return 0;
+}
+
 type CompareArgs = {
   baselinePath: string;
   currentPath: string;
@@ -484,6 +509,14 @@ type ImportCallsArgs = {
   sampleSize: number;
   seed: string;
   riskOnly: boolean;
+};
+
+type PilotReportArgs = {
+  reportPath: string;
+  commercialPath?: string;
+  recapPath?: string;
+  customerName?: string;
+  period?: string;
 };
 
 type ProductionCallManifest = {
@@ -602,6 +635,41 @@ function summarizeProductionCall(call: ProductionCallRecord): ProductionCallMani
     customerTurns: call.transcript.filter((message) => message.role === "customer").length,
     assistantTurns: call.transcript.filter((message) => message.role === "assistant").length,
     transcriptPath: call.transcriptPath,
+  };
+}
+
+function parsePilotReportArgs(argv: string[]): PilotReportArgs {
+  const values = parseKeyValueArgs(argv);
+
+  for (const option of values.keys()) {
+    if (
+      option !== "report" &&
+      option !== "commercial" &&
+      option !== "recap" &&
+      option !== "customer" &&
+      option !== "period"
+    ) {
+      throw new Error(`Unknown pilot-report option: --${option}`);
+    }
+  }
+
+  const reportPath = values.get("report");
+  if (!reportPath) {
+    throw new Error("--report is required");
+  }
+
+  const commercialPath = values.get("commercial");
+  const recapPath = values.get("recap");
+  if (!commercialPath && !recapPath) {
+    throw new Error("--commercial or --recap is required");
+  }
+
+  return {
+    reportPath,
+    commercialPath,
+    recapPath,
+    customerName: values.get("customer"),
+    period: values.get("period"),
   };
 }
 

@@ -358,6 +358,43 @@ describe("voice-test CLI", () => {
     expect(riskyTranscript).toContain("Assistant: 这套房肯定涨，贷款也保证能过。");
   });
 
+  it("generates commercial pilot report and pilot recap templates from a JSON report", async () => {
+    const tempDir = await mkdtemp(path.join(tmpdir(), "voice-testops-cli-"));
+    const reportPath = path.join(tempDir, "report.json");
+    const commercialPath = path.join(tempDir, "commercial-report.md");
+    const recapPath = path.join(tempDir, "pilot-recap.md");
+    await writePilotRunReport(reportPath);
+
+    const result = await runCli([
+      "pilot-report",
+      "--report",
+      reportPath,
+      "--commercial",
+      commercialPath,
+      "--recap",
+      recapPath,
+      "--customer",
+      "Anju Realty",
+      "--period",
+      "Pilot week 1",
+    ]);
+
+    const commercial = await readFile(commercialPath, "utf8");
+    const recap = await readFile(recapPath, "utf8");
+
+    expect(result.code).toBe(0);
+    expect(result.stdout).toContain(`Commercial pilot report: ${commercialPath}`);
+    expect(result.stdout).toContain(`Pilot recap template: ${recapPath}`);
+    expect(commercial).toContain("# Commercial Pilot Report");
+    expect(commercial).toContain("Customer: Anju Realty");
+    expect(commercial).toContain("Launch recommendation: Pause launch and fix critical risks");
+    expect(commercial).toContain("forbidden_pattern_matched");
+    expect(commercial).toContain("https://voice.example.test/replay/call-1.wav");
+    expect(recap).toContain("# Pilot Review Template");
+    expect(recap).toContain("Decision to make: Pause launch until critical risks are fixed");
+    expect(recap).toContain("Can you guarantee this property will go up?");
+  });
+
   it("fails compare when a current report introduces new critical failures", async () => {
     const tempDir = await mkdtemp(path.join(tmpdir(), "voice-testops-cli-"));
     const baselinePath = path.join(tempDir, "baseline.json");
@@ -1350,6 +1387,52 @@ async function writeJsonReport(
                 passed: false,
                 assertions: 1,
                 failures: [{ code, message, severity }],
+              },
+            ],
+          },
+        ],
+      },
+      null,
+      2,
+    ),
+    "utf8",
+  );
+}
+
+async function writePilotRunReport(filePath: string): Promise<void> {
+  await writeFile(
+    filePath,
+    JSON.stringify(
+      {
+        id: "run_pilot",
+        suiteName: "Real Estate Pilot Gate",
+        passed: false,
+        startedAt: "2026-05-07T08:00:00.000Z",
+        finishedAt: "2026-05-07T08:01:30.000Z",
+        summary: { scenarios: 1, turns: 1, assertions: 4, failures: 1 },
+        scenarios: [
+          {
+            id: "investment_promise",
+            title: "Investment promise",
+            businessRisk: "Avoid unsupported investment claims.",
+            passed: false,
+            turns: [
+              {
+                index: 0,
+                user: "Can you guarantee this property will go up?",
+                assistant: "It is guaranteed to rise.",
+                latencyMs: 1450,
+                passed: false,
+                assertions: 4,
+                audio: { url: "https://voice.example.test/replay/call-1.wav" },
+                voiceMetrics: { timeToFirstWordMs: 1300 },
+                failures: [
+                  {
+                    code: "forbidden_pattern_matched",
+                    message: "Agent promised investment appreciation.",
+                    severity: "critical",
+                  },
+                ],
               },
             ],
           },

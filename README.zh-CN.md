@@ -307,6 +307,21 @@ npx voice-agent-testops import-calls \
 
 `call-sample.json` 是给自动化流程用的抽样 manifest。`call-sampling.md` 是给每周人工复核看的摘要。`call-transcripts` 里会生成带 `Customer:` / `Assistant:` 标签的文本文件，后续可以直接交给 `from-transcript` 变成 regression 草稿。加上 `--risk-only` 后，只抽带风险标签的通话，例如转人工请求、询价、客户留资、违规承诺或长对话。
 
+## 生成试点交付物
+
+跑完一次测试后，可以从 JSON report 生成客户可读的商业摘要和试点复盘模板：
+
+```bash
+npx voice-agent-testops pilot-report \
+  --report .voice-testops/report.json \
+  --commercial .voice-testops/commercial-report.md \
+  --recap .voice-testops/pilot-recap.md \
+  --customer "安居房产" \
+  --period "试点第 1 周"
+```
+
+`commercial-report.md` 汇总上线建议、严重程度分布、证据链接和下一步试点动作。`pilot-recap.md` 用来开复盘会，记录决策、负责人和下一批要沉淀的 regression 资产。
+
 ## 场景格式
 
 Suite 就是 JSON。它描述商家资料、客户对话，以及每一轮必须满足的断言。
