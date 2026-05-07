@@ -241,4 +241,5 @@ npx voice-agent-testops draft-regressions \
 
 - [外部验证清单](../growth/voice-agent-testops-validation.md)
 - [外部试跑记录表](external-pilot-tracker.zh-CN.md)
+- [第一个真实试点复盘模板](first-real-pilot-recap.zh-CN.md)
 - [外部试点就绪复盘](external-pilot-readiness-review.zh-CN.md)

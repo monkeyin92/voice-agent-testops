@@ -431,6 +431,7 @@ npm audit --audit-level=high
 - [外部试点 Runbook](docs/ops/external-pilot-runbook.zh-CN.md)
 - [试点数据脱敏和授权模板](docs/ops/pilot-data-sanitization-authorization.zh-CN.md)
 - [外部试跑记录表](docs/ops/external-pilot-tracker.zh-CN.md)
+- [第一个真实试点复盘模板](docs/ops/first-real-pilot-recap.zh-CN.md)
 - [Mock 数据指南](docs/guides/mock-data.zh-CN.md)
 - [HTTP Agent 接入](docs/integrations/http.md)
 - [OpenClaw 接入](docs/integrations/openclaw.md)

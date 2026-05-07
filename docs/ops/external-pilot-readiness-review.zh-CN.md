@@ -181,6 +181,8 @@
 - commercial report；
 - pilot recap。
 
+当前文档：[第一个真实试点复盘模板](first-real-pilot-recap.zh-CN.md)。
+
 ## 验收命令和产物
 
 每个外部试点至少保留这些命令和产物：
