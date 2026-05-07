@@ -199,6 +199,20 @@ pbpaste | npx voice-agent-testops from-transcript \
 
 如果已经有审核过的商家事实，可以加 `--merchant examples/voice-testops/merchants/guangying-photo.json`，这样价格和服务断言会直接引用可信资料。
 
+## 从失败报告生成 Regression 草稿
+
+当 mock 或试点运行失败后，把报告和原始 suite 放在一起，生成下一批回归草稿：
+
+```bash
+npx voice-agent-testops draft-regressions \
+  --report .voice-testops/report.json \
+  --suite voice-testops/generated-suite.json \
+  --out voice-testops/regression-draft.json \
+  --clusters .voice-testops/failure-clusters.md
+```
+
+先看 `failure-clusters.md`，判断哪些失败属于同一个根因。再检查 `regression-draft.json`，围绕确认过的根因收紧断言，只把真正应该长期阻断发布的 case 追加进正式 suite。
+
 ## 一个小检查表
 
 - 商家事实里至少有一条价格或服务信息，Agent 必须引用。

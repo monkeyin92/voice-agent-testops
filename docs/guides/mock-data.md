@@ -162,6 +162,20 @@ The transcript generator is deterministic. It does not call an LLM; it extracts 
 
 When you already have approved business facts, add `--merchant examples/voice-testops/merchants/guangying-photo.json` so the generated suite can anchor pricing and service assertions to known-good data.
 
+## Drafting Regressions From Failed Reports
+
+When a mock or pilot run fails, keep the report and source suite together, then draft the next regression cases:
+
+```bash
+npx voice-agent-testops draft-regressions \
+  --report .voice-testops/report.json \
+  --suite voice-testops/generated-suite.json \
+  --out voice-testops/regression-draft.json \
+  --clusters .voice-testops/failure-clusters.md
+```
+
+Review `failure-clusters.md` first to see which failures share the same root cause. Then inspect `regression-draft.json`, tighten the assertions around the approved root cause, and append only the cases that should become permanent release gates.
+
 ## A Small Checklist
 
 - The merchant facts include at least one price or service fact the agent must quote.

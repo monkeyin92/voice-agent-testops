@@ -267,7 +267,7 @@ Starter 必测场景：
 
 ### 中期 P2
 
-- [ ] 失败聚类和 regression suite 草稿生成。
+- [x] 失败聚类和 regression suite 草稿生成。
 - [ ] 生产通话导入和抽样监控。
 - [ ] tool-call / backend-state 断言。
 - [ ] 语音原生指标和音频 replay。

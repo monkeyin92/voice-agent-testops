@@ -13,7 +13,7 @@ Voice Agent TestOps runs scripted customer conversations against your agent, the
 
 It is not another voice-agent framework. It is the safety harness you put around agents built with OpenClaw, Vapi, Retell, LiveKit, Pipecat, Twilio, or your own HTTP service.
 
-[Quick Start](#quick-start) · [Example Library](#example-library) · [Create Mock Data](#create-mock-data) · [Connect An Agent](#connect-an-agent) · [Turn A Real Failure Into A Regression Test](#turn-a-real-failure-into-a-regression-test) · [Suite Format](#suite-format)
+[Quick Start](#quick-start) · [Example Library](#example-library) · [Create Mock Data](#create-mock-data) · [Connect An Agent](#connect-an-agent) · [Turn A Real Failure Into A Regression Test](#turn-a-real-failure-into-a-regression-test) · [Draft Regressions From Failed Reports](#draft-regressions-from-failed-reports) · [Suite Format](#suite-format)
 
 ![Voice Agent TestOps report preview](docs/assets/report-preview.png)
 
@@ -337,6 +337,20 @@ Drop `--preview` from the append command when you are ready to modify the suite.
 The generator is deterministic. It does not call an LLM; it extracts customer turns, infers a draft merchant profile when you do not have one yet, and adds reviewable assertions for unsafe promises, pricing facts, lead fields, handoff intent, and latency. Treat the generated files as a first draft, then tighten them before using the suite as a release gate.
 
 If you already keep approved business facts in JSON, add `--merchant examples/voice-testops/merchants/guangying-photo.json`. That gives the generated suite better price and service assertions from day one.
+
+## Draft Regressions From Failed Reports
+
+After a run fails, turn the failed turns back into reviewable regression artifacts:
+
+```bash
+npx voice-agent-testops draft-regressions \
+  --report .voice-testops/report.json \
+  --suite voice-testops/suite.json \
+  --out voice-testops/regression-draft.json \
+  --clusters .voice-testops/failure-clusters.md
+```
+
+`regression-draft.json` keeps the failed scenarios and the turns needed to reproduce them. `failure-clusters.md` groups failures by severity, assertion code, and message fingerprint, so a team can review one cluster at a time instead of rereading every transcript. Treat both files as drafts: tighten the generated suite, then append the approved cases to your baseline gate.
 
 ## Suite Format
 
