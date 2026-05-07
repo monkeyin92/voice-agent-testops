@@ -136,6 +136,8 @@ describe("createOpenClawAgent", () => {
                     nextAction: "请人工确认档期并跟进",
                     transcript: [],
                   },
+                  tools: [{ name: "create_lead", arguments: { intent: "pricing" } }],
+                  state: { lead: { intent: "pricing", status: "captured" } },
                 }),
               },
             ],
@@ -160,6 +162,8 @@ describe("createOpenClawAgent", () => {
 
     expect(output.spoken).toContain("599-1299");
     expect(output.summary?.intent).toBe("pricing");
+    expect(output.tools).toEqual([{ name: "create_lead", arguments: { intent: "pricing" } }]);
+    expect(output.state).toEqual({ lead: { intent: "pricing", status: "captured" } });
   });
 
   it("fails fast when OpenClaw returns a response without spoken text", async () => {

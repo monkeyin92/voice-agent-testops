@@ -239,6 +239,126 @@ describe("runVoiceTestSuite", () => {
     expect(result.scenarios[0].turns[0].failures[0].message).toContain("custom judge blocked");
   });
 
+  it("passes tool-call and backend-state assertions when structured evidence matches", async () => {
+    const suite = parseVoiceTestSuite({
+      name: "工具状态门禁",
+      scenarios: [
+        {
+          id: "booking_state",
+          title: "创建预约并写入状态",
+          source: "website",
+          merchant,
+          turns: [
+            {
+              user: "请帮我预约明天下午，电话 13800000000",
+              expect: [
+                {
+                  type: "tool_called",
+                  name: "create_booking",
+                  arguments: { phone: "13800000000", slot: { day: "tomorrow" } },
+                  severity: "critical",
+                },
+                { type: "backend_state_present", path: "lead.phone", severity: "critical" },
+                {
+                  type: "backend_state_equals",
+                  path: "booking.status",
+                  value: "pending_manual_confirmation",
+                  severity: "major",
+                },
+              ],
+            },
+          ],
+        },
+      ],
+    });
+
+    const result = await runVoiceTestSuite(suite, async () => ({
+      spoken: "我会记录电话，并请真人确认明天下午档期。",
+      summary: {
+        source: "website",
+        intent: "booking",
+        level: "high",
+        need: "预约明天下午",
+        phone: "13800000000",
+        questions: ["请帮我预约明天下午"],
+        nextAction: "人工确认档期",
+        transcript: [],
+      },
+      tools: [
+        {
+          name: "create_booking",
+          arguments: { phone: "13800000000", slot: { day: "tomorrow", time: "afternoon" } },
+        },
+      ],
+      state: {
+        lead: { phone: "13800000000" },
+        booking: { status: "pending_manual_confirmation" },
+      },
+    }));
+
+    expect(result.passed).toBe(true);
+    expect(result.scenarios[0].turns[0]).toMatchObject({
+      tools: [{ name: "create_booking" }],
+      state: { booking: { status: "pending_manual_confirmation" } },
+    });
+  });
+
+  it("reports actionable failures for missing tool arguments and backend state", async () => {
+    const suite = parseVoiceTestSuite({
+      name: "工具状态失败门禁",
+      scenarios: [
+        {
+          id: "booking_state_failure",
+          title: "工具和状态不一致",
+          source: "website",
+          merchant,
+          turns: [
+            {
+              user: "请帮我预约明天下午，电话 13800000000",
+              expect: [
+                {
+                  type: "tool_called",
+                  name: "create_booking",
+                  arguments: { phone: "13800000000" },
+                  severity: "critical",
+                },
+                { type: "backend_state_present", path: "lead.phone", severity: "critical" },
+                {
+                  type: "backend_state_equals",
+                  path: "booking.status",
+                  value: "pending_manual_confirmation",
+                  severity: "major",
+                },
+              ],
+            },
+          ],
+        },
+      ],
+    });
+
+    const result = await runVoiceTestSuite(suite, async () => ({
+      spoken: "我会帮你记录预约。",
+      summary: {
+        source: "website",
+        intent: "booking",
+        level: "medium",
+        need: "预约明天下午",
+        questions: ["请帮我预约明天下午"],
+        nextAction: "记录预约",
+        transcript: [],
+      },
+      tools: [{ name: "create_booking", arguments: { phone: "13900000000" } }],
+      state: { booking: { status: "draft" } },
+    }));
+
+    expect(result.passed).toBe(false);
+    expect(result.scenarios[0].turns[0].failures.map((failure) => failure.code)).toEqual([
+      "tool_arguments_mismatch",
+      "backend_state_missing",
+      "backend_state_mismatch",
+    ]);
+  });
+
   it("reports per-turn progress while running a suite", async () => {
     const suite = parseVoiceTestSuite({
       name: "销售演示套件",

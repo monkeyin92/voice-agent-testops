@@ -269,7 +269,7 @@ Starter 必测场景：
 
 - [x] 失败聚类和 regression suite 草稿生成。
 - [x] 生产通话导入和抽样监控。
-- [ ] tool-call / backend-state 断言。
+- [x] tool-call / backend-state 断言。
 - [ ] 语音原生指标和音频 replay。
 - [ ] 商业版报告模板和试点复盘模板。
 

@@ -14,6 +14,12 @@ export const semanticJudgeRubricSchema = z.enum([
 ]);
 export type SemanticJudgeRubric = z.infer<typeof semanticJudgeRubricSchema>;
 
+type JsonValue = string | number | boolean | null | JsonValue[] | { [key: string]: JsonValue };
+const jsonValueSchema: z.ZodType<JsonValue> = z.lazy(() =>
+  z.union([z.string(), z.number(), z.boolean(), z.null(), z.array(jsonValueSchema), z.record(z.string(), jsonValueSchema)]),
+);
+const backendStatePathSchema = z.string().min(1).regex(/^[A-Za-z0-9_]+(?:\.[A-Za-z0-9_]+)*$/);
+
 export const voiceTestAssertionSchema = z.discriminatedUnion("type", [
   z.object({
     type: z.literal("must_contain_any"),
@@ -44,6 +50,24 @@ export const voiceTestAssertionSchema = z.discriminatedUnion("type", [
     type: z.literal("semantic_judge"),
     rubric: semanticJudgeRubricSchema,
     criteria: z.string().min(1),
+    severity: assertionSeverity,
+  }),
+  z.object({
+    type: z.literal("tool_called"),
+    name: z.string().min(1),
+    minCount: z.number().int().positive().default(1),
+    arguments: z.record(z.string(), jsonValueSchema).optional(),
+    severity: assertionSeverity,
+  }),
+  z.object({
+    type: z.literal("backend_state_present"),
+    path: backendStatePathSchema,
+    severity: assertionSeverity,
+  }),
+  z.object({
+    type: z.literal("backend_state_equals"),
+    path: backendStatePathSchema,
+    value: jsonValueSchema,
     severity: assertionSeverity,
   }),
 ]);

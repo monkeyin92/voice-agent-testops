@@ -43,7 +43,7 @@ npx voice-agent-testops list --industry restaurant
 
 3. Add assertions.
 
-   Use `must_contain_any` for approved facts, `must_not_match` for forbidden promises, `lead_intent` for classification, `lead_field_present` for structured capture, and `max_latency_ms` for response speed. Critical business risk should be marked `critical`; copy drift can stay `minor`.
+   Use `must_contain_any` for approved facts, `must_not_match` for forbidden promises, `lead_intent` for classification, `lead_field_present` for structured capture, and `max_latency_ms` for response speed. Use `semantic_judge` for higher-level business rubrics. Use `tool_called`, `backend_state_present`, and `backend_state_equals` when your bridge can return tool calls and a test-safe backend state snapshot. Critical business risk should be marked `critical`; copy drift can stay `minor`.
 
 4. Validate before running.
 

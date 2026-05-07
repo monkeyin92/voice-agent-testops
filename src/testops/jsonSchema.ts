@@ -275,6 +275,64 @@ function buildAssertionSchema(): JsonSchema {
           severity: severityProperty,
         },
       },
+      {
+        title: "tool_called",
+        type: "object",
+        additionalProperties: false,
+        required: ["type", "name"],
+        properties: {
+          type: { const: "tool_called" },
+          name: {
+            type: "string",
+            minLength: 1,
+            description: "Expected tool/function name returned by the test bridge.",
+          },
+          minCount: {
+            type: "integer",
+            minimum: 1,
+            default: 1,
+            description: "Minimum number of calls with this name, and with matching arguments when provided.",
+          },
+          arguments: {
+            type: "object",
+            description: "Expected JSON argument subset. Nested objects are matched as subsets.",
+          },
+          severity: severityProperty,
+        },
+      },
+      {
+        title: "backend_state_present",
+        type: "object",
+        additionalProperties: false,
+        required: ["type", "path"],
+        properties: {
+          type: { const: "backend_state_present" },
+          path: {
+            type: "string",
+            pattern: "^[A-Za-z0-9_]+(?:\\.[A-Za-z0-9_]+)*$",
+            description: "Dot path inside the optional state object returned by the test bridge.",
+          },
+          severity: severityProperty,
+        },
+      },
+      {
+        title: "backend_state_equals",
+        type: "object",
+        additionalProperties: false,
+        required: ["type", "path", "value"],
+        properties: {
+          type: { const: "backend_state_equals" },
+          path: {
+            type: "string",
+            pattern: "^[A-Za-z0-9_]+(?:\\.[A-Za-z0-9_]+)*$",
+            description: "Dot path inside the optional state object returned by the test bridge.",
+          },
+          value: {
+            description: "Expected JSON value at the selected backend state path.",
+          },
+          severity: severityProperty,
+        },
+      },
     ],
   };
 }

@@ -91,6 +91,53 @@ describe("parseVoiceTestSuite", () => {
     });
   });
 
+  it("accepts tool-call and backend-state assertions", () => {
+    const suite = parseVoiceTestSuite({
+      name: "工具和状态评测",
+      scenarios: [
+        {
+          id: "booking_tool_state",
+          title: "创建预约并写入状态",
+          source: "website",
+          merchant,
+          turns: [
+            {
+              user: "请帮我预约明天下午，电话 13800000000",
+              expect: [
+                {
+                  type: "tool_called",
+                  name: "create_booking",
+                  minCount: 1,
+                  arguments: { phone: "13800000000", slot: { day: "tomorrow" } },
+                  severity: "critical",
+                },
+                {
+                  type: "backend_state_present",
+                  path: "lead.phone",
+                  severity: "critical",
+                },
+                {
+                  type: "backend_state_equals",
+                  path: "booking.status",
+                  value: "pending_manual_confirmation",
+                  severity: "major",
+                },
+              ],
+            },
+          ],
+        },
+      ],
+    });
+
+    expect(suite.scenarios[0].turns[0].expect).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({ type: "tool_called", name: "create_booking", minCount: 1 }),
+        expect.objectContaining({ type: "backend_state_present", path: "lead.phone" }),
+        expect.objectContaining({ type: "backend_state_equals", path: "booking.status" }),
+      ]),
+    );
+  });
+
   it("rejects scenarios without customer turns", () => {
     expect(() =>
       parseVoiceTestSuite({

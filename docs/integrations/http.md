@@ -52,7 +52,7 @@ Voice Agent TestOps sends a single customer turn to `POST /test-turn`:
 
 ## Return contract
 
-Return the words your agent would speak, plus an optional structured summary:
+Return the words your agent would speak, plus optional structured evidence for assertions:
 
 ```json
 {
@@ -65,11 +65,26 @@ Return the words your agent would speak, plus an optional structured summary:
     "questions": ["How much is an individual portrait session?"],
     "nextAction": "Follow up with available slots",
     "transcript": []
+  },
+  "tools": [
+    {
+      "name": "create_lead",
+      "arguments": {
+        "intent": "pricing"
+      }
+    }
+  ],
+  "state": {
+    "lead": {
+      "intent": "pricing",
+      "status": "captured"
+    }
   }
 }
 ```
 
 `spoken` is required. `summary` is optional, but it unlocks lead-field and intent assertions such as `lead_field_present` and `lead_intent`.
+`tools` is optional; return it when you want assertions such as `tool_called` to verify function/tool usage. `state` is optional; return a small test-safe backend snapshot when you want `backend_state_present` or `backend_state_equals` to verify CRM, booking, handoff, or lead state.
 
 ## Bridge shape
 
@@ -86,6 +101,11 @@ async function createTestAgentResponse(turn) {
   return {
     spoken: agentResult.text,
     summary: agentResult.leadSummary,
+    tools: agentResult.toolCalls,
+    state: {
+      lead: agentResult.leadRecord,
+      booking: agentResult.bookingDraft,
+    },
   };
 }
 ```

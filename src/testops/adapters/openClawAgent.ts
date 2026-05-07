@@ -74,6 +74,8 @@ function buildCustomPayload(input: OpenClawTurnInput) {
     outputContract: {
       spoken: "short voice-agent response",
       summary: "optional LeadSummary-compatible JSON",
+      tools: "optional array of tool calls: [{ name, arguments, result }]",
+      state: "optional backend state snapshot used by backend_state assertions",
     },
   };
 }
@@ -138,11 +140,17 @@ function parseVoiceAgentJson(text: string | undefined): VoiceAgentTurnOutput | u
 
     return {
       spoken: parsed.spoken,
-      ...(typeof parsed.summary === "object" && parsed.summary !== null ? { summary: parsed.summary } : {}),
+      ...(isRecord(parsed.summary) ? { summary: parsed.summary } : {}),
+      ...(Array.isArray(parsed.tools) ? { tools: parsed.tools } : {}),
+      ...(isRecord(parsed.state) ? { state: parsed.state } : {}),
     } as VoiceAgentTurnOutput;
   } catch {
     return undefined;
   }
+}
+
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === "object" && value !== null && !Array.isArray(value);
 }
 
 function stripJsonFence(text: string): string {
