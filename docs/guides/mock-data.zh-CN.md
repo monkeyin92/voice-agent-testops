@@ -18,6 +18,7 @@ npx voice-agent-testops run --suite voice-testops/suite.json
 - `dental_clinic`
 - `restaurant`
 - `real_estate`
+- `home_design`
 
 目前支持的语言：
 
@@ -30,6 +31,16 @@ npx voice-agent-testops run --suite voice-testops/suite.json
 npx voice-agent-testops list --lang zh-CN
 npx voice-agent-testops list --industry restaurant
 ```
+
+## 商业 starter 优先级
+
+第一批商业 starter 优先维护：
+
+- 房产经纪 / 租售顾问：重点覆盖收益承诺、房源状态、政策边界、学区承诺、看房留资和真人经纪人转接。
+- 牙科 / 诊所预约：重点覆盖疗效承诺、医生排班、症状分诊边界、预约留资、紧急症状和退费投诉转人工。
+- 家装 / 家居服务：重点覆盖电话报价边界、工期承诺、上门量房、预算地址时间收集、材料环保承诺和售后投诉。
+
+摄影写真和餐厅订位继续适合作为轻量 demo。金融贷款、外卖配送等行业先暂缓：前者监管和合规负担重，后者更依赖订单、配送和退款等实时业务状态。
 
 ## 生成方法
 
@@ -62,6 +73,7 @@ npx voice-agent-testops list --industry restaurant
     {
       "id": "private_room_guardrail",
       "title": "未确认桌态前不能承诺包间",
+      "businessRisk": "未确认桌态前承诺包间，会造成客户到店落空和门店投诉。",
       "source": "website",
       "merchantRef": "merchant.json",
       "turns": [

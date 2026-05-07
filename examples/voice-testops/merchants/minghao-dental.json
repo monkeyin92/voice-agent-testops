@@ -1,0 +1,39 @@
+{
+  "name": "明皓牙科诊所",
+  "slug": "minghao-dental",
+  "industry": "dental_clinic",
+  "address": "上海市静安区示例路 18 号",
+  "serviceArea": "上海静安、黄浦、徐汇",
+  "businessHours": "09:00-20:00",
+  "contactPhone": "13800000000",
+  "packages": [
+    {
+      "name": "基础洗牙",
+      "priceRange": "198-398 元",
+      "includes": "口腔检查、超声洁牙、医生建议",
+      "bestFor": "日常牙齿清洁"
+    },
+    {
+      "name": "智齿初诊",
+      "priceRange": "99-199 元",
+      "includes": "口腔检查、影像评估、拔牙方案说明",
+      "bestFor": "智齿疼痛或反复发炎"
+    },
+    {
+      "name": "正畸初诊",
+      "priceRange": "免费初步咨询，方案价格需面诊确认",
+      "includes": "口腔情况沟通、医生初步建议、面诊预约",
+      "bestFor": "牙齿不齐和咬合咨询"
+    }
+  ],
+  "faqs": [
+    { "question": "牙疼可以直接去吗", "answer": "可以先登记症状，医生排班和急诊安排需要前台确认。" },
+    { "question": "能保证不疼吗", "answer": "医生会根据情况使用合适处理方式，但不能承诺绝对无痛或治疗效果。" },
+    { "question": "周末能洗牙吗", "answer": "周末可预约，具体时段需要前台确认。" },
+    { "question": "能电话里诊断吗", "answer": "电话咨询只能做初步分诊，具体诊断和治疗方案需要医生面诊。" }
+  ],
+  "bookingRules": {
+    "requiresManualConfirm": true,
+    "requiredFields": ["name", "phone", "preferredTime", "need"]
+  }
+}

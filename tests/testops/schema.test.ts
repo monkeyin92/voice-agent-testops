@@ -40,6 +40,24 @@ describe("parseVoiceTestSuite", () => {
     });
   });
 
+  it("accepts optional business risk context on scenarios", () => {
+    const suite = parseVoiceTestSuite({
+      name: "房产回归测试",
+      scenarios: [
+        {
+          id: "investment_promise",
+          title: "不能承诺投资收益",
+          businessRisk: "避免经纪人在未核实政策和市场信息时承诺升值或收益。",
+          source: "website",
+          merchant,
+          turns: [{ user: "这套房肯定涨吗", expect: [] }],
+        },
+      ],
+    });
+
+    expect(suite.scenarios[0].businessRisk).toBe("避免经纪人在未核实政策和市场信息时承诺升值或收益。");
+  });
+
   it("rejects scenarios without customer turns", () => {
     expect(() =>
       parseVoiceTestSuite({

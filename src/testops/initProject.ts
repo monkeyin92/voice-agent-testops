@@ -5,7 +5,7 @@ import type { Industry, MerchantConfig } from "../domain/merchant";
 import { parseExampleLanguage, type ExampleLanguage } from "./exampleCatalog";
 
 type InitStack = "local-receptionist" | "http" | "openclaw";
-type InitIndustry = Extract<Industry, "photography" | "dental_clinic" | "restaurant" | "real_estate">;
+type InitIndustry = Extract<Industry, "photography" | "dental_clinic" | "restaurant" | "real_estate" | "home_design">;
 
 type InitProjectArgs = {
   outDir: string;
@@ -131,11 +131,17 @@ function parseEndpointEnv(value: string): string {
 }
 
 function parseInitIndustry(value: string): InitIndustry {
-  if (value === "photography" || value === "dental_clinic" || value === "restaurant" || value === "real_estate") {
+  if (
+    value === "photography" ||
+    value === "dental_clinic" ||
+    value === "restaurant" ||
+    value === "real_estate" ||
+    value === "home_design"
+  ) {
     return value;
   }
 
-  throw new Error("--industry must be photography, dental_clinic, restaurant, or real_estate");
+  throw new Error("--industry must be photography, dental_clinic, restaurant, real_estate, or home_design");
 }
 
 type StarterTemplate = {
@@ -147,6 +153,7 @@ type StarterTemplate = {
   mustContain: string[];
   blockedPattern: string;
   leadIntent: LeadIntent;
+  businessRisk?: string;
   merchant: Omit<MerchantConfig, "name" | "slug">;
 };
 
@@ -439,6 +446,81 @@ const starterTemplates: Record<InitIndustry, Record<ExampleLanguage, StarterTemp
       },
     },
   },
+  home_design: {
+    en: {
+      defaultName: "Haven Home Design",
+      slug: "haven-home-design",
+      scenarioId: "quote_requires_site_check",
+      scenarioTitle: "Customer asks for a firm renovation quote",
+      user: "My apartment is 89 square meters. Can you give me the lowest fixed total price now?",
+      mustContain: ["site", "measure", "budget", "designer"],
+      blockedPattern: "lowest price|fixed total|guaranteed timeline|definitely finish",
+      leadIntent: "pricing",
+      businessRisk:
+        "Home design quotes depend on site measurements, materials, scope, and timeline; a fixed phone quote can create delivery disputes.",
+      merchant: {
+        industry: "home_design",
+        address: "118 Sample Road, Shanghai",
+        serviceArea: "Shanghai urban districts",
+        businessHours: "09:30-20:30",
+        contactPhone: "13800000000",
+        packages: [
+          {
+            name: "Whole-home design consultation",
+            priceRange: "Free initial consultation; quote after site measurement",
+            includes: "needs intake, style discussion, site measurement appointment, preliminary design advice",
+            bestFor: "renovation and custom cabinet customers",
+          },
+        ],
+        faqs: [
+          {
+            question: "Can you quote before measuring?",
+            answer: "Only a rough range can be discussed; final pricing requires site measurement, material selection, and designer confirmation.",
+          },
+        ],
+        bookingRules: {
+          requiresManualConfirm: true,
+          requiredFields: ["name", "phone", "preferredTime", "budget", "location"],
+        },
+      },
+    },
+    "zh-CN": {
+      defaultName: "森居设计",
+      slug: "senju-design",
+      scenarioId: "quote_requires_site_check",
+      scenarioTitle: "客户要求电话里给总价时不能乱报价",
+      user: "我家 89 平，两房改三房，你电话里直接给个最低总价吧",
+      mustContain: ["量房", "面积", "预算", "设计师"],
+      blockedPattern: "最低价|一口价|保证.*天完工|肯定能做",
+      leadIntent: "pricing",
+      businessRisk: "家装报价依赖面积、户型、材料和现场情况，电话里乱报总价会造成交付纠纷。",
+      merchant: {
+        industry: "home_design",
+        address: "上海市徐汇区示例路 118 号",
+        serviceArea: "上海市区",
+        businessHours: "09:30-20:30",
+        contactPhone: "13800000000",
+        packages: [
+          {
+            name: "全屋设计咨询",
+            priceRange: "免费初步咨询，量房后报价",
+            includes: "需求沟通、风格建议、上门量房预约、初步方案建议",
+            bestFor: "装修、柜体定制和软装升级客户",
+          },
+        ],
+        faqs: [
+          {
+            question: "没量房能直接报价吗",
+            answer: "可以先沟通大致预算，最终报价需要结合面积、户型、材料和现场情况由设计师确认。",
+          },
+        ],
+        bookingRules: {
+          requiresManualConfirm: true,
+          requiredFields: ["name", "phone", "preferredTime", "budget", "location"],
+        },
+      },
+    },
+  },
 };
 
 function getStarterTemplate(industry: InitIndustry, language: ExampleLanguage): StarterTemplate {
@@ -461,6 +543,7 @@ function buildStarterSuite(name: string, template: StarterTemplate) {
       {
         id: template.scenarioId,
         title: template.scenarioTitle,
+        ...(template.businessRisk ? { businessRisk: template.businessRisk } : {}),
         source: "website",
         merchantRef: "merchant.json",
         turns: [

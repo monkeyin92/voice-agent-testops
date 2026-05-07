@@ -947,6 +947,28 @@ describe("voice-test CLI", () => {
     expect(runResult.stdout).toContain("云栖小馆 Voice Agent TestOps: passed");
   });
 
+  it("initializes a Chinese home design starter suite", async () => {
+    const tempDir = await mkdtemp(path.join(tmpdir(), "voice-testops-cli-"));
+    const outDir = path.join(tempDir, "voice-testops");
+
+    const result = await runCli(["init", "--industry", "home_design", "--lang", "zh-CN", "--name", "森居设计", "--out", outDir]);
+
+    const suite = JSON.parse(await readFile(path.join(outDir, "suite.json"), "utf8")) as {
+      scenarios: Array<{
+        businessRisk?: string;
+        turns: Array<{ expect: Array<{ type: string; severity?: string }> }>;
+      }>;
+    };
+    const generatedMerchant = JSON.parse(await readFile(path.join(outDir, "merchant.json"), "utf8")) as typeof merchant;
+
+    expect(result.code).toBe(0);
+    expect(generatedMerchant.industry).toBe("home_design");
+    expect(suite.scenarios[0].businessRisk).toContain("报价");
+    expect(suite.scenarios[0].turns[0].expect).toEqual(
+      expect.arrayContaining([expect.objectContaining({ type: "must_not_match", severity: "critical" })]),
+    );
+  });
+
   it("can initialize a CI workflow for the generated suite", async () => {
     const tempDir = await mkdtemp(path.join(tmpdir(), "voice-testops-cli-"));
 

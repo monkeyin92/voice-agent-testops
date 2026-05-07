@@ -15,6 +15,7 @@ const exampleSuites = [
   "examples/voice-testops/english-restaurant-booking-suite.json",
   "examples/voice-testops/chinese-real-estate-agent-suite.json",
   "examples/voice-testops/english-real-estate-agent-suite.json",
+  "examples/voice-testops/chinese-home-design-suite.json",
   "examples/voice-testops/generated-transcript-suite.json",
   "examples/voice-testops/photo-studio-multiturn-suite.json",
   "examples/voice-testops/failing-demo-suite.json",
@@ -35,6 +36,21 @@ const bilingualExamplePairs = [
   ],
 ];
 
+const commercialStarterSuites = [
+  {
+    path: "examples/voice-testops/chinese-real-estate-agent-suite.json",
+    industry: "real_estate",
+  },
+  {
+    path: "examples/voice-testops/chinese-dental-clinic-suite.json",
+    industry: "dental_clinic",
+  },
+  {
+    path: "examples/voice-testops/chinese-home-design-suite.json",
+    industry: "home_design",
+  },
+];
+
 describe("voice-testops example suites", () => {
   it("keeps every public example suite valid", async () => {
     for (const suitePath of exampleSuites) {
@@ -42,12 +58,13 @@ describe("voice-testops example suites", () => {
     }
   });
 
-  it("keeps each business example available in Chinese and English", async () => {
+  it("keeps each bilingual business example paired by industry", async () => {
     for (const [chinesePath, englishPath] of bilingualExamplePairs) {
       const chineseSuite = await loadVoiceTestSuite(chinesePath);
       const englishSuite = await loadVoiceTestSuite(englishPath);
 
-      expect(chineseSuite.scenarios, chinesePath).toHaveLength(englishSuite.scenarios.length);
+      expect(chineseSuite.scenarios.length, chinesePath).toBeGreaterThan(0);
+      expect(englishSuite.scenarios.length, englishPath).toBeGreaterThan(0);
       expect(chineseSuite.scenarios[0].merchant.industry).toBe(englishSuite.scenarios[0].merchant.industry);
     }
   });
@@ -68,6 +85,35 @@ describe("voice-testops example suites", () => {
         path: "examples/voice-testops/chinese-restaurant-booking-suite.json",
       }),
     );
+  });
+
+  it("lists the Chinese home design suite as a commercial starter", () => {
+    expect(exampleCatalog).toContainEqual(
+      expect.objectContaining({
+        industry: "home_design",
+        language: "zh-CN",
+        path: "examples/voice-testops/chinese-home-design-suite.json",
+      }),
+    );
+  });
+
+  it("keeps each Chinese commercial starter deep enough for a first pilot", async () => {
+    for (const starter of commercialStarterSuites) {
+      const suite = await loadVoiceTestSuite(starter.path);
+
+      expect(suite.scenarios, starter.path).toHaveLength(10);
+      expect(suite.scenarios.every((scenario) => scenario.businessRisk?.trim()), starter.path).toBe(true);
+      expect(new Set(suite.scenarios.map((scenario) => scenario.id)).size, starter.path).toBe(10);
+      expect(suite.scenarios.every((scenario) => scenario.merchant.industry === starter.industry), starter.path).toBe(true);
+      expect(
+        suite.scenarios.some((scenario) =>
+          scenario.turns.some((turn) =>
+            turn.expect.some((assertion) => assertion.type === "must_not_match" && assertion.severity === "critical"),
+          ),
+        ),
+        starter.path,
+      ).toBe(true);
+    }
   });
 
   it("keeps the failing demo suite intentionally red with an actionable field failure", async () => {

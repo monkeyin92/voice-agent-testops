@@ -110,6 +110,37 @@ describe("runVoiceTestSuite", () => {
     ]);
   });
 
+  it("carries scenario business risk into run results", async () => {
+    const suite = parseVoiceTestSuite({
+      name: "业务风险测试",
+      scenarios: [
+        {
+          id: "risk_context",
+          title: "业务风险说明",
+          businessRisk: "这类失败会导致销售承诺越界。",
+          source: "website",
+          merchant,
+          turns: [{ user: "能保证吗", expect: [] }],
+        },
+      ],
+    });
+
+    const result = await runVoiceTestSuite(suite, async () => ({
+      spoken: "需要人工确认。",
+      summary: {
+        source: "website",
+        intent: "other",
+        need: "咨询承诺边界",
+        questions: [],
+        level: "low",
+        nextAction: "人工确认",
+        transcript: [],
+      },
+    }));
+
+    expect(result.scenarios[0].businessRisk).toBe("这类失败会导致销售承诺越界。");
+  });
+
   it("reports per-turn progress while running a suite", async () => {
     const suite = parseVoiceTestSuite({
       name: "销售演示套件",

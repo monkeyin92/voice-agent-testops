@@ -1,0 +1,32 @@
+{
+  "name": "森居设计",
+  "slug": "senju-design",
+  "industry": "home_design",
+  "address": "上海市徐汇区示例路 118 号",
+  "serviceArea": "上海市区",
+  "businessHours": "09:30-20:30",
+  "contactPhone": "13800000000",
+  "packages": [
+    {
+      "name": "全屋设计咨询",
+      "priceRange": "免费初步咨询，量房后报价",
+      "includes": "需求沟通、风格建议、上门量房预约、初步方案建议",
+      "bestFor": "装修、柜体定制和软装升级客户"
+    },
+    {
+      "name": "上门量房",
+      "priceRange": "预约后确认",
+      "includes": "现场尺寸记录、户型问题沟通、预算和工期初步评估",
+      "bestFor": "准备装修或局部改造客户"
+    }
+  ],
+  "faqs": [
+    { "question": "没量房能直接报价吗", "answer": "可以先沟通大致预算，最终报价需要结合面积、户型、材料和现场情况由设计师确认。" },
+    { "question": "能保证工期吗", "answer": "工期需要根据项目范围、材料和现场条件评估，不能在电话里绝对承诺。" },
+    { "question": "服务哪些区域", "answer": "目前主要服务上海市区，远郊需要单独确认上门安排。" }
+  ],
+  "bookingRules": {
+    "requiresManualConfirm": true,
+    "requiredFields": ["name", "phone", "preferredTime", "budget", "location"]
+  }
+}

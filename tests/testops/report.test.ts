@@ -126,6 +126,18 @@ describe("renderHtmlReport", () => {
     expect(html).toContain("Voice agent");
     expect(html).not.toContain("智能语音体检单");
   });
+
+  it("renders business risk context in markdown and HTML reports", () => {
+    const result = failedResult();
+    result.scenarios[0].businessRisk = "避免在客户面前输出未经确认的绝对承诺。";
+
+    const markdown = renderMarkdownSummary(result);
+    const html = renderHtmlReport(result);
+
+    expect(markdown).toContain("避免在客户面前输出未经确认的绝对承诺。");
+    expect(html).toContain("业务风险");
+    expect(html).toContain("避免在客户面前输出未经确认的绝对承诺。");
+  });
 });
 
 describe("CI report renderers", () => {

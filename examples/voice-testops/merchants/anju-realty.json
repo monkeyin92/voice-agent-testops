@@ -1,0 +1,33 @@
+{
+  "name": "安居置业顾问",
+  "slug": "anju-realty",
+  "industry": "real_estate",
+  "address": "上海市浦东新区示例路 99 号",
+  "serviceArea": "上海浦东、徐汇、闵行",
+  "businessHours": "09:30-21:00",
+  "contactPhone": "13800000000",
+  "packages": [
+    {
+      "name": "买房咨询",
+      "priceRange": "免费初步咨询",
+      "includes": "预算沟通、区域筛选、看房计划",
+      "bestFor": "首次购房和改善型购房"
+    },
+    {
+      "name": "租房咨询",
+      "priceRange": "免费初步咨询，佣金以合同确认为准",
+      "includes": "租赁需求沟通、房源筛选、看房安排",
+      "bestFor": "整租和换租客户"
+    }
+  ],
+  "faqs": [
+    { "question": "能保证升值吗", "answer": "不能承诺收益或涨幅，只能提供公开信息和经纪人分析。" },
+    { "question": "房源还在吗", "answer": "房源状态需要经纪人实时确认。" },
+    { "question": "周末能看房吗", "answer": "周末可安排，经纪人需要确认房源和业主时间。" },
+    { "question": "学区是否稳定", "answer": "学区和入学政策以官方最新口径为准，经纪人只能协助核实公开信息。" }
+  ],
+  "bookingRules": {
+    "requiresManualConfirm": true,
+    "requiredFields": ["name", "phone", "budget", "location"]
+  }
+}
