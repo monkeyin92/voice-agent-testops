@@ -29,9 +29,20 @@ Issue：[kev-hu/vapi-voice-agent#1](https://github.com/kev-hu/vapi-voice-agent/i
 - 风险点明确：identity verification、coverage/eligibility 边界、claim status、address update、warm transfer、false containment。
 - 试点路径低摩擦：可请求 Vapi test endpoint、3 条脱敏 transcript，或先用公开 `demo/sample-call.md` 做 dry run。
 
+## Public sample dry run
+
+记录：[Kevin Hu public sample dry run](2026-05-07-kev-hu-public-sample-dry-run.md)
+
+执行结论：
+
+- 已用公开 `demo/sample-call.md` 跑通 transcript-to-suite、validate、run、draft-regressions 和 pilot-report 路径。
+- 这是 public sample dry run，不代表仓库作者背书，也不是 live Vapi endpoint 的真实行为评测。
+- 原始 transcript 和 `.voice-testops/kev-hu-public-sample/` 生成产物均未提交到公开仓库。
+- 当前 starter library 没有 insurance profile，生成器把商家草稿推断为 `real_estate`，因此结果主要暴露行业覆盖缺口，而不是对方 prototype 的质量结论。
+
 ## 当前下一步
 
 1. 等待 `kev-hu/vapi-voice-agent#1` 回复。
-2. 如果对方同意 endpoint：按外部试点 Runbook 走 HTTP/Vapi 接入。
+2. 如果对方同意 endpoint：按外部试点 Runbook 走 HTTP/Vapi 接入，并和 public sample dry run 做对照。
 3. 如果对方只同意 transcript：走 transcript/import-calls 路径。
-4. 如果对方同意 public sample dry run：先用公开样本做报告并回传，避免索要任何私有数据。
+4. 如果对方允许公开回传：只贴 aggregate 结果和改进建议，不贴原始 transcript。
