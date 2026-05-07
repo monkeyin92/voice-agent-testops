@@ -102,10 +102,13 @@ describe("integration documentation", () => {
     expect(readme).toContain("npx voice-agent-testops from-transcript");
     expect(readme).toContain("npx voice-agent-testops draft-regressions");
     expect(readme).toContain("npx voice-agent-testops import-calls");
+    expect(readme).toContain("npx voice-agent-testops pilot-report");
     expect(readme).toContain("failure-clusters.md");
     expect(readme).toContain("regression-draft.json");
     expect(readme).toContain("call-sample.json");
     expect(readme).toContain("call-sampling.md");
+    expect(readme).toContain("commercial-report.md");
+    expect(readme).toContain("pilot-recap.md");
     expect(readme).toContain("call-transcripts");
     expect(readme).toContain("examples/voice-testops/production-calls/sample-calls.jsonl");
     expect(readme).toContain("pbpaste | npx voice-agent-testops from-transcript");
@@ -121,10 +124,13 @@ describe("integration documentation", () => {
     expect(chineseReadme).toContain("npx voice-agent-testops from-transcript");
     expect(chineseReadme).toContain("npx voice-agent-testops draft-regressions");
     expect(chineseReadme).toContain("npx voice-agent-testops import-calls");
+    expect(chineseReadme).toContain("npx voice-agent-testops pilot-report");
     expect(chineseReadme).toContain("failure-clusters.md");
     expect(chineseReadme).toContain("regression-draft.json");
     expect(chineseReadme).toContain("call-sample.json");
     expect(chineseReadme).toContain("call-sampling.md");
+    expect(chineseReadme).toContain("commercial-report.md");
+    expect(chineseReadme).toContain("pilot-recap.md");
     expect(chineseReadme).toContain("call-transcripts");
     expect(chineseReadme).toContain("examples/voice-testops/production-calls/sample-calls.jsonl");
     expect(chineseReadme).toContain("pbpaste | npx voice-agent-testops from-transcript");
