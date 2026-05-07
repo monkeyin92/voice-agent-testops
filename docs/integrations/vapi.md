@@ -1,41 +1,81 @@
 # Vapi
 
-Use Vapi with Voice Agent TestOps through a small `test-turn bridge`: a private HTTP endpoint that accepts one scripted customer turn, calls the same assistant logic your Vapi deployment uses, and returns `{ spoken, summary }`.
+Use Vapi with Voice Agent TestOps through a small `test-turn bridge`: a deterministic HTTP endpoint that exercises the same prompt, tool, handoff, CRM, and lead-summary logic your Vapi assistant uses, without placing a real phone call on every pull request.
 
-This keeps regression tests fast and inexpensive. Save real phone-call tests for smoke checks; use the bridge for every pull request.
+Vapi's official docs call webhook-style integration points [Server URLs](https://docs.vapi.ai/server-url/). Server URLs can receive status updates, transcript updates, function calls, assistant requests, end-of-call reports, and hang notifications. Vapi can set these URLs at account, phone number, assistant, or function level; the assistant-level API field is `assistant.server.url`. For local webhook forwarding, Vapi also documents `vapi listen --forward-to`.
 
 ## Run it
 
-Expose a bridge endpoint in your service, then run:
+Terminal 1: start the local bridge.
 
 ```bash
-export VAPI_API_KEY="your-vapi-key"
-export VAPI_ASSISTANT_ID="your-test-assistant-id"
-export VAPI_TEST_AGENT_URL="https://your-service.example.com/test-turn"
+npm run example:voice-platform-bridge
 ```
+
+Terminal 2: verify the TestOps HTTP contract.
+
+```bash
+npx voice-agent-testops doctor \
+  --agent http \
+  --endpoint http://127.0.0.1:4319/test-turn \
+  --suite examples/voice-testops/chinese-real-estate-agent-suite.json
+```
+
+Then run the starter suite:
 
 ```bash
 npm run voice-test -- \
-  --suite examples/voice-testops/openclaw-suite.json \
+  --suite examples/voice-testops/chinese-real-estate-agent-suite.json \
   --agent http \
-  --endpoint "$VAPI_TEST_AGENT_URL"
+  --endpoint http://127.0.0.1:4319/test-turn \
+  --fail-on-severity critical
 ```
+
+Expected local pass/fail loop:
+
+1. Replace `createBridgeTurnResponse()` in `examples/voice-platform-bridge/server.mjs` with the same internal function your Vapi assistant uses to build replies.
+2. Run `doctor` until `spoken: ok` and `summary: ok`.
+3. Run the suite with `--fail-on-severity critical`.
+4. Put the bridge URL into CI as `VOICE_AGENT_ENDPOINT`.
+
+## Vapi Webhook Smoke Test
+
+The deterministic bridge is for CI. A real Vapi call is still useful as a slower smoke test for Server URLs, transcripts, and call lifecycle events.
+
+Local smoke test:
+
+```bash
+curl -s http://127.0.0.1:4319/vapi/webhook \
+  -H 'content-type: application/json' \
+  -d '{"message":{"type":"end-of-call-report","call":{"id":"vapi_call_123"}}}'
+```
+
+Expose it:
+
+```bash
+ngrok http 4242
+vapi listen --forward-to localhost:4319/vapi/webhook
+```
+
+Set the tunnel URL in Vapi as your Server URL. For assistant-level configuration, set `assistant.server.url`; for function tools, use the tool server URL. Keep credentials in Vapi Custom Credentials or your own gateway, not in the public suite.
 
 ## Request contract
 
-Voice Agent TestOps calls your bridge with `POST /test-turn`:
+Voice Agent TestOps calls your deterministic bridge with `POST /test-turn`:
 
 ```json
 {
-  "scenarioId": "handoff",
-  "turnIndex": 1,
-  "customerText": "Can a real person call me?",
+  "suiteName": "房产经纪 Voice Agent 高风险场景",
+  "scenarioId": "real_estate_viewing_collects_phone",
+  "turnIndex": 0,
+  "customerText": "我预算 300 万，想看浦东两房，电话 13800000000，周末可以吗",
+  "source": "website",
   "merchant": {},
   "messages": []
 }
 ```
 
-The bridge should map that input into the Vapi-backed code path you want to protect: assistant prompt assembly, tool calls, CRM writes, lead extraction, or your app server route that prepares Vapi calls.
+Map that input into your Vapi-backed code path: prompt assembly, tool call selection, function-call policy, lead extraction, CRM writes, and handoff decisions. The bridge should not need to start a real Vapi phone call.
 
 ## Return contract
 
@@ -43,35 +83,39 @@ Return the assistant text and any lead summary you can recover:
 
 ```json
 {
-  "spoken": "Yes. I can ask a teammate to call you back. What phone number should they use?",
+  "spoken": "房源状态和看房时间需要经纪人、业主确认。我先记录预算、区域和期望时间，请留下电话方便经纪人联系。",
   "summary": {
-    "intent": "handoff",
+    "intent": "availability",
     "level": "high",
-    "nextAction": "Collect phone number for human callback"
+    "phone": "13800000000",
+    "budget": "300 万",
+    "location": "浦东",
+    "nextAction": "Ask a real estate agent to confirm facts before committing"
   }
 }
 ```
 
-`spoken` drives content assertions. `summary` drives lead assertions such as `lead_intent` and `lead_field_present`.
+`spoken` drives content and semantic assertions. `summary` drives lead assertions such as `lead_intent`, `lead_field_present`, and handoff checks.
 
-## Bridge sketch
+## CI Command
 
-```js
-app.post("/test-turn", async (req, res) => {
-  const turn = req.body;
-  const result = await callYourVapiBackedAgent({
-    apiKey: process.env.VAPI_API_KEY,
-    assistantId: process.env.VAPI_ASSISTANT_ID,
-    input: turn.customerText,
-    history: turn.messages,
-    merchant: turn.merchant,
-  });
-
-  res.json({
-    spoken: result.text,
-    summary: result.leadSummary,
-  });
-});
+```bash
+npx voice-agent-testops run \
+  --agent http \
+  --endpoint "$VOICE_AGENT_ENDPOINT" \
+  --suite voice-testops/suite.json \
+  --summary .voice-testops/summary.md \
+  --junit .voice-testops/junit.xml \
+  --fail-on-severity critical
 ```
 
-The important part is not the exact SDK wrapper. The important part is that every prompt, tool, and handoff rule you ship to Vapi is exercised before it reaches a real caller.
+When a baseline report exists, add:
+
+```bash
+--baseline .voice-testops-baseline/report.json \
+--diff-markdown .voice-testops/diff.md \
+--fail-on-new \
+--fail-on-severity critical
+```
+
+This blocks newly introduced critical regressions while leaving lower-severity drift visible in the diff.
