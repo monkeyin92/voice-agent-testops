@@ -13,7 +13,7 @@
 
 它不是语音 Agent 框架，也不替代 OpenClaw、Vapi、Retell、LiveKit、Pipecat 或 Twilio。它更像一条上线前的安全绳：你的 Agent 可以自由变强，但每次变更都要先跑过高风险场景。
 
-[30 秒试跑](#30-秒试跑) · [场景库](#场景库) · [生成 Mock 数据](#生成-mock-数据) · [接入真实-agent](#接入真实-agent) · [把真实失败对话变成回归测试](#把真实失败对话变成回归测试) · [场景格式](#场景格式)
+[30 秒试跑](#30-秒试跑) · [场景库](#场景库) · [生成 Mock 数据](#生成-mock-数据) · [接入真实-agent](#接入真实-agent) · [把真实失败对话变成回归测试](#把真实失败对话变成回归测试) · [从失败报告生成 Regression 草稿](#从失败报告生成-regression-草稿) · [场景格式](#场景格式)
 
 ![Voice Agent TestOps 中文报告预览](docs/assets/report-preview-zh-CN.png)
 
@@ -276,6 +276,20 @@ pbpaste | npx voice-agent-testops from-transcript \
 这个生成器不调用 LLM，只做确定性规则提取：客户轮次、商家资料草稿、乱承诺拦截、价格事实、留资字段、转人工意图和延迟断言。生成结果应该先人工检查，再把 suite 放进 CI 作为上线门禁。
 
 如果你已经有审核过的商家事实 JSON，可以再加 `--merchant examples/voice-testops/merchants/guangying-photo.json`。这样生成出来的价格和服务断言会更贴近真实业务。
+
+## 从失败报告生成 Regression 草稿
+
+一次测试跑失败后，可以把失败轮次整理成可审核的回归草稿：
+
+```bash
+npx voice-agent-testops draft-regressions \
+  --report .voice-testops/report.json \
+  --suite voice-testops/suite.json \
+  --out voice-testops/regression-draft.json \
+  --clusters .voice-testops/failure-clusters.md
+```
+
+`regression-draft.json` 会保留失败 scenario 和复现失败所需的前置轮次。`failure-clusters.md` 会按严重级别、断言代码和失败信息指纹聚类，方便团队先看问题簇，再决定哪些失败要进入长期门禁。两份文件都应该先人工审核，确认后再合并进正式 baseline。
 
 ## 场景格式
 

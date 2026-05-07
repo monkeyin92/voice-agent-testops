@@ -83,6 +83,9 @@ describe("integration documentation", () => {
     expect(existsSync("examples/voice-testops/transcripts/failed-photo-booking.txt")).toBe(true);
     expect(readme).toContain("Turn A Real Failure Into A Regression Test");
     expect(readme).toContain("npx voice-agent-testops from-transcript");
+    expect(readme).toContain("npx voice-agent-testops draft-regressions");
+    expect(readme).toContain("failure-clusters.md");
+    expect(readme).toContain("regression-draft.json");
     expect(readme).toContain("pbpaste | npx voice-agent-testops from-transcript");
     expect(readme).toContain("--preview");
     expect(readme).toContain("--stdin");
@@ -94,6 +97,9 @@ describe("integration documentation", () => {
     expect(readme).toContain("jq '.scenarios[0].turns | length'");
     expect(chineseReadme).toContain("把真实失败对话变成回归测试");
     expect(chineseReadme).toContain("npx voice-agent-testops from-transcript");
+    expect(chineseReadme).toContain("npx voice-agent-testops draft-regressions");
+    expect(chineseReadme).toContain("failure-clusters.md");
+    expect(chineseReadme).toContain("regression-draft.json");
     expect(chineseReadme).toContain("pbpaste | npx voice-agent-testops from-transcript");
     expect(chineseReadme).toContain("--preview");
     expect(chineseReadme).toContain("--stdin");
@@ -105,8 +111,10 @@ describe("integration documentation", () => {
     expect(chineseReadme).toContain("jq '.scenarios[0].turns | length'");
     expect(mockDataGuide).toContain("--print-json");
     expect(mockDataGuide).toContain("voice-testops/generated-suite.json");
+    expect(mockDataGuide).toContain("draft-regressions");
     expect(chineseMockDataGuide).toContain("--print-json");
     expect(chineseMockDataGuide).toContain("voice-testops/generated-suite.json");
+    expect(chineseMockDataGuide).toContain("draft-regressions");
   });
 
   it("documents the init quickstart in both READMEs", () => {

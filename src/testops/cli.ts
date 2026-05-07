@@ -15,6 +15,11 @@ import { initializeVoiceTestOpsProject } from "./initProject";
 import { buildVoiceTestSuiteJsonSchema } from "./jsonSchema";
 import { resolveReadablePath } from "./packagePaths";
 import { renderHtmlReport, renderJsonReport, renderJunitReport, renderMarkdownSummary } from "./report";
+import {
+  buildFailureClusters,
+  buildRegressionSuiteDraft,
+  renderFailureClusterMarkdown,
+} from "./regressionDraft";
 import { runVoiceTestSuite, type VoiceTestRunResult } from "./runner";
 import type { VoiceTestSeverity, VoiceTestSuite } from "./schema";
 import { loadVoiceTestSuite } from "./suiteLoader";
@@ -49,6 +54,10 @@ async function main(argv: string[]): Promise<number> {
 
   if (argv[0] === "compare") {
     return compareReports(argv.slice(1));
+  }
+
+  if (argv[0] === "draft-regressions") {
+    return draftRegressions(argv.slice(1));
   }
 
   if (argv[0] === "schema") {
@@ -381,6 +390,27 @@ async function compareReports(argv: string[]): Promise<number> {
   return 0;
 }
 
+async function draftRegressions(argv: string[]): Promise<number> {
+  const args = parseDraftRegressionsArgs(argv);
+  const report = await readVoiceTestReport(args.reportPath, "Failed run");
+  const sourceSuite = await loadVoiceTestSuite(args.suitePath);
+  const clusters = buildFailureClusters(report);
+  const draftSuite = buildRegressionSuiteDraft(sourceSuite, report);
+
+  await writeReport(args.outPath, `${JSON.stringify(draftSuite, null, 2)}\n`);
+  if (args.clustersPath) {
+    await writeReport(args.clustersPath, renderFailureClusterMarkdown(report, clusters));
+  }
+
+  console.log(`Regression draft: ${args.outPath}`);
+  if (args.clustersPath) {
+    console.log(`Failure clusters: ${args.clustersPath}`);
+  }
+  console.log(`Draft scenarios: ${draftSuite.scenarios.length}`);
+  console.log(`Failure clusters: ${clusters.length}`);
+  return 0;
+}
+
 type CompareArgs = {
   baselinePath: string;
   currentPath: string;
@@ -388,6 +418,43 @@ type CompareArgs = {
   failOnNew: boolean;
   failOnSeverity?: VoiceTestSeverity;
 };
+
+type DraftRegressionsArgs = {
+  reportPath: string;
+  suitePath: string;
+  outPath: string;
+  clustersPath?: string;
+};
+
+function parseDraftRegressionsArgs(argv: string[]): DraftRegressionsArgs {
+  const values = parseKeyValueArgs(argv);
+
+  for (const option of values.keys()) {
+    if (option !== "report" && option !== "suite" && option !== "out" && option !== "clusters") {
+      throw new Error(`Unknown draft-regressions option: --${option}`);
+    }
+  }
+
+  const reportPath = values.get("report");
+  if (!reportPath) {
+    throw new Error("--report is required");
+  }
+  const suitePath = values.get("suite");
+  if (!suitePath) {
+    throw new Error("--suite is required");
+  }
+  const outPath = values.get("out");
+  if (!outPath) {
+    throw new Error("--out is required");
+  }
+
+  return {
+    reportPath,
+    suitePath,
+    outPath,
+    clustersPath: values.get("clusters"),
+  };
+}
 
 function parseCompareArgs(argv: string[]): CompareArgs {
   const values = new Map<string, string>();

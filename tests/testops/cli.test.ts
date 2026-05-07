@@ -265,6 +265,48 @@ describe("voice-test CLI", () => {
     expect(markdown).toContain("Old blocked promise / turn 1");
   });
 
+  it("drafts regression artifacts from a failed report and source suite", async () => {
+    const tempDir = await mkdtemp(path.join(tmpdir(), "voice-testops-cli-"));
+    const suitePath = await writeMinorFailureSuite(tempDir);
+    const reportPath = path.join(tempDir, "report.json");
+    const outPath = path.join(tempDir, "regression-draft.json");
+    const clustersPath = path.join(tempDir, "failure-clusters.md");
+    await writeJsonReport(
+      reportPath,
+      "Minor severity gate demo",
+      "minor_copy_regression",
+      "Minor wording regression",
+      "expected_phrase_missing",
+      "missing reviewed phrase",
+      "minor",
+    );
+
+    const result = await runCli([
+      "draft-regressions",
+      "--report",
+      reportPath,
+      "--suite",
+      suitePath,
+      "--out",
+      outPath,
+      "--clusters",
+      clustersPath,
+    ]);
+
+    const draftSuite = await loadVoiceTestSuite(outPath);
+    const clusters = await readFile(clustersPath, "utf8");
+
+    expect(result.code).toBe(0);
+    expect(result.stdout).toContain(`Regression draft: ${outPath}`);
+    expect(result.stdout).toContain(`Failure clusters: ${clustersPath}`);
+    expect(result.stdout).toContain("Draft scenarios: 1");
+    expect(draftSuite.name).toBe("Regression draft from Minor severity gate demo");
+    expect(draftSuite.scenarios[0].id).toBe("minor_copy_regression");
+    expect(clusters).toContain("# Voice Agent TestOps Failure Clusters");
+    expect(clusters).toContain("expected_phrase_missing");
+    expect(clusters).toContain("Minor wording regression / turn 1");
+  });
+
   it("fails compare when a current report introduces new critical failures", async () => {
     const tempDir = await mkdtemp(path.join(tmpdir(), "voice-testops-cli-"));
     const baselinePath = path.join(tempDir, "baseline.json");
