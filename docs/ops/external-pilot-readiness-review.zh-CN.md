@@ -155,6 +155,8 @@
 - 如何替换真实姓名、电话、地址、病历、交易信息。
 - 生成 report 后如何处理产物。
 
+当前文档：[试点数据脱敏和授权模板](pilot-data-sanitization-authorization.zh-CN.md)。
+
 ### P3-3：外部试跑记录表升级
 
 把现有验证清单升级为可执行 tracking 表：
