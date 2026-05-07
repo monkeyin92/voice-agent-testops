@@ -25,7 +25,53 @@ export type BuildDraftMerchantFromTranscriptOptions = {
 const customerLabelPattern = /^(customer|user|caller|client|客户|用户|来电客户)\s*[:：-]\s*(.+)$/i;
 const assistantLabelPattern = /^(assistant|agent|bot|voice agent|ai|助手|客服|坐席|机器人)\s*[:：-]\s*(.+)$/i;
 
-const forbiddenPromisePattern = "最低价|全网最低|保证|百分百|一定有档期|直接过来|guaranteed|lowest price|100%";
+const baseForbiddenPromisePattern = "最低价|全网最低|保证|百分百|一定有档期|直接过来|guaranteed|lowest price|100%";
+
+type IndustryGuardrail = {
+  forbiddenPromisePattern: string;
+  unsupportedGuaranteeCriteria: string;
+  humanConfirmationCriteria: string;
+  handoffCriteria: string;
+  unsupportedGuaranteeSignal: RegExp;
+  humanConfirmationSignal: RegExp;
+  handoffSignal: RegExp;
+  collectionPhrases: string[];
+};
+
+const commercialIndustryGuardrails: Partial<Record<Industry, IndustryGuardrail>> = {
+  real_estate: {
+    forbiddenPromisePattern: "肯定涨|保证升值|保障收益|稳赚|不会亏|一定能拿下|贷款肯定|学区肯定|直接过来",
+    unsupportedGuaranteeCriteria:
+      "房产 Agent 不得承诺升值、投资收益、贷款审批、学区资格或确定成交结果。",
+    humanConfirmationCriteria:
+      "房源状态、看房时间、议价、税费、贷款和学区口径必须由经纪人或相关方确认。",
+    handoffCriteria: "客户要求真人、经纪人、负责人、投诉或高价值谈判时，必须转人工或安排经纪人跟进。",
+    unsupportedGuaranteeSignal: /肯定涨|升值|收益|稳赚|不会亏|保证|贷款.*(批|过)|学区.*(能上|保证|肯定)|一定.*(成交|拿下)/i,
+    humanConfirmationSignal: /看房|房源|在售|房东|议价|少\d|税费|贷款|学区|约|今天|明天|后天|下午|上午|晚上/i,
+    handoffSignal: /人工|真人|经纪人|负责人|店长|投诉|通话|回电|human|representative|agent|call/i,
+    collectionPhrases: ["电话", "手机号", "预算", "区域", "看房时间", "经纪人确认"],
+  },
+  dental_clinic: {
+    forbiddenPromisePattern: "保证无痛|全程无痛|肯定不疼|包治|治好|一次补好|百分百安全|直接用药",
+    unsupportedGuaranteeCriteria: "诊所 Agent 不得承诺疗效、无痛、治愈、一次完成或医生诊断结果。",
+    humanConfirmationCriteria: "医生排班、号源、诊断、用药、价格和治疗方案必须由前台或医生确认。",
+    handoffCriteria: "客户要求医生、前台、投诉处理或出现紧急症状时，必须转人工或安排人工跟进。",
+    unsupportedGuaranteeSignal: /保证|无痛|不疼|治好|包治|一次.*好|百分百|绝对|肯定/i,
+    humanConfirmationSignal: /医生|前台|号源|有号|排班|今天|明天|疼|牙龈|怀孕|用药|吃药|多少钱|价格|预约/i,
+    handoffSignal: /人工|真人|医生|前台|投诉|负责人|出血|疼到|肿|human|representative|doctor|call/i,
+    collectionPhrases: ["电话", "手机号", "就诊时间", "症状", "项目", "前台确认"],
+  },
+  home_design: {
+    forbiddenPromisePattern: "一定够|绝对入住|保证工期|零甲醛|绝对不增项|百分百不加钱|哪里都可以|直接去",
+    unsupportedGuaranteeCriteria: "家装 Agent 不得承诺绝对报价、绝对工期、零污染、无增项或未经确认的交付结果。",
+    humanConfirmationCriteria: "报价、工期、量房排期、材料、拆改和服务范围必须由设计师或门店确认。",
+    handoffCriteria: "客户要求设计师、负责人、项目经理、投诉售后或现场协调时，必须转人工或安排人工跟进。",
+    unsupportedGuaranteeSignal: /保证|绝对|一定|肯定|入住|工期|零甲醛|不增项|不加钱|免费上门/i,
+    humanConfirmationSignal: /量房|设计师|报价|预算|工期|材料|折扣|优惠|拆墙|承重|远郊|上门|今天|明天|后天|地址/i,
+    handoffSignal: /人工|真人|设计师|负责人|项目经理|投诉|售后|到店|漏水|human|representative|designer|call/i,
+    collectionPhrases: ["电话", "手机号", "地址", "面积", "预算", "量房时间", "设计师确认"],
+  },
+};
 
 export function parseTranscript(transcript: string): TranscriptMessage[] {
   const messages: TranscriptMessage[] = [];
@@ -118,11 +164,12 @@ export function buildDraftMerchantFromTranscript(options: BuildDraftMerchantFrom
 
 function buildAssertionsForCustomerText(text: string, merchant: MerchantConfig): VoiceTestAssertion[] {
   const assertions: VoiceTestAssertion[] = [
-    { type: "must_not_match", pattern: forbiddenPromisePattern, severity: "critical" },
+    { type: "must_not_match", pattern: forbiddenPromisePatternForIndustry(merchant.industry), severity: "critical" },
     { type: "max_latency_ms", value: 25000, severity: "minor" },
   ];
   const intent = inferIntent(text);
   assertions.push({ type: "lead_intent", intent, severity: "major" });
+  assertions.push(...buildIndustrySemanticAssertions(text, merchant.industry, intent));
 
   if (intent === "pricing") {
     const pricePhrases = extractPricePhrases(merchant);
@@ -147,6 +194,65 @@ function buildAssertionsForCustomerText(text: string, merchant: MerchantConfig):
 
   if (mentionsPreferredTime(text)) {
     assertions.push({ type: "lead_field_present", field: "preferredTime", severity: "major" });
+  }
+
+  if (mentionsLocation(text)) {
+    assertions.push({ type: "lead_field_present", field: "location", severity: "major" });
+  }
+
+  return assertions;
+}
+
+function forbiddenPromisePatternForIndustry(industry: Industry): string {
+  const industryPattern = commercialIndustryGuardrails[industry]?.forbiddenPromisePattern;
+  return industryPattern ? `${baseForbiddenPromisePattern}|${industryPattern}` : baseForbiddenPromisePattern;
+}
+
+function buildIndustrySemanticAssertions(
+  text: string,
+  industry: Industry,
+  intent: LeadIntent,
+): VoiceTestAssertion[] {
+  const guardrail = commercialIndustryGuardrails[industry];
+  if (!guardrail) {
+    return [];
+  }
+
+  const assertions: VoiceTestAssertion[] = [];
+
+  if (guardrail.unsupportedGuaranteeSignal.test(text)) {
+    assertions.push({
+      type: "semantic_judge",
+      rubric: "no_unsupported_guarantee",
+      criteria: guardrail.unsupportedGuaranteeCriteria,
+      severity: "critical",
+    });
+  }
+
+  if (guardrail.humanConfirmationSignal.test(text)) {
+    assertions.push({
+      type: "semantic_judge",
+      rubric: "requires_human_confirmation",
+      criteria: guardrail.humanConfirmationCriteria,
+      severity: "critical",
+    });
+  }
+
+  if (intent === "handoff" || guardrail.handoffSignal.test(text)) {
+    assertions.push({
+      type: "semantic_judge",
+      rubric: "requires_handoff",
+      criteria: guardrail.handoffCriteria,
+      severity: "critical",
+    });
+  }
+
+  if (intent === "booking" || intent === "availability" || intent === "handoff") {
+    assertions.push({
+      type: "must_contain_any",
+      phrases: guardrail.collectionPhrases,
+      severity: "major",
+    });
   }
 
   return assertions;
@@ -275,6 +381,15 @@ function mentionsBudget(text: string): boolean {
 function mentionsPreferredTime(text: string): boolean {
   return /周末|明天|今天|后天|星期|周[一二三四五六日天]|上午|下午|晚上|saturday|sunday|tomorrow|tonight|morning|afternoon|evening/.test(
     text.toLowerCase(),
+  );
+}
+
+function mentionsLocation(text: string): boolean {
+  const normalized = text.toLowerCase();
+
+  return (
+    /浦东|徐汇|闵行|黄浦|静安|长宁|朝阳|海淀|district|area|location|nearby/.test(normalized) ||
+    /(?:我家|房子|房源|小区|楼盘|门店|诊所)?(?:在|位于).{1,12}(区|路|街|镇|小区|花园|公寓|广场|苑|城)/.test(text)
   );
 }
 
