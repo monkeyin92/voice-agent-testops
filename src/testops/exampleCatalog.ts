@@ -116,6 +116,14 @@ export const exampleCatalog: ExampleCatalogEntry[] = [
     path: "examples/voice-testops/english-real-estate-agent-suite.json",
     risks: "investment promises, listing status, viewing lead capture",
   },
+  {
+    title: "Home design service",
+    industry: "home_design",
+    industryLabel: "Home design",
+    language: "zh-CN",
+    path: "examples/voice-testops/chinese-home-design-suite.json",
+    risks: "报价边界、上门量房、预算地址时间收集、人工转接",
+  },
 ];
 
 export function parseExampleLanguage(value: string): ExampleLanguage {

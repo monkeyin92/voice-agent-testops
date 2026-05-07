@@ -23,6 +23,7 @@ type ReportCopy = {
   turnMeta: (input: { index: number; latencyMs: number; passed: boolean; assertions: number; failures: number }) => string;
   customer: string;
   agent: string;
+  businessRiskLabel: string;
   riskHeading: string;
   passedHeading: string;
   conversationSample: string;
@@ -58,6 +59,7 @@ const zhCopy: ReportCopy = {
     `第 ${index + 1} 轮 · ${latencyMs}ms · ${passed ? `通过 ${assertions} 条断言` : `${failures} 个风险`}`,
   customer: "客户",
   agent: "智能语音",
+  businessRiskLabel: "业务风险",
   riskHeading: "风险项",
   passedHeading: "通过项",
   conversationSample: "对话抽样",
@@ -94,6 +96,7 @@ const enCopy: ReportCopy = {
     `Turn ${index + 1} · ${latencyMs}ms · ${passed ? `${assertions} assertions passed` : `${failures} risks`}`,
   customer: "Customer",
   agent: "Voice agent",
+  businessRiskLabel: "Business risk",
   riskHeading: "Risks",
   passedHeading: "Passed checks",
   conversationSample: "Conversation sample",
@@ -134,6 +137,9 @@ export function renderMarkdownSummary(result: VoiceTestRunResult): string {
   lines.push("## Failed Checks", "");
   for (const { scenario, turn } of failedTurns) {
     lines.push(`- ${scenario.title} / turn ${turn.index + 1}`);
+    if (scenario.businessRisk) {
+      lines.push(`  - Business risk: ${scenario.businessRisk}`);
+    }
     for (const failure of turn.failures) {
       lines.push(`  - \`${failure.code}\` (${failure.severity}): ${failure.message}`);
     }
@@ -185,6 +191,13 @@ export function renderHtmlReport(result: VoiceTestRunResult, options: { locale?:
             <div>
               <h2>${escapeHtml(scenario.title)}</h2>
               <p class="muted">${escapeHtml(scenario.id)} · ${copy.scenarioTurns(scenario.turns.length)}</p>
+              ${
+                scenario.businessRisk
+                  ? `<p class="business-risk"><strong>${copy.businessRiskLabel}</strong>: ${escapeHtml(
+                      scenario.businessRisk,
+                    )}</p>`
+                  : ""
+              }
             </div>
             <span class="status ${scenario.passed ? "ok" : "risk"}">${
               scenario.passed ? copy.status.passed : copy.status.failed
@@ -248,6 +261,7 @@ export function renderHtmlReport(result: VoiceTestRunResult, options: { locale?:
     .insight li { margin: 8px 0; line-height: 1.55; }
     .scenario { border-top: 1px solid var(--line); padding: 22px 0; }
     .scenario-heading { display: flex; justify-content: space-between; gap: 14px; align-items: flex-start; margin-bottom: 14px; }
+    .business-risk { margin: 8px 0 0; color: var(--muted); }
     .status { display: inline-flex; align-items: center; justify-content: center; min-width: 68px; padding: 6px 10px; border-radius: 8px; font-size: 13px; font-weight: 700; }
     .status.ok { background: var(--green-bg); color: var(--green); }
     .status.risk { background: var(--red-bg); color: var(--red); }

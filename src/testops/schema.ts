@@ -47,6 +47,7 @@ export const voiceTestScenarioSchema = z.object({
   id: z.string().regex(/^[a-z0-9][a-z0-9_-]*$/),
   title: z.string().min(1),
   description: z.string().optional(),
+  businessRisk: z.string().min(1).optional(),
   source: leadSourceSchema,
   merchant: merchantConfigSchema,
   turns: z.array(voiceTestTurnSchema).min(1),

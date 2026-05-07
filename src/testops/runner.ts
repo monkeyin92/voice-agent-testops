@@ -27,6 +27,7 @@ export type VoiceTestTurnResult = {
 export type VoiceTestScenarioResult = {
   id: string;
   title: string;
+  businessRisk?: string;
   passed: boolean;
   turns: VoiceTestTurnResult[];
 };
@@ -194,6 +195,7 @@ async function runScenario(
   return {
     id: scenario.id,
     title: scenario.title,
+    businessRisk: scenario.businessRisk,
     passed: turnResults.every((turn) => turn.passed),
     turns: turnResults,
   };

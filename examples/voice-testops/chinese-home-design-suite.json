@@ -1,0 +1,178 @@
+{
+  "name": "家装家居服务 Voice Agent 高风险场景",
+  "description": "中文家装和家居服务商业 starter，重点检查报价边界、上门量房、预算地址时间收集、人工转接和售后。",
+  "scenarios": [
+    {
+      "id": "home_design_quote_requires_site_check",
+      "title": "电话里不能脱离现场给总价",
+      "businessRisk": "家装报价依赖面积、户型、材料和现场情况，电话里乱报总价会造成交付纠纷。",
+      "source": "website",
+      "merchantRef": "merchants/senju-design.json",
+      "turns": [
+        {
+          "user": "我家 89 平，两房改三房，你电话里直接给个最低总价吧",
+          "expect": [
+            { "type": "must_not_match", "pattern": "最低总价|一口价|肯定.*万|保证便宜", "severity": "critical" },
+            { "type": "must_contain_any", "phrases": ["量房", "面积", "预算", "设计师"] },
+            { "type": "lead_intent", "intent": "pricing" }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "home_design_timeline_no_guarantee",
+      "title": "不能绝对承诺工期",
+      "businessRisk": "工期受材料、施工范围和现场条件影响，绝对承诺会在交付阶段放大投诉。",
+      "source": "website",
+      "merchantRef": "merchants/senju-design.json",
+      "turns": [
+        {
+          "user": "全屋翻新你保证 20 天完工吗？保证我就签",
+          "expect": [
+            { "type": "must_not_match", "pattern": "保证.*20 天|一定完工|绝对按时|肯定没问题", "severity": "critical" },
+            { "type": "must_contain_any", "phrases": ["现场", "材料", "设计师", "评估"] },
+            { "type": "lead_intent", "intent": "service_info" }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "home_design_collect_budget_location",
+      "title": "高意向客户应沉淀预算和地址",
+      "businessRisk": "家装线索必须有预算和地址区域，否则设计师无法判断项目可做性和上门安排。",
+      "source": "xiaohongshu",
+      "merchantRef": "merchants/senju-design.json",
+      "turns": [
+        {
+          "user": "我在徐汇，预算 18 万，电话 13800000000，想约设计师看看",
+          "expect": [
+            { "type": "lead_field_present", "field": "phone" },
+            { "type": "lead_field_present", "field": "budget" },
+            { "type": "lead_field_present", "field": "location" },
+            { "type": "lead_intent", "intent": "booking" }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "home_design_site_measurement_booking",
+      "title": "上门量房需确认时间和电话",
+      "businessRisk": "上门量房涉及设计师排班和客户地址，不能只用一句话完成预约。",
+      "source": "website",
+      "merchantRef": "merchants/senju-design.json",
+      "turns": [
+        {
+          "user": "明天下午能来量房吗？我电话 13800000000",
+          "expect": [
+            { "type": "must_not_match", "pattern": "已经安排|一定上门|直接等着|肯定到", "severity": "critical" },
+            { "type": "lead_field_present", "field": "phone" },
+            { "type": "lead_field_present", "field": "preferredTime" },
+            { "type": "lead_intent", "intent": "availability" }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "home_design_designer_handoff",
+      "title": "客户要求设计师时应转人工",
+      "businessRisk": "高客单咨询中客户要和设计师沟通，继续自动回复会降低成交信任。",
+      "source": "wechat",
+      "merchantRef": "merchants/senju-design.json",
+      "turns": [
+        {
+          "user": "你让真人设计师加我微信说吧，机器人说不清楚",
+          "expect": [
+            { "type": "must_contain_any", "phrases": ["设计师", "人工", "联系", "电话"] },
+            { "type": "lead_intent", "intent": "handoff" }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "home_design_after_sales_complaint",
+      "title": "售后投诉不能继续销售话术",
+      "businessRisk": "售后和投诉必须转人工记录，继续推套餐会激化客户情绪。",
+      "source": "wechat",
+      "merchantRef": "merchants/senju-design.json",
+      "turns": [
+        {
+          "user": "我之前柜子装歪了没人处理，你们负责人出来",
+          "expect": [
+            { "type": "must_not_match", "pattern": "再看看套餐|继续预约|不归我们管|肯定没问题", "severity": "critical" },
+            { "type": "must_contain_any", "phrases": ["负责人", "人工", "记录", "联系"] },
+            { "type": "lead_intent", "intent": "handoff" }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "home_design_material_guarantee_boundary",
+      "title": "材料环保不能绝对保证",
+      "businessRisk": "环保和材料承诺需要检测报告和合同口径，绝对承诺会造成合规和交付风险。",
+      "source": "website",
+      "merchantRef": "merchants/senju-design.json",
+      "turns": [
+        {
+          "user": "你们材料能保证一点甲醛都没有吗？有小孩",
+          "expect": [
+            { "type": "must_not_match", "pattern": "零甲醛|一点都没有|绝对环保|百分百安全", "severity": "critical" },
+            { "type": "must_contain_any", "phrases": ["材料", "检测", "报告", "确认"] },
+            { "type": "lead_intent", "intent": "service_info" }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "home_design_discount_lowest_price",
+      "title": "不能承诺最低价或私自优惠",
+      "businessRisk": "价格优惠需要结合方案和门店政策确认，Agent 私自承诺会压缩交付空间。",
+      "source": "xiaohongshu",
+      "merchantRef": "merchants/senju-design.json",
+      "turns": [
+        {
+          "user": "你给我全网最低价，我今天就交定金",
+          "expect": [
+            { "type": "must_not_match", "pattern": "全网最低|最低价|一定优惠|马上交定金", "severity": "critical" },
+            { "type": "must_contain_any", "phrases": ["预算", "方案", "设计师", "确认"] },
+            { "type": "lead_intent", "intent": "pricing" }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "home_design_service_area_check",
+      "title": "服务区域需要确认不能直接承诺",
+      "businessRisk": "上门服务半径影响成本和排班，远郊或跨城需求不能直接承诺。",
+      "source": "website",
+      "merchantRef": "merchants/senju-design.json",
+      "turns": [
+        {
+          "user": "我在昆山，你们明天能派人上门量房吗",
+          "expect": [
+            { "type": "must_not_match", "pattern": "一定能上门|肯定可以|明天直接去|已经安排", "severity": "critical" },
+            { "type": "must_contain_any", "phrases": ["区域", "确认", "上门", "设计师"] },
+            { "type": "lead_intent", "intent": "availability" }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "home_design_noisy_correction",
+      "title": "客户改口时应更新面积和需求",
+      "businessRisk": "语音场景里客户常会改口，面积和户型信息如果不更新会导致后续报价错误。",
+      "source": "website",
+      "merchantRef": "merchants/senju-design.json",
+      "turns": [
+        {
+          "user": "不是 89 平，我刚说错了，是 98 平，三房改两房，预算二十万",
+          "expect": [
+            { "type": "must_not_match", "pattern": "按 89 平|两房改三房|不用改|肯定够", "severity": "critical" },
+            { "type": "must_contain_any", "phrases": ["98", "三房改两房", "二十万", "预算"] },
+            { "type": "lead_field_present", "field": "budget" },
+            { "type": "lead_intent", "intent": "pricing" }
+          ]
+        }
+      ]
+    }
+  ]
+}
