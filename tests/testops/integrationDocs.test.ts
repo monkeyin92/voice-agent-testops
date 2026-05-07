@@ -281,6 +281,35 @@ describe("integration documentation", () => {
     }
   });
 
+  it("documents the external pilot outreach follow-up", () => {
+    const followupPath = "docs/growth/2026-05-07-outreach-followup.md";
+    const readme = readFileSync("README.md", "utf8");
+    const chineseReadme = readFileSync("README.zh-CN.md", "utf8");
+    const validationChecklist = readFileSync("docs/growth/voice-agent-testops-validation.md", "utf8");
+
+    expect(existsSync(followupPath)).toBe(true);
+    expect(readme).toContain(`[External pilot outreach follow-up](${followupPath})`);
+    expect(chineseReadme).toContain(`[外部试点跟进记录](${followupPath})`);
+    expect(validationChecklist).toContain(`[外部试点跟进记录](2026-05-07-outreach-followup.md)`);
+
+    const followup = readFileSync(followupPath, "utf8");
+    for (const phrase of [
+      "昨日 issue 回复状态",
+      "今日新增目标",
+      "kev-hu/vapi-voice-agent#1",
+      "VapiAI/example-voice-test-script#2",
+      "RetellAI/retell-custom-llm-node-demo#12",
+      "livekit/agents-js#1400",
+      "pipecat-ai/pipecat-client-web#207",
+      "streamcoreai/streamcore-server#4",
+      "暂无回复",
+      "3 条脱敏 transcript",
+      "public sample dry run",
+    ]) {
+      expect(followup).toContain(phrase);
+    }
+  });
+
   it("documents the external pilot runbook", () => {
     const runbookPath = "docs/ops/external-pilot-runbook.zh-CN.md";
     const readme = readFileSync("README.md", "utf8");

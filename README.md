@@ -547,6 +547,7 @@ If your team has ever watched a voice agent sound confident at exactly the wrong
 - [Mock data guide](docs/guides/mock-data.md)
 - [Market thesis](docs/strategy/voice-agent-testops-market.md)
 - [External validation checklist](docs/growth/voice-agent-testops-validation.md)
+- [External pilot outreach follow-up](docs/growth/2026-05-07-outreach-followup.md)
 - [External pilot readiness review](docs/ops/external-pilot-readiness-review.zh-CN.md)
 - [External pilot runbook](docs/ops/external-pilot-runbook.zh-CN.md)
 - [Pilot data sanitization and authorization template](docs/ops/pilot-data-sanitization-authorization.zh-CN.md)
