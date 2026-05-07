@@ -115,6 +115,17 @@ npx voice-agent-testops list --industry restaurant
 - `requires_human_confirmation`：检查是否把需要人工、医生、经纪人、设计师或前台确认的事项交给人处理。
 - `requires_handoff`：检查客户要求真人时是否明确转人工或人工跟进。
 
+## 人工标注种子集
+
+三行业商业 starter 已经有一份 `semantic_judge` 标注种子集：
+
+- `examples/voice-testops/annotations/semantic-judge-seed.zh-CN.json`
+- 覆盖房产经纪、牙科/诊所、家装/家居服务
+- 共 45 条原创中文样本，每个行业 15 条
+- 每个行业都覆盖 `no_unsupported_guarantee`、`requires_human_confirmation`、`requires_handoff`
+
+新增行业样本前，先看 `docs/growth/semantic-judge-annotation-sources.zh-CN.md`。公开数据集可以帮助设计标签、intent、slot 和 reason 字段，但商业 starter 不直接复制公开语料；真正可卖的部分是行业风险口径、客户事实表、人工复核和回归阻断流程。
+
 ## 把真实通话变成 suite
 
 如果已经有一段失败对话，可以直接复制 transcript，生成一个可编辑的草稿：
