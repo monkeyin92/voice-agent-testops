@@ -281,6 +281,34 @@ describe("integration documentation", () => {
     }
   });
 
+  it("documents the external pilot runbook", () => {
+    const runbookPath = "docs/ops/external-pilot-runbook.zh-CN.md";
+    const readme = readFileSync("README.md", "utf8");
+    const chineseReadme = readFileSync("README.zh-CN.md", "utf8");
+    const readinessReview = readFileSync("docs/ops/external-pilot-readiness-review.zh-CN.md", "utf8");
+
+    expect(existsSync(runbookPath)).toBe(true);
+    expect(readme).toContain(`[External pilot runbook](${runbookPath})`);
+    expect(chineseReadme).toContain(`[外部试点 Runbook](${runbookPath})`);
+    expect(readinessReview).toContain(`[外部试点 Runbook](external-pilot-runbook.zh-CN.md)`);
+
+    const runbook = readFileSync(runbookPath, "utf8");
+    for (const phrase of [
+      "适用对象",
+      "前置条件",
+      "10 分钟本地 demo",
+      "30 分钟 HTTP bridge 试点",
+      "Endpoint contract",
+      "生成试点产物",
+      "常见失败和处理",
+      "反馈收集清单",
+      "npx voice-agent-testops doctor",
+      "npx voice-agent-testops pilot-report",
+    ]) {
+      expect(runbook).toContain(phrase);
+    }
+  });
+
   it("documents the setup contract and copy-paste commands for every supported stack", () => {
     for (const doc of integrationDocs) {
       expect(existsSync(doc.path), `${doc.path} should exist`).toBe(true);
