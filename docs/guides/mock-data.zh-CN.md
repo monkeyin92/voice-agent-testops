@@ -114,6 +114,19 @@ npx voice-agent-testops from-transcript \
   --source website
 ```
 
+如果要把真实失败逐步沉淀成回归库，可以把新通话追加成另一个 scenario：
+
+```bash
+pbpaste | npx voice-agent-testops from-transcript \
+  --stdin \
+  --out voice-testops/generated-suite.json \
+  --append \
+  --merchant-out voice-testops/merchants/failed-call.json \
+  --merchant-name "光影写真馆" \
+  --scenario-id "missed_booking_handoff" \
+  --scenario-title "漏掉预约转人工"
+```
+
 这个生成器是确定性的，不调用 LLM。它会提取客户轮次；如果你还没有商家 JSON，它会先推断一份商家资料草稿；然后自动加上可审核的断言：乱承诺、价格事实、留资字段、转人工意图和响应延迟。生成结果只是第一稿，真正放进 CI 之前，应该围绕那次失败的根因把断言收紧。
 
 如果已经有审核过的商家事实，可以加 `--merchant examples/voice-testops/merchants/guangying-photo.json`，这样价格和服务断言会直接引用可信资料。

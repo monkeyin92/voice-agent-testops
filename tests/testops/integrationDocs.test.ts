@@ -64,6 +64,7 @@ describe("integration documentation", () => {
     expect(readme).toContain("pbpaste | npx voice-agent-testops from-transcript");
     expect(readme).toContain("--stdin");
     expect(readme).toContain("--input examples/voice-testops/transcripts/failed-photo-booking.txt");
+    expect(readme).toContain("--append");
     expect(readme).toContain("--merchant-out voice-testops/merchant.json");
     expect(readme).toContain("--merchant-name \"Lumen Portrait Studio\"");
     expect(chineseReadme).toContain("把真实失败对话变成回归测试");
@@ -71,6 +72,7 @@ describe("integration documentation", () => {
     expect(chineseReadme).toContain("pbpaste | npx voice-agent-testops from-transcript");
     expect(chineseReadme).toContain("--stdin");
     expect(chineseReadme).toContain("--input examples/voice-testops/transcripts/failed-photo-booking.txt");
+    expect(chineseReadme).toContain("--append");
     expect(chineseReadme).toContain("--merchant-out voice-testops/merchant.json");
     expect(chineseReadme).toContain("--merchant-name \"光影写真馆\"");
   });

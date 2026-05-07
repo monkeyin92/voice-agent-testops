@@ -290,6 +290,19 @@ npx voice-agent-testops from-transcript \
   --source website
 ```
 
+Already have a suite? Add the new failure as another scenario:
+
+```bash
+pbpaste | npx voice-agent-testops from-transcript \
+  --stdin \
+  --out voice-testops/suite.json \
+  --append \
+  --merchant-out voice-testops/merchants/failed-call.json \
+  --merchant-name "Lumen Portrait Studio" \
+  --scenario-id "missed_booking_handoff" \
+  --scenario-title "Missed booking handoff"
+```
+
 The generator is deterministic. It does not call an LLM; it extracts customer turns, infers a draft merchant profile when you do not have one yet, and adds reviewable assertions for unsafe promises, pricing facts, lead fields, handoff intent, and latency. Treat the generated files as a first draft, then tighten them before using the suite as a release gate.
 
 If you already keep approved business facts in JSON, add `--merchant examples/voice-testops/merchants/guangying-photo.json`. That gives the generated suite better price and service assertions from day one.

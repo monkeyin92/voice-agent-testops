@@ -114,6 +114,19 @@ npx voice-agent-testops from-transcript \
   --source website
 ```
 
+To grow an existing regression library, append the new call as another scenario:
+
+```bash
+pbpaste | npx voice-agent-testops from-transcript \
+  --stdin \
+  --out voice-testops/generated-suite.json \
+  --append \
+  --merchant-out voice-testops/merchants/failed-call.json \
+  --merchant-name "Lumen Portrait Studio" \
+  --scenario-id "missed_booking_handoff" \
+  --scenario-title "Missed booking handoff"
+```
+
 The transcript generator is deterministic. It does not call an LLM; it extracts customer turns, infers a draft merchant profile when no merchant file is available, and adds reviewable assertions for unsafe promises, pricing facts, lead fields, handoff intent, and latency. Treat the generated suite as a first draft, then tighten the assertions around the exact failure you want to prevent from coming back.
 
 When you already have approved business facts, add `--merchant examples/voice-testops/merchants/guangying-photo.json` so the generated suite can anchor pricing and service assertions to known-good data.

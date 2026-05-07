@@ -1,6 +1,6 @@
 import { execFile, spawn } from "node:child_process";
 import { createServer, type IncomingMessage, type ServerResponse } from "node:http";
-import { mkdtemp, readFile, writeFile } from "node:fs/promises";
+import { mkdir, mkdtemp, readFile, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import path from "node:path";
 import { promisify } from "node:util";
@@ -377,6 +377,88 @@ describe("voice-test CLI", () => {
     expect(rawSuite.scenarios[0].merchantRef).toBe("merchant.json");
     expect(rawMerchant).toMatchObject({ name: "Transcript import draft", industry: "restaurant" });
     expect(resolvedSuite.scenarios[0].merchant.name).toBe("Transcript import draft");
+  });
+
+  it("appends generated transcript scenarios to an existing suite", async () => {
+    const tempDir = await mkdtemp(path.join(tmpdir(), "voice-testops-cli-"));
+    const merchantDir = path.join(tempDir, "merchants");
+    await mkdir(merchantDir);
+    const suitePath = path.join(tempDir, "suite.json");
+    const baseMerchantPath = path.join(merchantDir, "photo.json");
+    const generatedMerchantPath = path.join(merchantDir, "restaurant.json");
+    const transcriptPath = path.join(tempDir, "restaurant-call.txt");
+    await writeFile(baseMerchantPath, JSON.stringify(merchant, null, 2), "utf8");
+    await writeFile(
+      suitePath,
+      JSON.stringify(
+        {
+          name: "Living regression library",
+          scenarios: [
+            {
+              id: "existing_pricing",
+              title: "Existing pricing guard",
+              source: "website",
+              merchantRef: "merchants/photo.json",
+              turns: [
+                {
+                  user: "How much is a portrait session?",
+                  expect: [{ type: "must_contain_any", phrases: ["599", "1299"] }],
+                },
+              ],
+            },
+          ],
+        },
+        null,
+        2,
+      ),
+      "utf8",
+    );
+    await writeFile(
+      transcriptPath,
+      [
+        "Customer: Do you have a table for six this Saturday?",
+        "Assistant: Yes, you can come directly. It is 388 per person.",
+      ].join("\n"),
+      "utf8",
+    );
+
+    const result = await runCli([
+      "from-transcript",
+      "--input",
+      transcriptPath,
+      "--out",
+      suitePath,
+      "--append",
+      "--merchant-out",
+      generatedMerchantPath,
+      "--merchant-name",
+      "Transcript import draft",
+      "--scenario-id",
+      "restaurant_table_failure",
+      "--scenario-title",
+      "Restaurant table failure",
+    ]);
+
+    const rawSuite = JSON.parse(await readFile(suitePath, "utf8")) as {
+      name: string;
+      scenarios: Array<{ id: string; merchant?: unknown; merchantRef?: string }>;
+    };
+    const resolvedSuite = await loadVoiceTestSuite(suitePath);
+    expect(result.code).toBe(0);
+    expect(result.stdout).toContain(`Appended scenario: ${suitePath}`);
+    expect(rawSuite.name).toBe("Living regression library");
+    expect(rawSuite.scenarios).toHaveLength(2);
+    expect(rawSuite.scenarios[0].merchantRef).toBe("merchants/photo.json");
+    expect(rawSuite.scenarios[1]).toMatchObject({
+      id: "restaurant_table_failure",
+      merchantRef: "merchants/restaurant.json",
+    });
+    expect(rawSuite.scenarios[1].merchant).toBeUndefined();
+    expect(resolvedSuite.scenarios).toHaveLength(2);
+    expect(resolvedSuite.scenarios[1].merchant).toMatchObject({
+      name: "Transcript import draft",
+      industry: "restaurant",
+    });
   });
 
   it("runs suites through the publishable bin with the run subcommand", async () => {

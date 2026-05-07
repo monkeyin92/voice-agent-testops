@@ -228,6 +228,19 @@ npx voice-agent-testops from-transcript \
   --source website
 ```
 
+如果已经有一个 suite，可以把这段失败追加成新的 scenario：
+
+```bash
+pbpaste | npx voice-agent-testops from-transcript \
+  --stdin \
+  --out voice-testops/suite.json \
+  --append \
+  --merchant-out voice-testops/merchants/failed-call.json \
+  --merchant-name "光影写真馆" \
+  --scenario-id "missed_booking_handoff" \
+  --scenario-title "漏掉预约转人工"
+```
+
 这个生成器不调用 LLM，只做确定性规则提取：客户轮次、商家资料草稿、乱承诺拦截、价格事实、留资字段、转人工意图和延迟断言。生成结果应该先人工检查，再把 suite 放进 CI 作为上线门禁。
 
 如果你已经有审核过的商家事实 JSON，可以再加 `--merchant examples/voice-testops/merchants/guangying-photo.json`。这样生成出来的价格和服务断言会更贴近真实业务。

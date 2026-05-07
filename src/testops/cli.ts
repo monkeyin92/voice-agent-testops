@@ -481,12 +481,13 @@ async function generateSuiteFromTranscript(argv: string[]): Promise<number> {
   const suiteOutput = args.merchantOutPath
     ? buildSuiteWithMerchantRef(suite, relativeMerchantRef(args.outPath, args.merchantOutPath))
     : suite;
+  const output = args.append ? await appendGeneratedScenarios(args.outPath, suiteOutput) : suiteOutput;
 
   if (args.merchantOutPath) {
     await writeReport(args.merchantOutPath, `${JSON.stringify(merchant, null, 2)}\n`);
   }
-  await writeReport(args.outPath, `${JSON.stringify(suiteOutput, null, 2)}\n`);
-  console.log(`Generated suite: ${args.outPath}`);
+  await writeReport(args.outPath, `${JSON.stringify(output, null, 2)}\n`);
+  console.log(`${args.append ? "Appended scenario" : "Generated suite"}: ${args.outPath}`);
   if (args.readFromStdin) {
     console.log("Transcript: read from stdin");
   }
@@ -505,6 +506,7 @@ type FromTranscriptArgs = {
   readFromStdin: boolean;
   merchantPath?: string;
   merchantOutPath?: string;
+  append: boolean;
   outPath: string;
   merchantName?: string;
   industry?: Industry;
@@ -538,7 +540,7 @@ function parseFromTranscriptArgs(argv: string[]): FromTranscriptArgs {
     }
 
     const name = arg.slice(2);
-    if (name === "stdin") {
+    if (name === "stdin" || name === "append") {
       flags.add(name);
       continue;
     }
@@ -559,6 +561,7 @@ function parseFromTranscriptArgs(argv: string[]): FromTranscriptArgs {
   const transcriptPath = values.get("transcript") ?? values.get("input");
   const merchantPath = values.get("merchant");
   const merchantOutPath = values.get("merchant-out");
+  const append = flags.has("append");
   const outPath = values.get("out");
 
   if (readFromStdin && transcriptPath) {
@@ -579,6 +582,7 @@ function parseFromTranscriptArgs(argv: string[]): FromTranscriptArgs {
     readFromStdin,
     merchantPath,
     merchantOutPath,
+    append,
     outPath,
     merchantName: values.get("merchant-name"),
     industry: values.has("industry") ? industrySchema.parse(values.get("industry")) : undefined,
@@ -586,6 +590,21 @@ function parseFromTranscriptArgs(argv: string[]): FromTranscriptArgs {
     scenarioId: values.get("scenario-id"),
     scenarioTitle: values.get("scenario-title"),
     source,
+  };
+}
+
+async function appendGeneratedScenarios(suitePath: string, generatedSuite: unknown): Promise<unknown> {
+  const existingSuite = JSON.parse(await readFile(await resolveReadablePath(suitePath), "utf8")) as unknown;
+  if (!isJsonObject(existingSuite) || !Array.isArray(existingSuite.scenarios)) {
+    throw new Error(`Existing suite must include a scenarios array: ${suitePath}`);
+  }
+  if (!isJsonObject(generatedSuite) || !Array.isArray(generatedSuite.scenarios)) {
+    throw new Error("Generated suite must include a scenarios array");
+  }
+
+  return {
+    ...existingSuite,
+    scenarios: [...existingSuite.scenarios, ...generatedSuite.scenarios],
   };
 }
 
@@ -597,6 +616,10 @@ function buildSuiteWithMerchantRef(suite: VoiceTestSuite, merchantRef: string): 
       merchantRef,
     })),
   };
+}
+
+function isJsonObject(value: unknown): value is Record<string, unknown> {
+  return typeof value === "object" && value !== null && !Array.isArray(value);
 }
 
 function relativeMerchantRef(suitePath: string, merchantPath: string): string {
