@@ -7,6 +7,13 @@ export type VoiceTestSeverity = z.infer<typeof voiceTestSeveritySchema>;
 
 const assertionSeverity = voiceTestSeveritySchema.default("major");
 
+export const semanticJudgeRubricSchema = z.enum([
+  "no_unsupported_guarantee",
+  "requires_human_confirmation",
+  "requires_handoff",
+]);
+export type SemanticJudgeRubric = z.infer<typeof semanticJudgeRubricSchema>;
+
 export const voiceTestAssertionSchema = z.discriminatedUnion("type", [
   z.object({
     type: z.literal("must_contain_any"),
@@ -31,6 +38,12 @@ export const voiceTestAssertionSchema = z.discriminatedUnion("type", [
   z.object({
     type: z.literal("lead_intent"),
     intent: leadIntentSchema,
+    severity: assertionSeverity,
+  }),
+  z.object({
+    type: z.literal("semantic_judge"),
+    rubric: semanticJudgeRubricSchema,
+    criteria: z.string().min(1),
     severity: assertionSeverity,
   }),
 ]);

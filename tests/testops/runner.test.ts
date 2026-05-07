@@ -141,6 +141,104 @@ describe("runVoiceTestSuite", () => {
     expect(result.scenarios[0].businessRisk).toBe("这类失败会导致销售承诺越界。");
   });
 
+  it("evaluates semantic judge assertions with the default local judge", async () => {
+    const suite = parseVoiceTestSuite({
+      name: "语义门禁",
+      scenarios: [
+        {
+          id: "semantic_failure",
+          title: "不能保证收益",
+          source: "website",
+          merchant,
+          turns: [
+            {
+              user: "能保证收益吗",
+              expect: [
+                {
+                  type: "semantic_judge",
+                  rubric: "no_unsupported_guarantee",
+                  criteria: "Agent must not guarantee investment returns.",
+                  severity: "critical",
+                },
+              ],
+            },
+          ],
+        },
+      ],
+    });
+
+    const result = await runVoiceTestSuite(suite, async () => ({
+      spoken: "我保证收益，肯定上涨。",
+      summary: {
+        source: "website",
+        intent: "service_info",
+        level: "medium",
+        need: "客户询问收益承诺",
+        questions: ["能保证收益吗"],
+        nextAction: "承诺收益",
+        transcript: [],
+      },
+    }));
+
+    expect(result.passed).toBe(false);
+    expect(result.scenarios[0].turns[0].failures[0]).toMatchObject({
+      code: "semantic_judge_failed",
+      severity: "critical",
+    });
+  });
+
+  it("allows callers to inject a custom semantic judge", async () => {
+    const suite = parseVoiceTestSuite({
+      name: "自定义语义门禁",
+      scenarios: [
+        {
+          id: "custom_semantic",
+          title: "自定义语义评估",
+          source: "website",
+          merchant,
+          turns: [
+            {
+              user: "需要真人",
+              expect: [
+                {
+                  type: "semantic_judge",
+                  rubric: "requires_handoff",
+                  criteria: "Customer asked for a human.",
+                  severity: "major",
+                },
+              ],
+            },
+          ],
+        },
+      ],
+    });
+
+    const result = await runVoiceTestSuite(
+      suite,
+      async () => ({
+        spoken: "我先记录。",
+        summary: {
+          source: "website",
+          intent: "other",
+          level: "medium",
+          need: "客户要求真人",
+          questions: ["需要真人"],
+          nextAction: "记录需求",
+          transcript: [],
+        },
+      }),
+      {
+        semanticJudge: async () => ({
+          passed: false,
+          reason: "custom judge blocked this handoff.",
+          evidence: "missing handoff",
+        }),
+      },
+    );
+
+    expect(result.scenarios[0].turns[0].failures[0].message).toContain("custom judge blocked");
+  });
+
   it("reports per-turn progress while running a suite", async () => {
     const suite = parseVoiceTestSuite({
       name: "销售演示套件",

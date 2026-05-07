@@ -259,7 +259,7 @@ Starter 必测场景：
 
 ### 近期 P1
 
-- [ ] 设计并实现 `semantic_judge` 断言。
+- [x] 设计并实现 `semantic_judge` 断言。
 - [ ] 建立 30-50 条人工标注样本，覆盖三行业。
 - [ ] 让 `from-transcript` 对三行业生成更贴合的断言草稿。
 - [ ] 完善 baseline diff，用新增 critical 风险作为发布阻断条件。

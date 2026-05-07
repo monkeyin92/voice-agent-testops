@@ -395,6 +395,8 @@ function repairAdviceForZh(code: string): string {
       return "调整意图识别规则，让询价、档期、转人工分别落到正确分类。";
     case "lead_field_missing":
       return "在高意向对话中主动收集手机号、称呼或期望时间。";
+    case "semantic_judge_failed":
+      return "按评测理由复盘回复，收紧提示词、业务事实或转人工条件。";
     case "latency_exceeded":
       return "检查模型链路、网络和工具调用，必要时缩短上下文或使用更快模型。";
     default:
@@ -412,6 +414,8 @@ function repairAdviceForEn(code: string): string {
       return "Tune intent routing so pricing, availability, booking, and handoff land in the right bucket.";
     case "lead_field_missing":
       return "Ask for and extract the required lead field, such as phone, name, or preferred time.";
+    case "semantic_judge_failed":
+      return "Review the judge rationale, then tighten prompts, approved facts, or handoff rules.";
     case "latency_exceeded":
       return "Check model latency, network hops, and tool calls; shorten context or use a faster model if needed.";
     default:

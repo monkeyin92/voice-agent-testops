@@ -881,6 +881,7 @@ describe("voice-test CLI", () => {
     const scenarioProperties = schema.properties?.scenarios?.items?.properties;
     const assertionVariants = scenarioProperties?.turns?.items?.properties?.expect?.items?.oneOf ?? [];
     const leadIntentVariant = assertionVariants.find((variant) => variant.properties?.type?.const === "lead_intent");
+    const semanticJudgeVariant = assertionVariants.find((variant) => variant.properties?.type?.const === "semantic_judge");
 
     expect(result.code).toBe(0);
     expect(result.stdout).toContain(`Wrote JSON Schema: ${schemaPath}`);
@@ -890,9 +891,17 @@ describe("voice-test CLI", () => {
     expect(scenarioProperties?.merchantRef).toBeDefined();
     expect(scenarioProperties?.merchant).toBeDefined();
     expect(assertionVariants.map((variant) => variant.properties?.type?.const)).toEqual(
-      expect.arrayContaining(["must_contain_any", "must_not_match", "max_latency_ms", "lead_field_present", "lead_intent"]),
+      expect.arrayContaining([
+        "must_contain_any",
+        "must_not_match",
+        "max_latency_ms",
+        "lead_field_present",
+        "lead_intent",
+        "semantic_judge",
+      ]),
     );
     expect(leadIntentVariant?.properties?.intent?.enum).toContain("handoff");
+    expect(semanticJudgeVariant?.properties?.rubric?.enum).toContain("no_unsupported_guarantee");
   });
 
   it("prints the suite JSON Schema to stdout when no output path is provided", async () => {

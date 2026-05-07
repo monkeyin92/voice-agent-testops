@@ -255,6 +255,26 @@ function buildAssertionSchema(): JsonSchema {
           severity: severityProperty,
         },
       },
+      {
+        title: "semantic_judge",
+        type: "object",
+        additionalProperties: false,
+        required: ["type", "rubric", "criteria"],
+        properties: {
+          type: { const: "semantic_judge" },
+          rubric: {
+            type: "string",
+            enum: ["no_unsupported_guarantee", "requires_human_confirmation", "requires_handoff"],
+            description: "High-level business-risk rubric evaluated by the semantic judge.",
+          },
+          criteria: {
+            type: "string",
+            minLength: 1,
+            description: "Natural-language instruction explaining what the judge should evaluate.",
+          },
+          severity: severityProperty,
+        },
+      },
     ],
   };
 }
