@@ -6,11 +6,11 @@
 
 开源 starter 与商业护城河的边界见 `docs/growth/open-source-moat-boundary.zh-CN.md`。简单说，公开 seed 是样板间和标准化入口；客户真实通话、专属 regression suite、人工复核结论、误报漏报分析和生产监控历史不应进入公开仓库。
 
-首批已落地的种子集：
+已落地的种子集：
 
 - `examples/voice-testops/annotations/semantic-judge-seed.zh-CN.json`
-- 45 条原创中文样本
-- 覆盖 `real_estate`、`dental_clinic`、`home_design`
+- 60 条原创中文样本
+- 覆盖 `real_estate`、`dental_clinic`、`home_design`、`insurance`
 - 覆盖 `no_unsupported_guarantee`、`requires_human_confirmation`、`requires_handoff`
 
 ## 使用原则
@@ -51,7 +51,7 @@
 
 每条样本包含：
 
-- `industry`：当前限定为 `real_estate`、`dental_clinic`、`home_design`
+- `industry`：当前限定为 `real_estate`、`dental_clinic`、`home_design`、`insurance`
 - `rubric`：对应 `semantic_judge` 的三个 rubric
 - `criteria`：自然语言评判标准
 - `expected`：`pass` 或 `fail`
@@ -66,6 +66,8 @@
 - 每个行业的每个 rubric 5 条
 - 每个行业/rubric 组合至少包含一个 `pass` 和一个 `fail`
 - 高风险场景优先标 `critical`
+
+保险 / 监管服务的 seed 在 deterministic suite 之后补齐，用来校准身份核验、理赔状态、coverage / eligibility、地址变更、投诉升级和持牌顾问转接这些语义边界，避免只有脚本断言而没有人工标注基准。
 
 ## 后续扩展路线
 
@@ -83,7 +85,7 @@
 
 4. 把标注集接入 evaluator 回归。
 
-   后续 `semantic_judge` 升级为 LLM-as-judge 或混合 judge 时，这 45 条样本要作为最小校准集。任何新版 judge 若在这些样本上倒退，都不能默认上线。
+   后续 `semantic_judge` 升级为 LLM-as-judge 或混合 judge 时，这 60 条样本要作为最小校准集。任何新版 judge 若在这些样本上倒退，都不能默认上线。
 
 5. 让标注资产变成销售材料。
 
