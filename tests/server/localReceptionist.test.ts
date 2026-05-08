@@ -42,6 +42,23 @@ describe("respondWithLocalReceptionist", () => {
     expect(response.summary.intent).toBe("handoff");
   });
 
+  it("treats WeChat follow-up requests as human handoff intent", async () => {
+    const response = await respondWithLocalReceptionist({
+      merchant,
+      source: "unknown",
+      messages: [
+        {
+          role: "customer",
+          text: "我这边有项目想合作，方便加微信后续跟进吗？",
+          at: "2026-05-03T10:00:00.000Z",
+        },
+      ],
+    });
+
+    expect(response.spoken).toMatch(/人工|联系方式/);
+    expect(response.summary.intent).toBe("handoff");
+  });
+
   it("asks for contact details when a customer asks for a concrete appointment time", async () => {
     const response = await respondWithLocalReceptionist({
       merchant,

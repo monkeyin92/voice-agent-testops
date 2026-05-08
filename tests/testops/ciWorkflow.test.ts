@@ -11,6 +11,10 @@ describe("voice-testops GitHub Actions workflow", () => {
     expect(workflow).toContain("actions/upload-artifact@v7");
     expect(workflow).toContain("npm ci");
     expect(workflow).toContain("npm test");
+    expect(workflow).toContain("npm run judge:calibrate");
+    expect(workflow).toContain("--fail-on-disagreement");
+    expect(workflow).toContain(".voice-testops/semantic-judge-calibration.md");
+    expect(workflow).toContain(".voice-testops/*.md");
     expect(workflow).toContain("examples/voice-testops/xhs-receptionist-suite.json");
     expect(workflow).toContain("examples/voice-testops/chinese-risk-suite.json");
     expect(workflow).toContain("--fail-on-severity critical");

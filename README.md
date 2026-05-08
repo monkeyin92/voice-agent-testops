@@ -306,6 +306,29 @@ pbpaste | npx voice-agent-testops from-transcript \
   --source website
 ```
 
+For insurance failures, swap in `--intake insurance` and let the preset fill the merchant name, suite name, scenario id, and scenario title unless you need to override them.
+
+Insurance shortcut:
+
+```bash
+pbpaste | npx voice-agent-testops from-transcript \
+  --stdin \
+  --intake insurance \
+  --out voice-testops/insurance-suite.json \
+  --merchant-out voice-testops/insurance-merchant.json
+```
+
+For outbound sales or lead-generation recordings, the risky turn may be on the agent side instead of the customer side. Sanitize recording URLs and file names first, then generate turns from assistant lines:
+
+```bash
+pbpaste | npx voice-agent-testops from-transcript \
+  --stdin \
+  --turn-role assistant \
+  --out voice-testops/outbound-suite.json \
+  --merchant-name "Outbound lead generation" \
+  --scenario-id "outbound_wechat_followup"
+```
+
 Need the suite as data instead of files? Print clean JSON to stdout and pipe it into whatever comes next:
 
 ```bash
@@ -344,7 +367,7 @@ pbpaste | npx voice-agent-testops from-transcript \
 
 Drop `--preview` from the append command when you are ready to modify the suite.
 
-The generator is deterministic. It does not call an LLM; it extracts customer turns, infers a draft merchant profile when you do not have one yet, and adds reviewable assertions for unsafe promises, pricing facts, lead fields, handoff intent, and latency. Treat the generated files as a first draft, then tighten them before using the suite as a release gate.
+The generator is deterministic. It does not call an LLM; it extracts customer turns by default, or assistant turns with `--turn-role assistant`, infers a draft merchant profile when you do not have one yet, and adds reviewable assertions for unsafe promises, pricing facts, lead fields, handoff intent, and latency. Treat the generated files as a first draft, then tighten them before using the suite as a release gate.
 
 If you already keep approved business facts in JSON, add `--merchant examples/voice-testops/merchants/guangying-photo.json`. That gives the generated suite better price and service assertions from day one.
 
@@ -389,6 +412,18 @@ npx voice-agent-testops recording-intake \
 ```
 
 The summary groups `keep` / `maybe` / `discard`, `business_type`, `risk_tag`, `quality`, and `turn_role_hint`, then lists `regression_candidate=yes` rows that are ready for the next step. `audio_url_private` is never printed in the summary; real URLs, missing fields, invalid enums, and consent/quality conflicts are reported as issue rows.
+
+## Calibrate Semantic Judge
+
+Run the public seed set back through the local judge to generate an agreement report by industry and rubric:
+
+```bash
+npx voice-agent-testops calibrate-judge \
+  --out .voice-testops/semantic-judge-calibration.md \
+  --json .voice-testops/semantic-judge-calibration.json
+```
+
+Add `--fail-on-disagreement` when using the seed as a release gate.
 
 ## Create Pilot Deliverables
 
@@ -492,6 +527,15 @@ npx voice-agent-testops init \
 
 Add `VOICE_AGENT_ENDPOINT` as a GitHub Secret, pointing at your test-turn bridge. The generated workflow validates the suite, runs `doctor --agent http` against `--suite voice-testops/suite.json`, then runs the regression suite with CI-friendly outputs:
 
+It also runs the semantic judge seed calibration as a release gate:
+
+```bash
+npx voice-agent-testops calibrate-judge \
+  --out .voice-testops/semantic-judge-calibration.md \
+  --json .voice-testops/semantic-judge-calibration.json \
+  --fail-on-disagreement
+```
+
 ```bash
 npx voice-agent-testops run \
   --agent http \
@@ -524,7 +568,7 @@ npx voice-agent-testops compare \
   --fail-on-severity critical
 ```
 
-The generated workflow caches the latest push report as `.voice-testops-baseline/report.json`. On the first run it gates on current critical failures. On later runs it switches to `--fail-on-new --fail-on-severity critical`, so newly introduced critical failures block release while new minor or major drift remains visible in `.voice-testops/diff.md`. The diff lists new, resolved, and unchanged failures, then appends both `.voice-testops/summary.md` and `.voice-testops/diff.md` to `GITHUB_STEP_SUMMARY`. It also uploads `.voice-testops/report.json`, `.voice-testops/report.html`, `.voice-testops/summary.md`, `.voice-testops/junit.xml`, and `.voice-testops/diff.md` through `actions/upload-artifact`.
+The generated workflow caches the latest push report as `.voice-testops-baseline/report.json`. On the first run it gates on current critical failures. On later runs it switches to `--fail-on-new --fail-on-severity critical`, so newly introduced critical failures block release while new minor or major drift remains visible in `.voice-testops/diff.md`. The diff lists new, resolved, and unchanged failures, then appends `.voice-testops/summary.md`, `.voice-testops/diff.md`, and `.voice-testops/semantic-judge-calibration.md` to `GITHUB_STEP_SUMMARY`. It also uploads `.voice-testops/report.json`, `.voice-testops/report.html`, `.voice-testops/summary.md`, `.voice-testops/junit.xml`, `.voice-testops/diff.md`, `.voice-testops/semantic-judge-calibration.md`, and `.voice-testops/semantic-judge-calibration.json` through `actions/upload-artifact`.
 
 Use `--fail-on-severity` when you want CI to block only the failures that matter for release. This keeps minor copy drift visible in the report without treating it like a production-stopping safety issue.
 
@@ -565,6 +609,8 @@ If your team has ever watched a voice agent sound confident at exactly the wrong
 - [External pilot readiness review](docs/ops/external-pilot-readiness-review.zh-CN.md)
 - [External pilot runbook](docs/ops/external-pilot-runbook.zh-CN.md)
 - [Pilot data sanitization and authorization template](docs/ops/pilot-data-sanitization-authorization.zh-CN.md)
+- [Recording resource intake runbook](docs/ops/recording-resource-intake.zh-CN.md)
+- [Insurance transcript intake pack](docs/ops/insurance-transcript-intake.md)
 - [External pilot tracker](docs/ops/external-pilot-tracker.zh-CN.md)
 - [First real pilot recap template](docs/ops/first-real-pilot-recap.zh-CN.md)
 - [Generic HTTP Agent](docs/integrations/http.md)

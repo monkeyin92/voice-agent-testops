@@ -678,6 +678,13 @@ jobs:
         run: npx voice-agent-testops validate --suite ${options.suitePath}
 ${doctorStep}
 
+      - name: Calibrate semantic judge
+        run: |
+          npx voice-agent-testops calibrate-judge \
+            --out .voice-testops/semantic-judge-calibration.md \
+            --json .voice-testops/semantic-judge-calibration.json \
+            --fail-on-disagreement
+
       - name: Restore Voice TestOps baseline
         if: github.event_name == 'push'
         uses: actions/cache/restore@v4
@@ -707,6 +714,10 @@ ${doctorStep}
             echo "" >> "$GITHUB_STEP_SUMMARY"
             cat .voice-testops/diff.md >> "$GITHUB_STEP_SUMMARY"
           fi
+          if [ -f .voice-testops/semantic-judge-calibration.md ]; then
+            echo "" >> "$GITHUB_STEP_SUMMARY"
+            cat .voice-testops/semantic-judge-calibration.md >> "$GITHUB_STEP_SUMMARY"
+          fi
 
       - name: Update Voice TestOps baseline cache
         if: always() && github.event_name == 'push'
@@ -734,6 +745,8 @@ ${doctorStep}
             .voice-testops/summary.md
             .voice-testops/junit.xml
             .voice-testops/diff.md
+            .voice-testops/semantic-judge-calibration.md
+            .voice-testops/semantic-judge-calibration.json
           if-no-files-found: ignore
           include-hidden-files: true
 `;

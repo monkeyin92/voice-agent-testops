@@ -6,7 +6,7 @@ export async function respondWithLocalReceptionist(input: AgentRequest): Promise
   const now = new Date().toISOString();
   const asksPrice = /价格|多少钱|费用|报价|退保|保费|price|cost|how much|package|fee|refund/i.test(lastMessage);
   const asksHandoff =
-    /人工|真人|客服|老板|转接|联系|回电|回电话|投诉|主管|拒赔|持牌|顾问|理赔专员|human|person|call me|contact me|handoff|transfer|licensed agent|adjuster/i.test(
+    /人工|真人|客服|老板|转接|联系|跟进|加.*微信|微信|回电|回电话|投诉|主管|拒赔|持牌|顾问|理赔专员|human|person|call me|contact me|follow up|handoff|transfer|licensed agent|adjuster/i.test(
       lastMessage,
     );
   const asksTime =
