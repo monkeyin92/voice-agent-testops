@@ -308,6 +308,18 @@ npx voice-agent-testops import-calls \
 
 `call-sample.json` 是给自动化流程用的抽样 manifest。`call-sampling.md` 是给每周人工复核看的摘要。`call-transcripts` 里会生成带 `Customer:` / `Assistant:` 标签的文本文件，后续可以直接交给 `from-transcript` 变成 regression 草稿。加上 `--risk-only` 后，只抽带风险标签的通话，例如转人工请求、询价、客户留资、违规承诺或长对话。
 
+## 录音 Intake Triage
+
+如果拿到的是一批原始录音链接，先把私有 manifest 跑一遍 triage，再挑 3-5 条高价值样本去转写：
+
+```bash
+npx voice-agent-testops recording-intake \
+  --input .voice-testops/recordings/recording-intake.csv \
+  --summary .voice-testops/recordings/intake-summary.md
+```
+
+报告会汇总 `keep` / `maybe` / `discard`、`business_type`、`risk_tag`、`quality`、`turn_role_hint`，并列出可进入下一步的 `regression_candidate=yes` 样本。`audio_url_private` 不会写进 summary；真实 URL、缺字段、非法枚举和授权/质量冲突会作为问题行标出。
+
 ## 生成试点交付物
 
 跑完一次测试后，可以从 JSON report 生成客户可读的商业摘要和试点复盘模板：

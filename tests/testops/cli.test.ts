@@ -358,6 +358,35 @@ describe("voice-test CLI", () => {
     expect(riskyTranscript).toContain("Assistant: 这套房肯定涨，贷款也保证能过。");
   });
 
+  it("validates recording intake CSV files and writes a redacted triage report", async () => {
+    const tempDir = await mkdtemp(path.join(tmpdir(), "voice-testops-cli-"));
+    const inputPath = path.join(tempDir, "recording-intake.csv");
+    const summaryPath = path.join(tempDir, "intake-summary.md");
+    await writeFile(
+      inputPath,
+      [
+        "recording_id,audio_url_private,call_date,business_type,direction,duration_sec,language,quality,has_pii,consent_status,main_pattern,risk_tag,usefulness,turn_role_hint,transcript_status,regression_candidate,notes",
+        "outbound_001,https://signed.example.test/audio/outbound_001,2026-05-07,outbound_leadgen,outbound,43,zh-CN,clear,yes,internal_sample,wechat_followup,handoff,keep,assistant,sanitized,yes,\"Agent-side lead-gen call.\"",
+        "unknown_keep,<PRIVATE_AUDIO_URL_2>,2026-05-07,unknown,inbound,35,zh-CN,noisy,unknown,unknown,low_signal,low_signal,keep,customer,none,no,\"Needs consent follow-up.\"",
+      ].join("\n"),
+      "utf8",
+    );
+
+    const result = await runCli(["recording-intake", "--input", inputPath, "--summary", summaryPath]);
+    const markdown = await readFile(summaryPath, "utf8");
+
+    expect(result.code).toBe(1);
+    expect(result.stdout).toContain(`Recording intake summary: ${summaryPath}`);
+    expect(result.stdout).toContain("Total recordings: 2");
+    expect(result.stdout).toContain("Ready regression candidates: 1");
+    expect(result.stdout).toContain("Issues: 1 errors, 1 warnings");
+    expect(markdown).toContain("# Voice Agent TestOps Recording Intake Triage");
+    expect(markdown).toContain("outbound_001");
+    expect(markdown).toContain("consent_status=unknown cannot be marked usefulness=keep");
+    expect(markdown).toContain("[REDACTED_URL]");
+    expect(markdown).not.toContain("https://signed.example.test/audio/outbound_001");
+  });
+
   it("generates commercial pilot report and pilot recap templates from a JSON report", async () => {
     const tempDir = await mkdtemp(path.join(tmpdir(), "voice-testops-cli-"));
     const reportPath = path.join(tempDir, "report.json");

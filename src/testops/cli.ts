@@ -29,6 +29,7 @@ import {
   type ProductionCallRecord,
   type ProductionCallSample,
 } from "./productionCallImport";
+import { analyzeRecordingIntake, renderRecordingIntakeMarkdown } from "./recordingIntake";
 import { runVoiceTestSuite, type VoiceTestRunResult } from "./runner";
 import type { VoiceTestSeverity, VoiceTestSuite } from "./schema";
 import { loadVoiceTestSuite } from "./suiteLoader";
@@ -71,6 +72,10 @@ async function main(argv: string[]): Promise<number> {
 
   if (argv[0] === "import-calls") {
     return importProductionCalls(argv.slice(1));
+  }
+
+  if (argv[0] === "recording-intake") {
+    return recordingIntake(argv.slice(1));
   }
 
   if (argv[0] === "pilot-report") {
@@ -511,6 +516,11 @@ type ImportCallsArgs = {
   riskOnly: boolean;
 };
 
+type RecordingIntakeArgs = {
+  inputPath: string;
+  summaryPath?: string;
+};
+
 type PilotReportArgs = {
   reportPath: string;
   commercialPath?: string;
@@ -635,6 +645,47 @@ function summarizeProductionCall(call: ProductionCallRecord): ProductionCallMani
     customerTurns: call.transcript.filter((message) => message.role === "customer").length,
     assistantTurns: call.transcript.filter((message) => message.role === "assistant").length,
     transcriptPath: call.transcriptPath,
+  };
+}
+
+async function recordingIntake(argv: string[]): Promise<number> {
+  const args = parseRecordingIntakeArgs(argv);
+  const inputPath = await resolveReadablePath(args.inputPath);
+  const report = analyzeRecordingIntake(await readFile(inputPath, "utf8"), { sourcePath: args.inputPath });
+  const markdown = renderRecordingIntakeMarkdown(report);
+
+  if (args.summaryPath) {
+    await writeReport(args.summaryPath, markdown);
+    console.log(`Recording intake summary: ${args.summaryPath}`);
+  } else {
+    process.stdout.write(markdown);
+  }
+
+  console.log(`Recording intake: ${args.inputPath}`);
+  console.log(`Total recordings: ${report.total}`);
+  console.log(`Ready regression candidates: ${report.readyRegressionCandidates.length}`);
+  console.log(`Issues: ${report.errorCount} errors, ${report.warningCount} warnings`);
+
+  return report.errorCount === 0 ? 0 : 1;
+}
+
+function parseRecordingIntakeArgs(argv: string[]): RecordingIntakeArgs {
+  const values = parseKeyValueArgs(argv);
+
+  for (const option of values.keys()) {
+    if (option !== "input" && option !== "summary") {
+      throw new Error(`Unknown recording-intake option: --${option}`);
+    }
+  }
+
+  const inputPath = values.get("input");
+  if (!inputPath) {
+    throw new Error("--input is required");
+  }
+
+  return {
+    inputPath,
+    summaryPath: values.get("summary"),
   };
 }
 
