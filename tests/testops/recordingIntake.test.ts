@@ -1,5 +1,9 @@
 import { describe, expect, it } from "vitest";
-import { analyzeRecordingIntake, renderRecordingIntakeMarkdown } from "@/testops/recordingIntake";
+import {
+  analyzeRecordingIntake,
+  normalizeRecordingIntakeContent,
+  renderRecordingIntakeMarkdown,
+} from "@/testops/recordingIntake";
 
 describe("recording intake triage", () => {
   it("summarizes intake rows, selects ready candidates, and redacts private URLs", () => {
@@ -50,6 +54,28 @@ describe("recording intake triage", () => {
     expect(report.issues.map((issue) => issue.field)).toEqual(
       expect.arrayContaining(["call_date", "direction", "risk_tag", "csv"]),
     );
+  });
+
+  it("normalizes raw private recording URL lists into conservative intake rows", () => {
+    const rawUrls = [
+      "https://signed.example.test/2026-03-20/private-recording-001",
+      "https://signed.example.test/2026-03-20/private-recording-002",
+    ].join("\n");
+
+    const normalized = normalizeRecordingIntakeContent(rawUrls);
+    const report = analyzeRecordingIntake(rawUrls, { sourcePath: "private-url-list.csv" });
+    const markdown = renderRecordingIntakeMarkdown(report);
+
+    expect(normalized).toContain("recording_id,audio_url_private,call_date,business_type");
+    expect(report.total).toBe(2);
+    expect(report.usefulnessCounts).toEqual([{ value: "maybe", count: 2 }]);
+    expect(report.riskTagCounts).toEqual([{ value: "pii", count: 2 }]);
+    expect(report.qualityCounts).toEqual([{ value: "noisy", count: 2 }]);
+    expect(report.readyRegressionCandidates).toEqual([]);
+    expect(report.errorCount).toBe(0);
+    expect(report.warningCount).toBe(2);
+    expect(markdown).toContain("[REDACTED_URL]");
+    expect(markdown).not.toContain("https://signed.example.test");
   });
 });
 

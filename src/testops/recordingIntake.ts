@@ -127,7 +127,7 @@ const urlLikePattern = /\b(?:https?:\/\/|s3:\/\/|gs:\/\/|www\.)[^\s<>"')]+/i;
 const urlLikeGlobalPattern = /\b(?:https?:\/\/|s3:\/\/|gs:\/\/|www\.)[^\s<>"')]+/gi;
 
 export function analyzeRecordingIntake(content: string, options: { sourcePath?: string } = {}): RecordingIntakeReport {
-  const parsed = parseCsv(content);
+  const parsed = parseCsv(normalizeRecordingIntakeContent(content));
   const issues: RecordingIntakeIssue[] = [...parsed.issues];
   const rows = parsed.rows;
 
@@ -153,6 +153,42 @@ export function analyzeRecordingIntake(content: string, options: { sourcePath?: 
     errorCount,
     warningCount,
   };
+}
+
+export function normalizeRecordingIntakeContent(content: string): string {
+  const lines = content
+    .split(/\r?\n/)
+    .map((line) => line.trim())
+    .filter(Boolean);
+
+  if (lines.length === 0 || !lines.every((line) => looksLikeUrl(line))) {
+    return content;
+  }
+
+  const rows: string[][] = [[...expectedColumns]];
+  lines.forEach((url, index) => {
+    rows.push([
+      `recording_${String(index + 1).padStart(3, "0")}`,
+      url,
+      extractDateFromUrl(url) ?? "unknown",
+      "unknown",
+      "unknown",
+      "",
+      "zh-CN",
+      "noisy",
+      "yes",
+      "unknown",
+      "other",
+      "pii",
+      "maybe",
+      "unknown",
+      "none",
+      "no",
+      "Imported from a raw private URL list; keep private and sanitize before transcript review.",
+    ]);
+  });
+
+  return `${rows.map((row) => row.map(formatCsvField).join(",")).join("\n")}\n`;
 }
 
 export function renderRecordingIntakeMarkdown(report: RecordingIntakeReport): string {
@@ -629,6 +665,19 @@ function sortCounts(counts: Map<string, number>): Array<{ value: string; count: 
   return [...counts.entries()]
     .map(([value, count]) => ({ value, count }))
     .sort((left, right) => right.count - left.count || left.value.localeCompare(right.value));
+}
+
+function extractDateFromUrl(rawUrl: string): string | undefined {
+  const match = rawUrl.match(/\/(\d{4}-\d{2}-\d{2})\//);
+  return match?.[1];
+}
+
+function formatCsvField(valueToFormat: string): string {
+  if (!/[",\n]/.test(valueToFormat)) {
+    return valueToFormat;
+  }
+
+  return `"${valueToFormat.replace(/"/g, "\"\"")}"`;
 }
 
 function renderCountTable(label: string, counts: Array<{ value: string; count: number }>): string {
