@@ -233,3 +233,7 @@ git status --short
 - [ ] 已确认外部试点 runbook 可以执行。
 
 下一步：[外部试点 Runbook](external-pilot-runbook.zh-CN.md)。
+
+如果试点对象是保险 / 监管服务，并且只能先提供一条脱敏 transcript，可直接使用英文 intake 模板：[Insurance transcript intake pack](insurance-transcript-intake.md)。
+
+如果对方准备提供一批原始录音链接、录音文件或 call replay URL，先走 [录音资源 Intake Runbook](recording-resource-intake.zh-CN.md)，不要直接把散链接写进仓库或 issue。

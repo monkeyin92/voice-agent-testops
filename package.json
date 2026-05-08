@@ -46,6 +46,7 @@
     "test": "vitest run",
     "test:watch": "vitest",
     "voice-test": "tsx src/testops/cli.ts",
+    "judge:calibrate": "tsx src/testops/cli.ts calibrate-judge",
     "suite:from-transcript": "tsx src/testops/cli.ts from-transcript",
     "calls:import": "tsx src/testops/cli.ts import-calls",
     "voice-test:openclaw": "scripts/openclaw-docker.sh voice-test",

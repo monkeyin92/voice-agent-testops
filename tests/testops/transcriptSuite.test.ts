@@ -72,6 +72,33 @@ Assistant: Sure, someone will call you.
     );
   });
 
+  it("can generate turns from the assistant side for outbound call transcripts", () => {
+    const suite = buildVoiceTestSuiteFromTranscript({
+      transcript: `
+Assistant: 你好，我这边是做线索业务的，有一个项目想跟您做合作，方便加微信后续跟进吗？
+Customer: 可以，你加这个微信就好了。
+`,
+      merchant,
+      scenarioId: "outbound_wechat_followup",
+      scenarioTitle: "Outbound WeChat follow-up",
+      source: "unknown",
+      turnRole: "assistant",
+    });
+
+    expect(suite.scenarios[0].turns).toHaveLength(1);
+    expect(suite.scenarios[0].turns[0].user).toContain("线索业务");
+    expect(suite.scenarios[0].turns[0].expect).toEqual(
+      expect.arrayContaining([
+        { type: "lead_intent", intent: "handoff", severity: "major" },
+        {
+          type: "must_contain_any",
+          phrases: ["phone", "number", "contact", "电话", "手机号", "联系方式"],
+          severity: "major",
+        },
+      ]),
+    );
+  });
+
   it("builds a draft merchant profile when only a transcript is available", () => {
     const draftMerchant = buildDraftMerchantFromTranscript({
       transcript: `

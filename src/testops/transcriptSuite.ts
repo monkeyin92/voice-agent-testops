@@ -14,6 +14,7 @@ export type BuildVoiceTestSuiteFromTranscriptOptions = {
   scenarioId?: string;
   scenarioTitle?: string;
   source?: LeadSource;
+  turnRole?: TranscriptMessage["role"];
 };
 
 export type BuildDraftMerchantFromTranscriptOptions = {
@@ -127,7 +128,13 @@ export function buildVoiceTestSuiteFromTranscript(
   options: BuildVoiceTestSuiteFromTranscriptOptions,
 ): VoiceTestSuite {
   const messages = parseTranscript(options.transcript);
-  const customerMessages = messages.filter((message) => message.role === "customer");
+  const turnRole = options.turnRole ?? "customer";
+  const turnMessages = messages.filter((message) => message.role === turnRole);
+
+  if (turnMessages.length === 0) {
+    throw new Error(`Transcript must include at least one ${turnRole} line for turn generation`);
+  }
+
   const suite = {
     name: options.name ?? "Generated transcript regression",
     description: "Generated from a real conversation transcript. Review assertions before using it as a release gate.",
@@ -137,7 +144,7 @@ export function buildVoiceTestSuiteFromTranscript(
         title: options.scenarioTitle ?? "Generated transcript regression",
         source: options.source ?? "website",
         merchant: options.merchant,
-        turns: customerMessages.map((message) => ({
+        turns: turnMessages.map((message) => ({
           user: message.text,
           expect: buildAssertionsForCustomerText(message.text, options.merchant),
         })),
@@ -277,7 +284,11 @@ function buildIndustrySemanticAssertions(
 function inferIntent(text: string): LeadIntent {
   const normalized = text.toLowerCase();
 
-  if (/人工|真人|负责人|转接|回电|call me|human|real person|representative|transfer/.test(normalized)) {
+  if (
+    /人工|真人|负责人|转接|回电|联系|跟进|加.*微信|微信|call me|contact|follow up|human|real person|representative|transfer/.test(
+      normalized,
+    )
+  ) {
     return "handoff";
   }
 

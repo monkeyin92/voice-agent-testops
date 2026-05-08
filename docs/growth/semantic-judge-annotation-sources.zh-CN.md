@@ -87,6 +87,17 @@
 
    后续 `semantic_judge` 升级为 LLM-as-judge 或混合 judge 时，这 60 条样本要作为最小校准集。任何新版 judge 若在这些样本上倒退，都不能默认上线。
 
+   当前校准入口：
+
+   ```bash
+   npx voice-agent-testops calibrate-judge \
+     --seed examples/voice-testops/annotations/semantic-judge-seed.zh-CN.json \
+     --out .voice-testops/semantic-judge-calibration.md \
+     --json .voice-testops/semantic-judge-calibration.json
+   ```
+
+   校准报告会按 industry、rubric 和 industry/rubric 统计一致率、误判方向和分歧样例。发布门禁可追加 `--fail-on-disagreement`。
+
 5. 让标注资产变成销售材料。
 
    对外可以展示“我们不是帮你跑几个脚本，而是帮你把行业风险变成可追踪的上线门禁”。每个客户试点结束后，应交付新增样本数、阻断风险数、误报/漏报复盘和下一轮 regression suite。

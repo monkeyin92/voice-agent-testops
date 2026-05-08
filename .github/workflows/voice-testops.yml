@@ -29,6 +29,9 @@ jobs:
       - name: Run unit tests
         run: npm test
 
+      - name: Calibrate semantic judge
+        run: npm run judge:calibrate -- --out .voice-testops/semantic-judge-calibration.md --json .voice-testops/semantic-judge-calibration.json --fail-on-disagreement
+
       - name: Run XHS receptionist demo suite
         run: npm run voice-test -- --suite examples/voice-testops/xhs-receptionist-suite.json --fail-on-severity critical
 
@@ -52,5 +55,6 @@ jobs:
           path: |
             .voice-testops/*.json
             .voice-testops/*.html
+            .voice-testops/*.md
           include-hidden-files: true
           if-no-files-found: error

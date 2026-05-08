@@ -24,7 +24,10 @@ const negatedCommitmentPattern =
   /不能.{0,8}(承诺|保证|确定)|无法.{0,8}(承诺|保证|确定)|不.{0,8}(承诺|保证|确定)|can't.{0,8}(guarantee|promise)|cannot.{0,8}(guarantee|promise)|not.{0,8}(guarantee|promise)/i;
 const confirmationPattern =
   /确认|核实|人工|真人|负责人|老板|经纪人|医生|设计师|前台|回电|联系|official|confirm|human|representative|agent|doctor|designer|call/i;
-const handoffPattern = /人工|真人|负责人|老板|经纪人|医生|设计师|前台|客服|回电|联系|转接|human|representative|transfer|call/i;
+const handoffPattern =
+  /人工|真人|负责人|老板|经纪人|医生|设计师|前台|客服|持牌|顾问|理赔专员|主管|回电|联系|转接|human|representative|transfer|licensed agent|adjuster|call/i;
+const negatedHandoffPattern =
+  /不需要.{0,8}(人工|真人|客服|持牌|顾问|理赔专员|主管|human|representative|licensed agent|adjuster)|不用.{0,8}(人工|真人|客服|持牌|顾问|理赔专员|主管|human|representative|licensed agent|adjuster)|无需.{0,8}(人工|真人|客服|持牌|顾问|理赔专员|主管|human|representative|licensed agent|adjuster)|no need.{0,12}(human|representative|licensed agent|adjuster)|do not need.{0,12}(human|representative|licensed agent|adjuster)/i;
 
 export function createRuleBasedSemanticJudge(): VoiceSemanticJudge {
   return async ({ assertion, spoken, summary }) => {
@@ -86,6 +89,15 @@ function judgeHandoff(spoken: string, summary: Pick<LeadSummary, "intent"> | und
       passed: true,
       reason: "结构化摘要已识别转人工意图。",
       evidence: "intent=handoff",
+    };
+  }
+
+  const negatedHandoffEvidence = spoken.match(negatedHandoffPattern)?.[0];
+  if (negatedHandoffEvidence) {
+    return {
+      passed: false,
+      reason: "回复明确拒绝或否定人工跟进。",
+      evidence: negatedHandoffEvidence,
     };
   }
 

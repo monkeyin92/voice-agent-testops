@@ -16,6 +16,7 @@ import { initializeVoiceTestOpsProject } from "./initProject";
 import { buildVoiceTestSuiteJsonSchema } from "./jsonSchema";
 import { resolveReadablePath } from "./packagePaths";
 import { renderHtmlReport, renderJsonReport, renderJunitReport, renderMarkdownSummary } from "./report";
+import { parseSemanticJudgeAnnotationSet } from "./annotationSet";
 import {
   buildFailureClusters,
   buildRegressionSuiteDraft,
@@ -32,7 +33,12 @@ import {
 import { analyzeRecordingIntake, renderRecordingIntakeMarkdown } from "./recordingIntake";
 import { runVoiceTestSuite, type VoiceTestRunResult } from "./runner";
 import type { VoiceTestSeverity, VoiceTestSuite } from "./schema";
+import {
+  calibrateSemanticJudge,
+  renderSemanticJudgeCalibrationMarkdown,
+} from "./semanticJudgeCalibration";
 import { loadVoiceTestSuite } from "./suiteLoader";
+import { getTranscriptIntakeDefaults, parseTranscriptIntakePreset, type TranscriptIntakePreset } from "./transcriptIntake";
 import { buildDraftMerchantFromTranscript, buildVoiceTestSuiteFromTranscript } from "./transcriptSuite";
 
 const severityRank: Record<VoiceTestSeverity, number> = {
@@ -80,6 +86,10 @@ async function main(argv: string[]): Promise<number> {
 
   if (argv[0] === "pilot-report") {
     return generatePilotReport(argv.slice(1));
+  }
+
+  if (argv[0] === "calibrate-judge") {
+    return calibrateJudge(argv.slice(1));
   }
 
   if (argv[0] === "schema") {
@@ -529,6 +539,14 @@ type PilotReportArgs = {
   period?: string;
 };
 
+type CalibrateJudgeArgs = {
+  seedPath: string;
+  outPath?: string;
+  jsonPath?: string;
+  maxExamples?: number;
+  failOnDisagreement: boolean;
+};
+
 type ProductionCallManifest = {
   generatedAt: string;
   sourcePath: string;
@@ -724,6 +742,84 @@ function parsePilotReportArgs(argv: string[]): PilotReportArgs {
   };
 }
 
+async function calibrateJudge(argv: string[]): Promise<number> {
+  const args = parseCalibrateJudgeArgs(argv);
+  const annotationSet = parseSemanticJudgeAnnotationSet(
+    JSON.parse(await readFile(await resolveReadablePath(args.seedPath), "utf8")),
+  );
+  const report = await calibrateSemanticJudge(annotationSet);
+  const markdown = renderSemanticJudgeCalibrationMarkdown(report, { maxExamples: args.maxExamples });
+
+  if (args.outPath) {
+    await writeReport(args.outPath, markdown);
+    console.log(`Semantic judge calibration: ${args.outPath}`);
+  } else {
+    process.stdout.write(markdown);
+  }
+
+  if (args.jsonPath) {
+    await writeReport(args.jsonPath, `${JSON.stringify(report, null, 2)}\n`);
+    console.log(`Semantic judge calibration JSON: ${args.jsonPath}`);
+  }
+
+  console.log(
+    `Calibration summary: ${report.summary.agreements}/${report.summary.total} agreements (${(
+      report.summary.agreementRate * 100
+    ).toFixed(1)}%), ${report.summary.disagreements} disagreements`,
+  );
+
+  if (args.failOnDisagreement) {
+    return report.summary.disagreements === 0 ? 0 : 1;
+  }
+
+  return 0;
+}
+
+function parseCalibrateJudgeArgs(argv: string[]): CalibrateJudgeArgs {
+  const values = new Map<string, string>();
+  const flags = new Set<string>();
+  const knownValues = new Set(["seed", "out", "json", "max-examples"]);
+
+  for (let index = 0; index < argv.length; index += 1) {
+    const arg = argv[index];
+    if (!arg.startsWith("--")) {
+      throw new Error(`Unexpected argument: ${arg}`);
+    }
+
+    const name = arg.slice(2);
+    if (name === "fail-on-disagreement") {
+      flags.add(name);
+      continue;
+    }
+
+    if (!knownValues.has(name)) {
+      throw new Error(`Unknown calibrate-judge option: --${name}`);
+    }
+
+    const value = argv[index + 1];
+    if (!value || value.startsWith("--")) {
+      throw new Error(`${arg} requires a value`);
+    }
+
+    values.set(name, value);
+    index += 1;
+  }
+
+  const maxExamplesValue = values.get("max-examples");
+  const maxExamples = maxExamplesValue === undefined ? undefined : Number.parseInt(maxExamplesValue, 10);
+  if (maxExamples !== undefined && (!Number.isInteger(maxExamples) || maxExamples < 0)) {
+    throw new Error("--max-examples must be a non-negative integer");
+  }
+
+  return {
+    seedPath: values.get("seed") ?? "examples/voice-testops/annotations/semantic-judge-seed.zh-CN.json",
+    outPath: values.get("out"),
+    jsonPath: values.get("json"),
+    maxExamples,
+    failOnDisagreement: flags.has("fail-on-disagreement"),
+  };
+}
+
 function safeFileName(value: string): string {
   const normalized = value.replace(/[^a-zA-Z0-9._-]+/g, "_").replace(/^_+|_+$/g, "");
   return normalized || "call";
@@ -849,20 +945,24 @@ async function generateSuiteFromTranscript(argv: string[]): Promise<number> {
   const transcript = args.readFromStdin
     ? await readFromStdin()
     : await readFile(await resolveReadablePath(args.transcriptPath ?? ""), "utf8");
+  const intakeDefaults = args.intake ? getTranscriptIntakeDefaults(args.intake) : undefined;
+  const merchantName = args.merchantName ?? intakeDefaults?.merchantName;
+  const industry = args.industry ?? intakeDefaults?.industry;
   const merchant = args.merchantPath
     ? merchantConfigSchema.parse(JSON.parse(await readFile(await resolveReadablePath(args.merchantPath), "utf8")))
     : buildDraftMerchantFromTranscript({
         transcript,
-        name: args.merchantName,
-        industry: args.industry,
+        name: merchantName,
+        industry,
       });
   const suite = buildVoiceTestSuiteFromTranscript({
     transcript,
     merchant,
-    name: args.name,
-    scenarioId: args.scenarioId,
-    scenarioTitle: args.scenarioTitle,
+    name: args.name ?? intakeDefaults?.suiteName,
+    scenarioId: args.scenarioId ?? intakeDefaults?.scenarioId,
+    scenarioTitle: args.scenarioTitle ?? intakeDefaults?.scenarioTitle,
     source: args.source,
+    turnRole: args.turnRole,
   });
   const suiteOutput = args.merchantOutPath
     ? buildSuiteWithMerchantRef(
@@ -900,12 +1000,19 @@ async function generateSuiteFromTranscript(argv: string[]): Promise<number> {
   if (args.merchantOutPath) {
     console.log(`${args.merchantPath ? "Merchant profile" : "Merchant draft"}: ${args.merchantOutPath}`);
   }
+  if (args.intake) {
+    console.log(`Transcript intake: ${args.intake}`);
+  }
+  console.log(`Suite: ${suite.name}`);
+  console.log(`Scenario: ${suite.scenarios[0].id} - ${suite.scenarios[0].title}`);
   if (!args.merchantPath && !args.merchantOutPath) {
     console.log("Merchant draft: generated from transcript");
   }
-  console.log(`Customer turns: ${suite.scenarios[0].turns.length}`);
+  printTurnCount(args.turnRole, suite.scenarios[0].turns.length);
   return 0;
 }
+
+type FromTranscriptTurnRole = "customer" | "assistant";
 
 type FromTranscriptArgs = {
   transcriptPath?: string;
@@ -922,6 +1029,8 @@ type FromTranscriptArgs = {
   scenarioId?: string;
   scenarioTitle?: string;
   source: LeadSource;
+  intake?: TranscriptIntakePreset;
+  turnRole: FromTranscriptTurnRole;
 };
 
 function parseFromTranscriptArgs(argv: string[]): FromTranscriptArgs {
@@ -939,6 +1048,8 @@ function parseFromTranscriptArgs(argv: string[]): FromTranscriptArgs {
     "scenario-id",
     "scenario-title",
     "source",
+    "intake",
+    "turn-role",
   ]);
 
   for (let index = 0; index < argv.length; index += 1) {
@@ -992,6 +1103,8 @@ function parseFromTranscriptArgs(argv: string[]): FromTranscriptArgs {
   }
 
   const source = leadSourceSchema.parse(values.get("source") ?? "website");
+  const intake = values.get("intake");
+  const turnRole = parseTranscriptTurnRole(values.get("turn-role") ?? "customer");
 
   return {
     transcriptPath,
@@ -1008,7 +1121,17 @@ function parseFromTranscriptArgs(argv: string[]): FromTranscriptArgs {
     scenarioId: values.get("scenario-id"),
     scenarioTitle: values.get("scenario-title"),
     source,
+    intake: intake ? parseTranscriptIntakePreset(intake) : undefined,
+    turnRole,
   };
+}
+
+function parseTranscriptTurnRole(value: string): FromTranscriptTurnRole {
+  if (value === "customer" || value === "assistant") {
+    return value;
+  }
+
+  throw new Error("--turn-role must be customer or assistant");
 }
 
 type AppendCounts = {
@@ -1089,13 +1212,27 @@ function printFromTranscriptPreview(options: {
     console.log(`Existing scenarios: ${options.appendCounts.existing}`);
     console.log(`Result scenarios: ${options.appendCounts.existing + options.appendCounts.added}`);
   }
+  console.log(`Suite: ${options.suite.name}`);
+  if (options.args.intake) {
+    console.log(`Transcript intake: ${options.args.intake}`);
+  }
   console.log(`Scenario: ${scenario.id} - ${scenario.title}`);
   console.log(`Merchant: ${options.merchant.name} (${options.merchant.industry})`);
   if (options.args.merchantOutPath) {
     console.log(`Merchant draft target: ${options.args.merchantOutPath}`);
   }
-  console.log(`Customer turns: ${scenario.turns.length}`);
+  printTurnCount(options.args.turnRole, scenario.turns.length);
   console.log(`Assertions: ${assertions}`);
+}
+
+function printTurnCount(turnRole: FromTranscriptTurnRole, count: number): void {
+  if (turnRole === "assistant") {
+    console.log("Turn role: assistant");
+    console.log(`Assistant turns: ${count}`);
+    return;
+  }
+
+  console.log(`Customer turns: ${count}`);
 }
 
 async function readFromStdin(): Promise<string> {

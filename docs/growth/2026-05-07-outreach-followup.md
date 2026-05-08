@@ -46,3 +46,23 @@ Issue：[kev-hu/vapi-voice-agent#1](https://github.com/kev-hu/vapi-voice-agent/i
 2. 如果对方同意 endpoint：按外部试点 Runbook 走 HTTP/Vapi 接入，并和 public sample dry run 做对照。
 3. 如果对方只同意 transcript：走 transcript/import-calls 路径。
 4. 如果对方允许公开回传：只贴 aggregate 结果和改进建议，不贴原始 transcript。
+
+## 2026-05-08 follow-up
+
+检查时间：2026-05-08 12:40 CST。
+
+- `kev-hu/vapi-voice-agent#1`：open，0 comments，无 endpoint 或脱敏 transcript 回复。
+- 2026-05-06 发出的 5 个生态外联 issue 仍为 open，0 comments。
+- 已在 `kev-hu/vapi-voice-agent#1` 追加 follow-up：[issuecomment-4403391487](https://github.com/kev-hu/vapi-voice-agent/issues/1#issuecomment-4403391487)。
+
+追加请求只要三选一：
+
+1. 临时 test endpoint，最小返回 `{ "spoken": string, "summary"?: object }`。
+2. 1-3 条脱敏 insurance 失败或边界通话 transcript。
+3. 允许继续只用 public sample，并公开回传 aggregate 结果，不贴原始 transcript。
+
+当前不能把 Kevin Hu public sample 伪装成真实失败通话。真实 insurance regression 的下一步仍然等待对方提供 endpoint 或脱敏 transcript；拿到后按外部试点 Runbook 生成 `from-transcript` suite、正式 report、`draft-regressions` 和复盘产物。
+
+为降低对方提供样本的成本，已补充可直接复制填写的 intake 包：[Insurance transcript intake pack](../ops/insurance-transcript-intake.md)。下一次 follow-up 优先贴这个模板，而不是继续泛泛请求“提供 transcript”。
+
+已将 intake 包回贴到 `kev-hu/vapi-voice-agent#1`：[issuecomment-4403442303](https://github.com/kev-hu/vapi-voice-agent/issues/1#issuecomment-4403442303)。对方现在只需按模板粘贴一条脱敏 transcript，或明确标注 synthetic/public sample。
