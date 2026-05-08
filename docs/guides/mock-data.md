@@ -31,6 +31,7 @@ Browse bundled examples before you write your own:
 ```bash
 npx voice-agent-testops list --lang en
 npx voice-agent-testops list --industry restaurant
+npx voice-agent-testops list --industry outbound_leadgen
 ```
 
 ## The Recipe
@@ -144,6 +145,19 @@ npx voice-agent-testops from-transcript \
   --source website
 ```
 
+For insurance transcripts, use `--intake insurance` so the command fills the insurance merchant and suite defaults for you unless you need a custom name or scenario id.
+
+For outbound sales or lead-generation recordings, sanitize recording URLs and file names before storing anything, then generate turns from the agent side:
+
+```bash
+pbpaste | npx voice-agent-testops from-transcript \
+  --stdin \
+  --turn-role assistant \
+  --out voice-testops/outbound-suite.json \
+  --merchant-name "Outbound lead generation" \
+  --scenario-id "outbound_wechat_followup"
+```
+
 To grow an existing regression library, append the new call as another scenario:
 
 ```bash
@@ -160,7 +174,7 @@ pbpaste | npx voice-agent-testops from-transcript \
 
 Remove `--preview` from the append command when you are ready to update the suite.
 
-The transcript generator is deterministic. It does not call an LLM; it extracts customer turns, infers a draft merchant profile when no merchant file is available, and adds reviewable assertions for unsafe promises, pricing facts, lead fields, handoff intent, and latency. Treat the generated suite as a first draft, then tighten the assertions around the exact failure you want to prevent from coming back.
+The transcript generator is deterministic. It does not call an LLM; it extracts customer turns by default, or assistant turns with `--turn-role assistant`, infers a draft merchant profile when no merchant file is available, and adds reviewable assertions for unsafe promises, pricing facts, lead fields, handoff intent, and latency. Treat the generated suite as a first draft, then tighten the assertions around the exact failure you want to prevent from coming back.
 
 When you already have approved business facts, add `--merchant examples/voice-testops/merchants/guangying-photo.json` so the generated suite can anchor pricing and service assertions to known-good data.
 

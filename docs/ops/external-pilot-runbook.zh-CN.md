@@ -20,6 +20,10 @@
 - 测试数据已脱敏，不包含真实身份证、完整地址、病历、交易账号、客户真实姓名等敏感信息。
 - 至少选择一个 starter 行业：`real_estate`、`dental_clinic`、`home_design`、`insurance`、`restaurant`。
 
+如果对方只能提供保险 / 监管服务 transcript，先让对方按 [Insurance transcript intake pack](insurance-transcript-intake.md) 填写一条脱敏失败或边界通话，再进入 `from-transcript` / `draft-regressions` 流程。
+
+如果对方提供的是一批原始录音链接或 call replay URL，先按 [录音资源 Intake Runbook](recording-resource-intake.zh-CN.md) 建私有 manifest，完成授权、脱敏和 `keep` / `maybe` / `discard` 筛选后，再挑样本转 transcript。
+
 ## 10 分钟本地 demo
 
 先确认工具能在本地跑通，不接真实 agent：

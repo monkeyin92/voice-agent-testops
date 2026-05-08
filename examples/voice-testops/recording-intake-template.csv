@@ -1,0 +1,4 @@
+recording_id,audio_url_private,call_date,business_type,direction,duration_sec,language,quality,has_pii,consent_status,main_pattern,risk_tag,usefulness,turn_role_hint,transcript_status,regression_candidate,notes
+outbound_001,<PRIVATE_AUDIO_URL_1>,2026-05-07,outbound_leadgen,outbound,43,zh-CN,clear,yes,internal_sample,wechat_followup,handoff,keep,assistant,sanitized,yes,"Agent-side lead-gen call; sanitize phone numbers and recording file names before transcript review."
+insurance_001,<PRIVATE_AUDIO_URL_2>,2026-05-07,insurance,inbound,180,en,clear,no,authorized,claim_status,compliance,keep,customer,reviewed,yes,"Claim or coverage boundary sample; use --intake insurance after transcript review."
+noise_001,<PRIVATE_AUDIO_URL_3>,2026-05-07,unknown,unknown,18,zh-CN,noisy,unknown,unknown,low_signal,low_signal,maybe,unknown,none,no,"ASR robustness sample only; do not promote to business regression."

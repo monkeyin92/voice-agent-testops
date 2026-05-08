@@ -82,7 +82,7 @@ npm run report:export
 
 ## 场景库
 
-公开 examples 分两层维护：中文商业 starter 用来沉淀高风险行业场景；英文 suite 保留轻量示例，方便海外开发者理解接入方式。当前商业 starter 优先维护房产经纪、牙科/诊所预约、家装/家居服务、保险/监管服务；摄影写真继续作为轻量 demo。
+公开 examples 分两层维护：中文商业 starter 用来沉淀高风险行业场景；英文 suite 保留轻量示例，方便海外开发者理解接入方式。当前商业 starter 优先维护房产经纪、牙科/诊所预约、家装/家居服务、保险/监管服务和外呼线索运营；摄影写真继续作为轻量 demo。
 
 | 行业 | 中文 suite | 英文 suite | 覆盖风险 |
 |---|---|---|---|
@@ -90,8 +90,8 @@ npm run report:export
 | 牙科/诊所预约 | [chinese-dental-clinic-suite.json](examples/voice-testops/chinese-dental-clinic-suite.json) | [english-dental-clinic-suite.json](examples/voice-testops/english-dental-clinic-suite.json) | 疗效承诺、医生排班、症状分诊、紧急转人工 |
 | 家装/家居服务 | [chinese-home-design-suite.json](examples/voice-testops/chinese-home-design-suite.json) | 暂未提供 | 报价边界、上门量房、预算地址时间收集、售后转人工 |
 | 保险/监管服务 | [chinese-insurance-regulated-service-suite.json](examples/voice-testops/chinese-insurance-regulated-service-suite.json) | [english-insurance-regulated-service-suite.json](examples/voice-testops/english-insurance-regulated-service-suite.json) | 身份核验、理赔状态、coverage/eligibility、持牌顾问转接 |
+| 外呼线索运营 | [chinese-outbound-leadgen-suite.json](examples/voice-testops/chinese-outbound-leadgen-suite.json) | 暂未提供 | 客户拒绝、无微信渠道、赠品承诺、年龄和孩子信息确认 |
 | 餐厅订位 | [chinese-restaurant-booking-suite.json](examples/voice-testops/chinese-restaurant-booking-suite.json) | [english-restaurant-booking-suite.json](examples/voice-testops/english-restaurant-booking-suite.json) | 未确认桌态、低消编造、订位信息 |
-| 外呼线索跟进 demo | [chinese-outbound-leadgen-suite.json](examples/voice-testops/chinese-outbound-leadgen-suite.json) | 暂未提供 | 来源说明、勿扰偏好、价格边界、档期确认、留资摘要 |
 
 也可以在终端里直接浏览：
 
@@ -99,6 +99,7 @@ npm run report:export
 npx voice-agent-testops list
 npx voice-agent-testops list --lang zh-CN
 npx voice-agent-testops list --industry restaurant
+npx voice-agent-testops list --industry outbound_leadgen
 ```
 
 ## 生成 Mock 数据
@@ -342,7 +343,7 @@ npx voice-agent-testops recording-intake \
   --summary .voice-testops/recordings/intake-summary.md
 ```
 
-报告会汇总 `keep` / `maybe` / `discard`、`business_type`、`risk_tag`、`quality`、`turn_role_hint`，并列出可进入下一步的 `regression_candidate=yes` 样本。`audio_url_private` 不会写进 summary；真实 URL、缺字段、非法枚举和授权/质量冲突会作为问题行标出。
+输入可以是完整 manifest 模板，也可以是一行一个 URL 的私有录音列表。裸 URL 列表会先保守归一成 `maybe`、`pii`、`consent_status=unknown`、`regression_candidate=no`，等人工复核后再提级。报告会汇总 `keep` / `maybe` / `discard`、`business_type`、`risk_tag`、`quality`、`turn_role_hint`，并列出可进入下一步的 `regression_candidate=yes` 样本。`audio_url_private` 不会写进 summary；真实 URL、缺字段、非法枚举和授权/质量冲突会作为问题行标出。
 
 ## 校准 Semantic Judge
 

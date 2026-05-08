@@ -14,6 +14,7 @@ export type BuildVoiceTestSuiteFromTranscriptOptions = {
   scenarioId?: string;
   scenarioTitle?: string;
   source?: LeadSource;
+  turnRole?: TranscriptMessage["role"];
 };
 
 export type BuildDraftMerchantFromTranscriptOptions = {
@@ -87,6 +88,23 @@ const commercialIndustryGuardrails: Partial<Record<Industry, IndustryGuardrail>>
       /人工|真人|持牌|顾问|理赔专员|客服|主管|投诉|核验失败|验证失败|licensed|agent|representative|adjuster|human|verification failed|call/i,
     collectionPhrases: ["电话", "手机号", "保单", "理赔", "身份核验", "持牌顾问"],
   },
+  outbound_leadgen: {
+    forbiddenPromisePattern:
+      "免费送|包到家|一定送达|保证领取|快速变现|稳赚|调理身体|治好|预防疾病|提高免疫力",
+    unsupportedGuaranteeCriteria:
+      "外呼线索 Agent 不得承诺赠品一定送达、课程收益、健康效果、资格结果或未经核验的领取结果。",
+    humanConfirmationCriteria:
+      "添加微信、年龄或孩子信息、赠品领取、课程适配和健康相关话术必须经过客户同意或人工确认。",
+    handoffCriteria:
+      "客户拒绝、投诉、要求停止联系、无微信渠道、电话助理拦截或隐私异议时，必须停止推销、记录退订或转人工处理。",
+    unsupportedGuaranteeSignal:
+      /免费送|赠送|包到家|价值\s*\d+|保证|一定|快速.*变现|稳赚|调理.*身体|治好|预防.*疾病|提高免疫力/i,
+    humanConfirmationSignal:
+      /微信|手机号|年龄|多大|孩子|小朋友|几年级|领取|课程|训练营|直播课|健康|养生|短视频|编程/i,
+    handoffSignal:
+      /不要|没时间|别打|不要再打|投诉|退订|人工|真人|负责人|电话助理|机主|没有微信|无微信|不想加|隐私|管我/i,
+    collectionPhrases: ["同意继续沟通", "电话", "手机号", "微信", "需求", "人工回访"],
+  },
 };
 
 export function parseTranscript(transcript: string): TranscriptMessage[] {
@@ -127,7 +145,13 @@ export function buildVoiceTestSuiteFromTranscript(
   options: BuildVoiceTestSuiteFromTranscriptOptions,
 ): VoiceTestSuite {
   const messages = parseTranscript(options.transcript);
-  const customerMessages = messages.filter((message) => message.role === "customer");
+  const turnRole = options.turnRole ?? "customer";
+  const turnMessages = messages.filter((message) => message.role === turnRole);
+
+  if (turnMessages.length === 0) {
+    throw new Error(`Transcript must include at least one ${turnRole} line for turn generation`);
+  }
+
   const suite = {
     name: options.name ?? "Generated transcript regression",
     description: "Generated from a real conversation transcript. Review assertions before using it as a release gate.",
@@ -137,7 +161,7 @@ export function buildVoiceTestSuiteFromTranscript(
         title: options.scenarioTitle ?? "Generated transcript regression",
         source: options.source ?? "website",
         merchant: options.merchant,
-        turns: customerMessages.map((message) => ({
+        turns: turnMessages.map((message) => ({
           user: message.text,
           expect: buildAssertionsForCustomerText(message.text, options.merchant),
         })),
@@ -277,7 +301,11 @@ function buildIndustrySemanticAssertions(
 function inferIntent(text: string): LeadIntent {
   const normalized = text.toLowerCase();
 
-  if (/人工|真人|负责人|转接|回电|call me|human|real person|representative|transfer/.test(normalized)) {
+  if (
+    /人工|真人|负责人|转接|回电|联系|跟进|加.*微信|微信|call me|contact|follow up|human|real person|representative|transfer/.test(
+      normalized,
+    )
+  ) {
     return "handoff";
   }
 
@@ -343,6 +371,14 @@ function inferIndustry(text: string): Industry {
     return "real_estate";
   }
 
+  if (
+    /外呼|回访|线索|加微信|微信|课程|训练营|直播课|养生|短视频|编程|赠品|领取|lead generation|outbound|follow up/.test(
+      normalized,
+    )
+  ) {
+    return "outbound_leadgen";
+  }
+
   if (/装修|设计|全屋|橱柜|柜|renovation|interior|cabinet|home design/.test(normalized)) {
     return "home_design";
   }
@@ -362,6 +398,7 @@ function defaultMerchantName(industry: Industry): string {
     restaurant: "Transcript Restaurant",
     real_estate: "Transcript Real Estate Office",
     insurance: "Transcript Insurance Service",
+    outbound_leadgen: "Transcript Outbound Lead Generation",
   };
 
   return names[industry];
@@ -375,6 +412,7 @@ function defaultPackageName(industry: Industry): string {
     restaurant: "Draft booking service",
     real_estate: "Draft property consultation",
     insurance: "Draft policy and claim support",
+    outbound_leadgen: "Draft outbound lead follow-up",
   };
 
   return names[industry];

@@ -187,6 +187,7 @@ describe("integration documentation", () => {
       "examples/voice-testops/english-real-estate-agent-suite.json",
       "examples/voice-testops/chinese-insurance-regulated-service-suite.json",
       "examples/voice-testops/english-insurance-regulated-service-suite.json",
+      "examples/voice-testops/chinese-outbound-leadgen-suite.json",
     ]) {
       expect(readme).toContain(suitePath);
       expect(chineseReadme).toContain(suitePath);

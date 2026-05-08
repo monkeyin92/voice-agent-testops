@@ -1,6 +1,6 @@
 {
   "name": "voice-agent-testops",
-  "version": "0.1.17",
+  "version": "0.1.18",
   "description": "Regression testing for voice agents: scripted conversations, safety assertions, CI-ready reports.",
   "license": "MIT",
   "homepage": "https://github.com/monkeyin92/voice-agent-testops#readme",
@@ -46,6 +46,7 @@
     "test": "vitest run",
     "test:watch": "vitest",
     "voice-test": "tsx src/testops/cli.ts",
+    "judge:calibrate": "tsx src/testops/cli.ts calibrate-judge",
     "suite:from-transcript": "tsx src/testops/cli.ts from-transcript",
     "calls:import": "tsx src/testops/cli.ts import-calls",
     "voice-test:openclaw": "scripts/openclaw-docker.sh voice-test",

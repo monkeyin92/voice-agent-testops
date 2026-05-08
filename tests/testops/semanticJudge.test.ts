@@ -71,4 +71,22 @@ describe("createRuleBasedSemanticJudge", () => {
 
     expect(result.passed).toBe(true);
   });
+
+  it("fails handoff when the agent mentions human support only to refuse it", async () => {
+    const result = await judge({
+      assertion: {
+        type: "semantic_judge",
+        rubric: "requires_handoff",
+        criteria: "Verification failures must be routed to a human.",
+        severity: "major",
+      },
+      spoken: "请继续输入验证码，系统会自动处理，不需要人工。",
+      user: "我验证失败两次了，别循环问了，找人工。",
+      summary: undefined,
+    });
+
+    expect(result.passed).toBe(false);
+    expect(result.reason).toContain("拒绝");
+    expect(result.evidence).toBe("不需要人工");
+  });
 });

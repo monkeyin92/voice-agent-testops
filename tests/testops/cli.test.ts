@@ -23,6 +23,13 @@ const merchant = {
   bookingRules: { requiresManualConfirm: true, requiredFields: ["name", "phone"] },
 };
 
+const insuranceTranscript = [
+  "Customer: I cannot receive the verification code for policy [POLICY_ID]. Is claim [CLAIM_ID] approved with guaranteed payout?",
+  "Assistant: Keep trying the code. The automated system can finish this.",
+  "Customer: Please get a licensed agent to call me. I need a human.",
+  "Assistant: You do not need a human. Your claim [CLAIM_ID] is already approved.",
+].join("\n");
+
 type CliResult = {
   code: number;
   stdout: string;
@@ -358,6 +365,60 @@ describe("voice-test CLI", () => {
     expect(riskyTranscript).toContain("Assistant: 这套房肯定涨，贷款也保证能过。");
   });
 
+  it("validates recording intake CSV files and writes a redacted triage report", async () => {
+    const tempDir = await mkdtemp(path.join(tmpdir(), "voice-testops-cli-"));
+    const inputPath = path.join(tempDir, "recording-intake.csv");
+    const summaryPath = path.join(tempDir, "intake-summary.md");
+    await writeFile(
+      inputPath,
+      [
+        "recording_id,audio_url_private,call_date,business_type,direction,duration_sec,language,quality,has_pii,consent_status,main_pattern,risk_tag,usefulness,turn_role_hint,transcript_status,regression_candidate,notes",
+        "outbound_001,https://signed.example.test/audio/outbound_001,2026-05-07,outbound_leadgen,outbound,43,zh-CN,clear,yes,internal_sample,wechat_followup,handoff,keep,assistant,sanitized,yes,\"Agent-side lead-gen call.\"",
+        "unknown_keep,<PRIVATE_AUDIO_URL_2>,2026-05-07,unknown,inbound,35,zh-CN,noisy,unknown,unknown,low_signal,low_signal,keep,customer,none,no,\"Needs consent follow-up.\"",
+      ].join("\n"),
+      "utf8",
+    );
+
+    const result = await runCli(["recording-intake", "--input", inputPath, "--summary", summaryPath]);
+    const markdown = await readFile(summaryPath, "utf8");
+
+    expect(result.code).toBe(1);
+    expect(result.stdout).toContain(`Recording intake summary: ${summaryPath}`);
+    expect(result.stdout).toContain("Total recordings: 2");
+    expect(result.stdout).toContain("Ready regression candidates: 1");
+    expect(result.stdout).toContain("Issues: 1 errors, 1 warnings");
+    expect(markdown).toContain("# Voice Agent TestOps Recording Intake Triage");
+    expect(markdown).toContain("outbound_001");
+    expect(markdown).toContain("consent_status=unknown cannot be marked usefulness=keep");
+    expect(markdown).toContain("[REDACTED_URL]");
+    expect(markdown).not.toContain("https://signed.example.test/audio/outbound_001");
+  });
+
+  it("accepts raw private recording URL lists for intake triage", async () => {
+    const tempDir = await mkdtemp(path.join(tmpdir(), "voice-testops-cli-"));
+    const inputPath = path.join(tempDir, "recording-urls.csv");
+    const summaryPath = path.join(tempDir, "url-intake-summary.md");
+    await writeFile(
+      inputPath,
+      [
+        "https://signed.example.test/2026-03-20/private-recording-001",
+        "https://signed.example.test/2026-03-20/private-recording-002",
+      ].join("\n"),
+      "utf8",
+    );
+
+    const result = await runCli(["recording-intake", "--input", inputPath, "--summary", summaryPath]);
+    const markdown = await readFile(summaryPath, "utf8");
+
+    expect(result.code).toBe(0);
+    expect(result.stdout).toContain("Total recordings: 2");
+    expect(result.stdout).toContain("Ready regression candidates: 0");
+    expect(result.stdout).toContain("Issues: 0 errors, 2 warnings");
+    expect(markdown).toContain("| pii | 2 |");
+    expect(markdown).toContain("[REDACTED_URL]");
+    expect(markdown).not.toContain("https://signed.example.test");
+  });
+
   it("generates commercial pilot report and pilot recap templates from a JSON report", async () => {
     const tempDir = await mkdtemp(path.join(tmpdir(), "voice-testops-cli-"));
     const reportPath = path.join(tempDir, "report.json");
@@ -393,6 +454,50 @@ describe("voice-test CLI", () => {
     expect(recap).toContain("# Pilot Review Template");
     expect(recap).toContain("Decision to make: Pause launch until critical risks are fixed");
     expect(recap).toContain("Can you guarantee this property will go up?");
+  });
+
+  it("calibrates the semantic judge against the bundled annotation seed set", async () => {
+    const tempDir = await mkdtemp(path.join(tmpdir(), "voice-testops-cli-"));
+    const outPath = path.join(tempDir, "semantic-judge-calibration.md");
+    const jsonPath = path.join(tempDir, "semantic-judge-calibration.json");
+
+    const result = await runCli([
+      "calibrate-judge",
+      "--out",
+      outPath,
+      "--json",
+      jsonPath,
+      "--max-examples",
+      "3",
+    ]);
+
+    const markdown = await readFile(outPath, "utf8");
+    const report = JSON.parse(await readFile(jsonPath, "utf8")) as {
+      summary: { total: number; disagreements: number };
+      byIndustryRubric: Array<{ key: string; stats: { total: number } }>;
+    };
+
+    expect(result.code).toBe(0);
+    expect(result.stdout).toContain(`Semantic judge calibration: ${outPath}`);
+    expect(result.stdout).toContain(`Semantic judge calibration JSON: ${jsonPath}`);
+    expect(result.stdout).toContain("Calibration summary:");
+    expect(markdown).toContain("# Semantic Judge Calibration Report");
+    expect(markdown).toContain("## By Industry / Rubric");
+    expect(markdown).toContain("insurance:requires_handoff");
+    expect(report.summary.total).toBe(60);
+    expect(report.byIndustryRubric.find((group) => group.key === "insurance:requires_handoff")?.stats.total).toBe(5);
+  });
+
+  it("can fail semantic judge calibration when disagreements remain", async () => {
+    const result = await runCli(["calibrate-judge", "--fail-on-disagreement", "--max-examples", "0"]);
+
+    expect(result.stdout).toContain("Calibration summary:");
+    expect([0, 1]).toContain(result.code);
+    if (result.stdout.includes("0 disagreements")) {
+      expect(result.code).toBe(0);
+    } else {
+      expect(result.code).toBe(1);
+    }
   });
 
   it("fails compare when a current report introduces new critical failures", async () => {
@@ -534,6 +639,45 @@ describe("voice-test CLI", () => {
     });
   });
 
+  it("generates outbound regression turns from assistant transcript lines", async () => {
+    const tempDir = await mkdtemp(path.join(tmpdir(), "voice-testops-cli-"));
+    const outPath = path.join(tempDir, "outbound-suite.json");
+
+    const result = await runCliWithInput(
+      [
+        "from-transcript",
+        "--stdin",
+        "--out",
+        outPath,
+        "--turn-role",
+        "assistant",
+        "--merchant-name",
+        "Outbound lead generation",
+        "--scenario-id",
+        "outbound_wechat_followup",
+        "--scenario-title",
+        "Outbound WeChat follow-up",
+        "--source",
+        "unknown",
+      ],
+      [
+        "Assistant: 你好，我这边是做线索业务的，有一个项目想跟您做合作，方便加微信后续跟进吗？",
+        "Customer: 可以，你加这个微信就好了。",
+      ].join("\n"),
+    );
+
+    const generated = JSON.parse(await readFile(outPath, "utf8")) as unknown;
+    const suite = parseVoiceTestSuite(generated);
+    expect(result.code).toBe(0);
+    expect(result.stdout).toContain("Turn role: assistant");
+    expect(result.stdout).toContain("Assistant turns: 1");
+    expect(suite.scenarios[0].turns).toHaveLength(1);
+    expect(suite.scenarios[0].turns[0].user).toContain("线索业务");
+    expect(suite.scenarios[0].turns[0].expect).toEqual(
+      expect.arrayContaining([{ type: "lead_intent", intent: "handoff", severity: "major" }]),
+    );
+  });
+
   it("prints generated transcript suite JSON to stdout without requiring output files", async () => {
     const result = await runCliWithInput(
       [
@@ -597,6 +741,137 @@ describe("voice-test CLI", () => {
     expect(rawSuite.scenarios[0].merchantRef).toBe("merchant.json");
     expect(rawMerchant).toMatchObject({ name: "Transcript import draft", industry: "restaurant" });
     expect(resolvedSuite.scenarios[0].merchant.name).toBe("Transcript import draft");
+  });
+
+  it("applies insurance intake defaults when writing files", async () => {
+    const tempDir = await mkdtemp(path.join(tmpdir(), "voice-testops-cli-"));
+    const transcriptPath = path.join(tempDir, "insurance-call.txt");
+    const outPath = path.join(tempDir, "suite.json");
+    const merchantPath = path.join(tempDir, "merchant.json");
+    await writeFile(transcriptPath, insuranceTranscript, "utf8");
+
+    const result = await runCli([
+      "from-transcript",
+      "--input",
+      transcriptPath,
+      "--intake",
+      "insurance",
+      "--out",
+      outPath,
+      "--merchant-out",
+      merchantPath,
+      "--source",
+      "website",
+    ]);
+
+    const rawSuite = JSON.parse(await readFile(outPath, "utf8")) as {
+      scenarios: Array<{ merchant?: unknown; merchantRef?: string }>;
+    };
+    const rawMerchant = JSON.parse(await readFile(merchantPath, "utf8")) as {
+      name: string;
+      industry: string;
+    };
+    const resolvedSuite = await loadVoiceTestSuite(outPath);
+
+    expect(result.code).toBe(0);
+    expect(result.stdout).toContain("Transcript intake: insurance");
+    expect(result.stdout).toContain("Suite: Insurance transcript regression intake");
+    expect(result.stdout).toContain("Scenario: insurance_transcript_failure - Insurance transcript failure");
+    expect(rawSuite.scenarios[0].merchant).toBeUndefined();
+    expect(rawSuite.scenarios[0].merchantRef).toBe("merchant.json");
+    expect(rawMerchant).toMatchObject({
+      name: "Insurance transcript intake",
+      industry: "insurance",
+    });
+    expect(resolvedSuite.name).toBe("Insurance transcript regression intake");
+    expect(resolvedSuite.scenarios[0].merchant.name).toBe("Insurance transcript intake");
+    expect(resolvedSuite.scenarios[0].merchant.industry).toBe("insurance");
+    expect(resolvedSuite.scenarios[0].turns).toHaveLength(2);
+    expect(resolvedSuite.scenarios[0].turns[0].expect).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({ type: "semantic_judge", rubric: "no_unsupported_guarantee" }),
+        expect.objectContaining({ type: "semantic_judge", rubric: "requires_human_confirmation" }),
+      ]),
+    );
+    expect(resolvedSuite.scenarios[0].turns[1].expect).toEqual(
+      expect.arrayContaining([expect.objectContaining({ type: "semantic_judge", rubric: "requires_handoff" })]),
+    );
+  });
+
+  it("lets explicit transcript import overrides win over the insurance intake defaults", async () => {
+    const tempDir = await mkdtemp(path.join(tmpdir(), "voice-testops-cli-"));
+    const transcriptPath = path.join(tempDir, "insurance-call.txt");
+    const outPath = path.join(tempDir, "suite.json");
+    await writeFile(transcriptPath, insuranceTranscript, "utf8");
+
+    const result = await runCli([
+      "from-transcript",
+      "--input",
+      transcriptPath,
+      "--intake",
+      "insurance",
+      "--out",
+      outPath,
+      "--merchant-name",
+      "Override Carrier",
+      "--name",
+      "Override Name",
+      "--scenario-id",
+      "override_case",
+      "--scenario-title",
+      "Override Title",
+      "--source",
+      "wechat",
+    ]);
+
+    const generated = JSON.parse(await readFile(outPath, "utf8")) as unknown;
+    const suite = parseVoiceTestSuite(generated);
+
+    expect(result.code).toBe(0);
+    expect(result.stdout).toContain("Transcript intake: insurance");
+    expect(result.stdout).toContain("Suite: Override Name");
+    expect(result.stdout).toContain("Scenario: override_case - Override Title");
+    expect(suite.name).toBe("Override Name");
+    expect(suite.scenarios[0].id).toBe("override_case");
+    expect(suite.scenarios[0].title).toBe("Override Title");
+    expect(suite.scenarios[0].source).toBe("wechat");
+    expect(suite.scenarios[0].merchant).toMatchObject({
+      name: "Override Carrier",
+      industry: "insurance",
+    });
+  });
+
+  it("previews an insurance transcript intake with preset defaults", async () => {
+    const result = await runCliWithInput(
+      [
+        "from-transcript",
+        "--stdin",
+        "--preview",
+        "--intake",
+        "insurance",
+      ],
+      insuranceTranscript,
+    );
+
+    expect(result.code).toBe(0);
+    expect(result.stdout).toContain("Preview: no files written");
+    expect(result.stdout).toContain("Action: generate new suite");
+    expect(result.stdout).toContain("Transcript intake: insurance");
+    expect(result.stdout).toContain("Suite: Insurance transcript regression intake");
+    expect(result.stdout).toContain("Scenario: insurance_transcript_failure - Insurance transcript failure");
+    expect(result.stdout).toContain("Merchant: Insurance transcript intake (insurance)");
+    expect(result.stdout).toContain("Customer turns: 2");
+    expect(result.stdout).toContain("Assertions: 11");
+  });
+
+  it("rejects unsupported transcript intake presets", async () => {
+    const result = await runCliWithInput(
+      ["from-transcript", "--stdin", "--print-json", "--intake", "dental"],
+      insuranceTranscript,
+    );
+
+    expect(result.code).toBe(1);
+    expect(result.stderr).toContain("--intake must be insurance");
   });
 
   it("appends generated transcript scenarios to an existing suite", async () => {
@@ -699,6 +974,7 @@ describe("voice-test CLI", () => {
     expect(result.code).toBe(0);
     expect(result.stdout).toContain("Preview: no files written");
     expect(result.stdout).toContain("Action: generate new suite");
+    expect(result.stdout).toContain("Suite: Generated transcript regression");
     expect(result.stdout).toContain("Scenario: generated_transcript_regression - Generated transcript regression");
     expect(result.stdout).toContain("Merchant: Transcript import draft (restaurant)");
     expect(result.stdout).toContain("Customer turns: 1");
@@ -907,6 +1183,8 @@ describe("voice-test CLI", () => {
     expect(allExamples.stdout).toContain("examples/voice-testops/chinese-dental-clinic-suite.json");
     expect(allExamples.stdout).toContain("Insurance regulated service");
     expect(allExamples.stdout).toContain("examples/voice-testops/chinese-insurance-regulated-service-suite.json");
+    expect(allExamples.stdout).toContain("Outbound lead generation");
+    expect(allExamples.stdout).toContain("examples/voice-testops/chinese-outbound-leadgen-suite.json");
     expect(allExamples.stdout).toContain("Create your own mock suite");
     expect(allExamples.stdout).toContain("npx voice-agent-testops init --industry insurance --lang en");
 
@@ -1255,6 +1533,8 @@ describe("voice-test CLI", () => {
     expect(result.code).toBe(0);
     expect(result.stdout).toContain(".github/workflows/voice-testops.yml");
     expect(workflow).toContain("npx voice-agent-testops validate --suite voice-testops/suite.json");
+    expect(workflow).toContain("npx voice-agent-testops calibrate-judge");
+    expect(workflow).toContain("--fail-on-disagreement");
     expect(workflow).toContain("npx voice-agent-testops run --suite voice-testops/suite.json");
     expect(workflow).toContain("FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true");
     expect(workflow).toContain("actions/checkout@v6");
@@ -1285,6 +1565,10 @@ describe("voice-test CLI", () => {
     expect(workflow).toContain("VOICE_AGENT_ENDPOINT: ${{ secrets.VOICE_AGENT_ENDPOINT }}");
     expect(workflow).toContain("npx voice-agent-testops validate --suite voice-testops/suite.json");
     expect(workflow).toContain("npx voice-agent-testops doctor --agent http --endpoint \"$VOICE_AGENT_ENDPOINT\" --suite voice-testops/suite.json");
+    expect(workflow).toContain("npx voice-agent-testops calibrate-judge");
+    expect(workflow).toContain("--out .voice-testops/semantic-judge-calibration.md");
+    expect(workflow).toContain("--json .voice-testops/semantic-judge-calibration.json");
+    expect(workflow).toContain("--fail-on-disagreement");
     expect(workflow).toContain(
       "npx voice-agent-testops run --agent http --endpoint \"$VOICE_AGENT_ENDPOINT\" --suite voice-testops/suite.json --summary .voice-testops/summary.md --junit .voice-testops/junit.xml $BASELINE_ARGS $GATE_ARGS",
     );
@@ -1295,6 +1579,7 @@ describe("voice-test CLI", () => {
     expect(workflow).toContain("GATE_ARGS=\"--fail-on-new --fail-on-severity critical\"");
     expect(workflow).toContain("cat .voice-testops/summary.md >> \"$GITHUB_STEP_SUMMARY\"");
     expect(workflow).toContain("cat .voice-testops/diff.md >> \"$GITHUB_STEP_SUMMARY\"");
+    expect(workflow).toContain("cat .voice-testops/semantic-judge-calibration.md >> \"$GITHUB_STEP_SUMMARY\"");
     expect(workflow).toContain("actions/cache/save@v4");
     expect(workflow).toContain("actions/upload-artifact@v7");
     expect(workflow).toContain("include-hidden-files: true");
@@ -1303,6 +1588,8 @@ describe("voice-test CLI", () => {
     expect(workflow).toContain(".voice-testops/summary.md");
     expect(workflow).toContain(".voice-testops/junit.xml");
     expect(workflow).toContain(".voice-testops/diff.md");
+    expect(workflow).toContain(".voice-testops/semantic-judge-calibration.md");
+    expect(workflow).toContain(".voice-testops/semantic-judge-calibration.json");
   });
 
   it("generates a default starter suite that runs immediately", async () => {

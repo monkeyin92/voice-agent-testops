@@ -9,6 +9,7 @@ type PackageJson = {
   keywords?: string[];
   license?: string;
   repository?: { type: string; url: string };
+  scripts?: Record<string, string>;
 };
 
 describe("package metadata", () => {
@@ -40,6 +41,7 @@ describe("package metadata", () => {
     expect(packageJson.dependencies).not.toHaveProperty("next");
     expect(packageJson.dependencies).not.toHaveProperty("react");
     expect(packageJson.dependencies).not.toHaveProperty("@prisma/client");
+    expect(packageJson.scripts?.["judge:calibrate"]).toContain("calibrate-judge");
     expect(lockRoot.packages[""].dependencies).toHaveProperty("tsx");
     expect(lockRoot.packages[""].dependencies).toHaveProperty("zod");
     expect(lockRoot.packages[""].dependencies).not.toHaveProperty("next");

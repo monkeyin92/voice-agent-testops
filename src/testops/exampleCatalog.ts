@@ -148,6 +148,14 @@ export const exampleCatalog: ExampleCatalogEntry[] = [
     path: "examples/voice-testops/english-insurance-regulated-service-suite.json",
     risks: "identity verification, claim status, coverage eligibility, licensed-agent handoff",
   },
+  {
+    title: "Outbound lead-generation guardrails",
+    industry: "outbound_leadgen",
+    industryLabel: "Outbound lead generation",
+    language: "zh-CN",
+    path: "examples/voice-testops/chinese-outbound-leadgen-suite.json",
+    risks: "客户拒绝、无微信渠道、赠品承诺、年龄和孩子信息确认",
+  },
 ];
 
 export function parseExampleLanguage(value: string): ExampleLanguage {

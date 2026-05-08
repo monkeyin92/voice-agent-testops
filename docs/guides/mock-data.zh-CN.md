@@ -31,6 +31,7 @@ npx voice-agent-testops run --suite voice-testops/suite.json
 ```bash
 npx voice-agent-testops list --lang zh-CN
 npx voice-agent-testops list --industry restaurant
+npx voice-agent-testops list --industry outbound_leadgen
 ```
 
 ## 商业 starter 优先级
@@ -40,6 +41,7 @@ npx voice-agent-testops list --industry restaurant
 - 房产经纪 / 租售顾问：重点覆盖收益承诺、房源状态、政策边界、学区承诺、看房留资和真人经纪人转接。
 - 牙科 / 诊所预约：重点覆盖疗效承诺、医生排班、症状分诊边界、预约留资、紧急症状和退费投诉转人工。
 - 家装 / 家居服务：重点覆盖电话报价边界、工期承诺、上门量房、预算地址时间收集、材料环保承诺和售后投诉。
+- 外呼线索运营：重点覆盖客户拒绝、无微信渠道、赠品承诺、年龄和孩子信息确认、退订或人工处理。
 - 保险 / 监管服务：重点覆盖身份核验、理赔状态、coverage/eligibility 边界、地址变更、投诉升级和持牌顾问转接。
 
 摄影写真和餐厅订位继续适合作为轻量 demo。金融贷款、外卖配送等行业先暂缓：前者比保险客服更依赖强监管牌照和授信决策，后者更依赖订单、配送和退款等实时业务状态。
@@ -126,6 +128,17 @@ npx voice-agent-testops list --industry restaurant
 - 共 60 条原创中文样本，每个行业 15 条
 - 每个行业都覆盖 `no_unsupported_guarantee`、`requires_human_confirmation`、`requires_handoff`
 
+跑校准报告：
+
+```bash
+npx voice-agent-testops calibrate-judge \
+  --seed examples/voice-testops/annotations/semantic-judge-seed.zh-CN.json \
+  --out .voice-testops/semantic-judge-calibration.md \
+  --json .voice-testops/semantic-judge-calibration.json
+```
+
+`semantic-judge-calibration.md` 会按 industry、rubric、industry/rubric 汇总一致率、judge pass/fail 分布和误判样例。CI 或发布前可以加 `--fail-on-disagreement`，确保新版 judge 不会在这 60 条最小校准集上静默倒退。
+
 新增行业样本前，先看 `docs/growth/semantic-judge-annotation-sources.zh-CN.md`。公开数据集可以帮助设计标签、intent、slot 和 reason 字段，但商业 starter 不直接复制公开语料；真正可卖的部分是行业风险口径、客户事实表、人工复核和回归阻断流程。
 
 ## 把真实通话变成 suite
@@ -181,6 +194,19 @@ npx voice-agent-testops from-transcript \
   --source website
 ```
 
+如果是保险 transcript，可以用 `--intake insurance`，让命令自动补齐保险场景的商家和 suite 默认值；只有在需要自定义名字或 scenario id 时再手动覆盖。
+
+如果是电销、外呼或线索合作录音，先脱敏录音 URL 和文件名，再从坐席侧生成 turns：
+
+```bash
+pbpaste | npx voice-agent-testops from-transcript \
+  --stdin \
+  --turn-role assistant \
+  --out voice-testops/outbound-suite.json \
+  --merchant-name "Outbound lead generation" \
+  --scenario-id "outbound_wechat_followup"
+```
+
 如果要把真实失败逐步沉淀成回归库，可以把新通话追加成另一个 scenario：
 
 ```bash
@@ -197,7 +223,7 @@ pbpaste | npx voice-agent-testops from-transcript \
 
 确认预览后，把追加命令里的 `--preview` 去掉，就会真正更新 suite。
 
-这个生成器是确定性的，不调用 LLM。它会提取客户轮次；如果你还没有商家 JSON，它会先推断一份商家资料草稿；然后自动加上可审核的断言：乱承诺、价格事实、留资字段、转人工意图和响应延迟。生成结果只是第一稿，真正放进 CI 之前，应该围绕那次失败的根因把断言收紧。
+这个生成器是确定性的，不调用 LLM。它默认提取客户轮次，也可以用 `--turn-role assistant` 提取坐席轮次；如果你还没有商家 JSON，它会先推断一份商家资料草稿；然后自动加上可审核的断言：乱承诺、价格事实、留资字段、转人工意图和响应延迟。生成结果只是第一稿，真正放进 CI 之前，应该围绕那次失败的根因把断言收紧。
 
 如果已经有审核过的商家事实，可以加 `--merchant examples/voice-testops/merchants/guangying-photo.json`，这样价格和服务断言会直接引用可信资料。
 
