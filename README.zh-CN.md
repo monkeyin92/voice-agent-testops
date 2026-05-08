@@ -91,6 +91,7 @@ npm run report:export
 | 家装/家居服务 | [chinese-home-design-suite.json](examples/voice-testops/chinese-home-design-suite.json) | 暂未提供 | 报价边界、上门量房、预算地址时间收集、售后转人工 |
 | 保险/监管服务 | [chinese-insurance-regulated-service-suite.json](examples/voice-testops/chinese-insurance-regulated-service-suite.json) | [english-insurance-regulated-service-suite.json](examples/voice-testops/english-insurance-regulated-service-suite.json) | 身份核验、理赔状态、coverage/eligibility、持牌顾问转接 |
 | 餐厅订位 | [chinese-restaurant-booking-suite.json](examples/voice-testops/chinese-restaurant-booking-suite.json) | [english-restaurant-booking-suite.json](examples/voice-testops/english-restaurant-booking-suite.json) | 未确认桌态、低消编造、订位信息 |
+| 外呼线索跟进 demo | [chinese-outbound-leadgen-suite.json](examples/voice-testops/chinese-outbound-leadgen-suite.json) | 暂未提供 | 来源说明、勿扰偏好、价格边界、档期确认、留资摘要 |
 
 也可以在终端里直接浏览：
 
@@ -236,6 +237,29 @@ pbpaste | npx voice-agent-testops from-transcript \
   --source website
 ```
 
+如果是保险类失败，可以直接加 `--intake insurance`，让 preset 自动补上商家名、suite 名、scenario id 和 scenario title；只有在需要覆盖时才手动传这些参数。
+
+保险快捷命令：
+
+```bash
+pbpaste | npx voice-agent-testops from-transcript \
+  --stdin \
+  --intake insurance \
+  --out voice-testops/insurance-suite.json \
+  --merchant-out voice-testops/insurance-merchant.json
+```
+
+如果是电销、外呼或线索合作录音，风险句经常在坐席侧。先把录音 URL 和文件名里的手机号等信息脱敏，再用 `--turn-role assistant` 从坐席侧生成 turns：
+
+```bash
+pbpaste | npx voice-agent-testops from-transcript \
+  --stdin \
+  --turn-role assistant \
+  --out voice-testops/outbound-suite.json \
+  --merchant-name "Outbound lead generation" \
+  --scenario-id "outbound_wechat_followup"
+```
+
 如果你想把生成结果交给脚本处理，而不是马上写文件，可以直接打印干净的 JSON：
 
 ```bash
@@ -274,7 +298,7 @@ pbpaste | npx voice-agent-testops from-transcript \
 
 确认预览后，把追加命令里的 `--preview` 去掉，就会真正修改 suite。
 
-这个生成器不调用 LLM，只做确定性规则提取：客户轮次、商家资料草稿、乱承诺拦截、价格事实、留资字段、转人工意图和延迟断言。生成结果应该先人工检查，再把 suite 放进 CI 作为上线门禁。
+这个生成器不调用 LLM，只做确定性规则提取：默认提取客户轮次，也可以用 `--turn-role assistant` 提取坐席轮次；同时生成商家资料草稿、乱承诺拦截、价格事实、留资字段、转人工意图和延迟断言。生成结果应该先人工检查，再把 suite 放进 CI 作为上线门禁。
 
 如果你已经有审核过的商家事实 JSON，可以再加 `--merchant examples/voice-testops/merchants/guangying-photo.json`。这样生成出来的价格和服务断言会更贴近真实业务。
 
@@ -307,6 +331,30 @@ npx voice-agent-testops import-calls \
 ```
 
 `call-sample.json` 是给自动化流程用的抽样 manifest。`call-sampling.md` 是给每周人工复核看的摘要。`call-transcripts` 里会生成带 `Customer:` / `Assistant:` 标签的文本文件，后续可以直接交给 `from-transcript` 变成 regression 草稿。加上 `--risk-only` 后，只抽带风险标签的通话，例如转人工请求、询价、客户留资、违规承诺或长对话。
+
+## 录音 Intake Triage
+
+如果拿到的是一批原始录音链接，先把私有 manifest 跑一遍 triage，再挑 3-5 条高价值样本去转写：
+
+```bash
+npx voice-agent-testops recording-intake \
+  --input .voice-testops/recordings/recording-intake.csv \
+  --summary .voice-testops/recordings/intake-summary.md
+```
+
+报告会汇总 `keep` / `maybe` / `discard`、`business_type`、`risk_tag`、`quality`、`turn_role_hint`，并列出可进入下一步的 `regression_candidate=yes` 样本。`audio_url_private` 不会写进 summary；真实 URL、缺字段、非法枚举和授权/质量冲突会作为问题行标出。
+
+## 校准 Semantic Judge
+
+公开 seed 可以直接跑回本地 judge，生成按 industry/rubric 汇总的一致性报告：
+
+```bash
+npx voice-agent-testops calibrate-judge \
+  --out .voice-testops/semantic-judge-calibration.md \
+  --json .voice-testops/semantic-judge-calibration.json
+```
+
+如果要把它放进发布门禁，追加 `--fail-on-disagreement`。
 
 ## 生成试点交付物
 
@@ -367,6 +415,15 @@ npx voice-agent-testops init \
 
 在仓库设置里添加名为 `VOICE_AGENT_ENDPOINT` 的 GitHub Secret，值指向你的 test-turn bridge。生成的 workflow 会先 validate suite，再用 `doctor --agent http --suite voice-testops/suite.json` 检查合同，然后用 CI 友好的产物跑回归：
 
+它也会把 semantic judge seed 校准作为发布门禁：
+
+```bash
+npx voice-agent-testops calibrate-judge \
+  --out .voice-testops/semantic-judge-calibration.md \
+  --json .voice-testops/semantic-judge-calibration.json \
+  --fail-on-disagreement
+```
+
 ```bash
 npx voice-agent-testops run \
   --agent http \
@@ -399,7 +456,7 @@ npx voice-agent-testops compare \
   --fail-on-severity critical
 ```
 
-生成的 workflow 会把最新 push 的 `.voice-testops/report.json` 缓存在 `.voice-testops-baseline/report.json`。首轮没有 baseline 时，它仍阻断当前 critical 失败；后续有 baseline 时会切到 `--fail-on-new --fail-on-severity critical`，只在新增 critical 风险出现时失败。新增 minor/major 漂移仍会写入 `.voice-testops/diff.md`，但不会挡发布。diff 会列出新增、已修复和仍存在的风险，并把 `.voice-testops/summary.md` 和 `.voice-testops/diff.md` 一起追加到 `GITHUB_STEP_SUMMARY`；同时通过 `actions/upload-artifact` 上传 `.voice-testops/report.json`、`.voice-testops/report.html`、`.voice-testops/summary.md`、`.voice-testops/junit.xml` 和 `.voice-testops/diff.md`。
+生成的 workflow 会把最新 push 的 `.voice-testops/report.json` 缓存在 `.voice-testops-baseline/report.json`。首轮没有 baseline 时，它仍阻断当前 critical 失败；后续有 baseline 时会切到 `--fail-on-new --fail-on-severity critical`，只在新增 critical 风险出现时失败。新增 minor/major 漂移仍会写入 `.voice-testops/diff.md`，但不会挡发布。diff 会列出新增、已修复和仍存在的风险，并把 `.voice-testops/summary.md`、`.voice-testops/diff.md` 和 `.voice-testops/semantic-judge-calibration.md` 一起追加到 `GITHUB_STEP_SUMMARY`；同时通过 `actions/upload-artifact` 上传 `.voice-testops/report.json`、`.voice-testops/report.html`、`.voice-testops/summary.md`、`.voice-testops/junit.xml`、`.voice-testops/diff.md`、`.voice-testops/semantic-judge-calibration.md` 和 `.voice-testops/semantic-judge-calibration.json`。
 
 CI 里可以用 `--fail-on-severity critical` 只阻断高危失败。这样轻微文案漂移会留在报告里，但不会和乱报价、漏手机号、错误转人工这类上线事故混在一起。
 
@@ -430,9 +487,12 @@ npm audit --audit-level=high
 - [商业化护城河路线图](docs/roadmap/2026-05-07-commercial-moat-roadmap.zh-CN.md)
 - [外部试点跟进记录](docs/growth/2026-05-07-outreach-followup.md)
 - [Kevin Hu 公开样本 dry run](docs/growth/2026-05-07-kev-hu-public-sample-dry-run.md)
+- [公开外呼线索 demo report](docs/growth/2026-05-08-public-outbound-leadgen-demo-report.md)
 - [外部试点就绪复盘](docs/ops/external-pilot-readiness-review.zh-CN.md)
 - [外部试点 Runbook](docs/ops/external-pilot-runbook.zh-CN.md)
 - [试点数据脱敏和授权模板](docs/ops/pilot-data-sanitization-authorization.zh-CN.md)
+- [录音资源 intake runbook](docs/ops/recording-resource-intake.zh-CN.md)
+- [Insurance transcript intake pack](docs/ops/insurance-transcript-intake.md)
 - [外部试跑记录表](docs/ops/external-pilot-tracker.zh-CN.md)
 - [第一个真实试点复盘模板](docs/ops/first-real-pilot-recap.zh-CN.md)
 - [Mock 数据指南](docs/guides/mock-data.zh-CN.md)

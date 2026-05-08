@@ -20,6 +20,7 @@ const exampleSuites = [
   "examples/voice-testops/english-insurance-regulated-service-suite.json",
   "examples/voice-testops/generated-transcript-suite.json",
   "examples/voice-testops/photo-studio-multiturn-suite.json",
+  "examples/voice-testops/chinese-outbound-leadgen-suite.json",
   "examples/voice-testops/failing-demo-suite.json",
 ];
 
@@ -113,6 +114,16 @@ describe("voice-testops example suites", () => {
         industry: "insurance",
         language: "zh-CN",
         path: "examples/voice-testops/chinese-insurance-regulated-service-suite.json",
+      }),
+    );
+  });
+
+  it("lists the outbound leadgen demo suite", () => {
+    expect(exampleCatalog).toContainEqual(
+      expect.objectContaining({
+        industry: "photography",
+        language: "zh-CN",
+        path: "examples/voice-testops/chinese-outbound-leadgen-suite.json",
       }),
     );
   });

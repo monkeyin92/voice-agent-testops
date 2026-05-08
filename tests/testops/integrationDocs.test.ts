@@ -118,6 +118,8 @@ describe("integration documentation", () => {
     expect(readme).toContain("--append");
     expect(readme).toContain("--merchant-out voice-testops/merchant.json");
     expect(readme).toContain("--merchant-name \"Lumen Portrait Studio\"");
+    expect(readme).toContain("--intake insurance");
+    expect(readme).toContain("--turn-role assistant");
     expect(readme).toContain("--print-json");
     expect(readme).toContain("jq '.scenarios[0].turns | length'");
     expect(chineseReadme).toContain("把真实失败对话变成回归测试");
@@ -140,14 +142,20 @@ describe("integration documentation", () => {
     expect(chineseReadme).toContain("--append");
     expect(chineseReadme).toContain("--merchant-out voice-testops/merchant.json");
     expect(chineseReadme).toContain("--merchant-name \"光影写真馆\"");
+    expect(chineseReadme).toContain("--intake insurance");
+    expect(chineseReadme).toContain("--turn-role assistant");
     expect(chineseReadme).toContain("--print-json");
     expect(chineseReadme).toContain("jq '.scenarios[0].turns | length'");
     expect(mockDataGuide).toContain("--print-json");
     expect(mockDataGuide).toContain("voice-testops/generated-suite.json");
+    expect(mockDataGuide).toContain("--intake insurance");
+    expect(mockDataGuide).toContain("--turn-role assistant");
+    expect(chineseMockDataGuide).toContain("--turn-role assistant");
     expect(mockDataGuide).toContain("draft-regressions");
     expect(mockDataGuide).toContain("import-calls");
     expect(chineseMockDataGuide).toContain("--print-json");
     expect(chineseMockDataGuide).toContain("voice-testops/generated-suite.json");
+    expect(chineseMockDataGuide).toContain("--intake insurance");
     expect(chineseMockDataGuide).toContain("draft-regressions");
     expect(chineseMockDataGuide).toContain("import-calls");
   });
@@ -233,9 +241,12 @@ describe("integration documentation", () => {
     expect(readme).toContain("GitHub Secret");
     expect(readme).toContain("VOICE_AGENT_ENDPOINT");
     expect(readme).toContain("doctor --agent http");
+    expect(readme).toContain("calibrate-judge");
+    expect(readme).toContain("--fail-on-disagreement");
     expect(readme).toContain("actions/upload-artifact");
     expect(readme).toContain("--summary .voice-testops/summary.md");
     expect(readme).toContain("--junit .voice-testops/junit.xml");
+    expect(readme).toContain(".voice-testops/semantic-judge-calibration.md");
     expect(readme).toContain("--baseline .voice-testops-baseline/report.json");
     expect(readme).toContain("--diff-markdown .voice-testops/diff.md");
     expect(readme).toContain("--fail-on-new");
@@ -246,9 +257,12 @@ describe("integration documentation", () => {
     expect(chineseReadme).toContain("GitHub Secret");
     expect(chineseReadme).toContain("VOICE_AGENT_ENDPOINT");
     expect(chineseReadme).toContain("doctor --agent http");
+    expect(chineseReadme).toContain("calibrate-judge");
+    expect(chineseReadme).toContain("--fail-on-disagreement");
     expect(chineseReadme).toContain("actions/upload-artifact");
     expect(chineseReadme).toContain("--summary .voice-testops/summary.md");
     expect(chineseReadme).toContain("--junit .voice-testops/junit.xml");
+    expect(chineseReadme).toContain(".voice-testops/semantic-judge-calibration.md");
     expect(chineseReadme).toContain("--baseline .voice-testops-baseline/report.json");
     expect(chineseReadme).toContain("--diff-markdown .voice-testops/diff.md");
     expect(chineseReadme).toContain("--fail-on-new");
@@ -354,6 +368,35 @@ describe("integration documentation", () => {
     }
   });
 
+  it("documents the public outbound leadgen demo report", () => {
+    const reportPath = "docs/growth/2026-05-08-public-outbound-leadgen-demo-report.md";
+    const suitePath = "examples/voice-testops/chinese-outbound-leadgen-suite.json";
+    const readme = readFileSync("README.md", "utf8");
+    const chineseReadme = readFileSync("README.zh-CN.md", "utf8");
+
+    expect(existsSync(reportPath)).toBe(true);
+    expect(existsSync(suitePath)).toBe(true);
+    expect(readme).toContain(`[Public outbound leadgen demo report](${reportPath})`);
+    expect(chineseReadme).toContain(`[公开外呼线索 demo report](${reportPath})`);
+    expect(readme).toContain(`[chinese-outbound-leadgen-suite.json](${suitePath})`);
+    expect(chineseReadme).toContain(`[chinese-outbound-leadgen-suite.json](${suitePath})`);
+
+    const report = readFileSync(reportPath, "utf8");
+    for (const phrase of [
+      "public demo run",
+      "real HTTP outbound leadgen agent",
+      "Overall result: **passed**",
+      "Scenarios | 5",
+      "Assertions | 25",
+      "Failures | 0",
+      "Source disclosure and opt-out handling",
+      "WeChat follow-up",
+      "not a benchmark of any live telephony system",
+    ]) {
+      expect(report).toContain(phrase);
+    }
+  });
+
   it("documents the external pilot runbook", () => {
     const runbookPath = "docs/ops/external-pilot-runbook.zh-CN.md";
     const readme = readFileSync("README.md", "utf8");
@@ -417,6 +460,89 @@ describe("integration documentation", () => {
     ]) {
       expect(template).toContain(phrase);
     }
+  });
+
+  it("documents the insurance transcript intake pack", () => {
+    const intakePath = "docs/ops/insurance-transcript-intake.md";
+    const readme = readFileSync("README.md", "utf8");
+    const chineseReadme = readFileSync("README.zh-CN.md", "utf8");
+    const runbook = readFileSync("docs/ops/external-pilot-runbook.zh-CN.md", "utf8");
+    const sanitizationTemplate = readFileSync("docs/ops/pilot-data-sanitization-authorization.zh-CN.md", "utf8");
+    const followup = readFileSync("docs/growth/2026-05-07-outreach-followup.md", "utf8");
+
+    expect(existsSync(intakePath)).toBe(true);
+    expect(readme).toContain(`[Insurance transcript intake pack](${intakePath})`);
+    expect(chineseReadme).toContain(`[Insurance transcript intake pack](${intakePath})`);
+    expect(runbook).toContain(`[Insurance transcript intake pack](insurance-transcript-intake.md)`);
+    expect(sanitizationTemplate).toContain(`[Insurance transcript intake pack](insurance-transcript-intake.md)`);
+    expect(followup).toContain(`[Insurance transcript intake pack](../ops/insurance-transcript-intake.md)`);
+
+    const intake = readFileSync(intakePath, "utf8");
+    for (const phrase of [
+      "Insurance Transcript Intake Pack",
+      "Claim status before identity verification",
+      "Coverage or eligibility",
+      "Verification failed",
+      "licensed agent",
+      "[CUSTOMER_NAME]",
+      "[PHONE]",
+      "[POLICY_ID]",
+      "[CLAIM_ID]",
+      "Copy-Paste Transcript Template",
+      "Good Sanitized Example",
+      "Bad Example",
+      "What We Will Run",
+      "from-transcript",
+      "--intake insurance",
+      "draft-regressions",
+      "aggregate results only",
+      "do not quote raw transcript publicly",
+    ]) {
+      expect(intake).toContain(phrase);
+    }
+  });
+
+  it("documents the recording resource intake runbook", () => {
+    const intakePath = "docs/ops/recording-resource-intake.zh-CN.md";
+    const templatePath = "examples/voice-testops/recording-intake-template.csv";
+    const readme = readFileSync("README.md", "utf8");
+    const chineseReadme = readFileSync("README.zh-CN.md", "utf8");
+    const runbook = readFileSync("docs/ops/external-pilot-runbook.zh-CN.md", "utf8");
+    const sanitizationTemplate = readFileSync("docs/ops/pilot-data-sanitization-authorization.zh-CN.md", "utf8");
+
+    expect(existsSync(intakePath)).toBe(true);
+    expect(existsSync(templatePath)).toBe(true);
+    expect(readme).toContain(`[Recording resource intake runbook](${intakePath})`);
+    expect(chineseReadme).toContain(`[录音资源 intake runbook](${intakePath})`);
+    expect(runbook).toContain(`[录音资源 Intake Runbook](recording-resource-intake.zh-CN.md)`);
+    expect(sanitizationTemplate).toContain(`[录音资源 Intake Runbook](recording-resource-intake.zh-CN.md)`);
+
+    const intake = readFileSync(intakePath, "utf8");
+    for (const phrase of [
+      "Voice Agent TestOps 录音资源 Intake Runbook",
+      "recording-intake-template.csv",
+      "audio_url_private",
+      "business_type",
+      "turn_role_hint",
+      "regression_candidate",
+      "keep",
+      "maybe",
+      "discard",
+      "--turn-role assistant",
+      "--intake insurance",
+      "low_signal",
+      "asr_failure",
+      "不要把真实 URL、手机号文件名或 call id 复制到仓库文件",
+    ]) {
+      expect(intake).toContain(phrase);
+    }
+
+    const template = readFileSync(templatePath, "utf8");
+    expect(template).toContain("recording_id,audio_url_private,call_date,business_type");
+    expect(template).toContain("outbound_leadgen");
+    expect(template).toContain("insurance");
+    expect(template).toContain("low_signal");
+    expect(template).not.toContain("https://");
   });
 
   it("documents the external pilot tracking table", () => {
