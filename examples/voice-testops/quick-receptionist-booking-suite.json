@@ -1,0 +1,143 @@
+{
+  "name": "Quick receptionist booking pilot suite",
+  "description": "A 10-minute first-run suite for AI phone receptionists that collect bookings, confirm handoff, and avoid unsupported availability promises.",
+  "scenarios": [
+    {
+      "id": "receptionist_booking_availability_boundary",
+      "title": "Availability must be confirmed before booking",
+      "businessRisk": "Promising an unverified table, appointment, or slot creates customer disappointment and operational cleanup.",
+      "source": "unknown",
+      "merchant": {
+        "name": "Pilot Bistro",
+        "slug": "pilot-bistro",
+        "industry": "restaurant",
+        "address": "Pilot street",
+        "serviceArea": "Pilot city",
+        "businessHours": "11:00-22:00",
+        "contactPhone": "000000",
+        "packages": [
+          {
+            "name": "Dinner booking",
+            "priceRange": "Final spend confirmed by staff",
+            "includes": "Reservation request and human confirmation",
+            "bestFor": "Guests booking by phone"
+          }
+        ],
+        "faqs": [
+          {
+            "question": "Can a booking be confirmed automatically?",
+            "answer": "No. Availability and special requests require staff confirmation."
+          }
+        ],
+        "bookingRules": {
+          "requiresManualConfirm": true,
+          "requiredFields": ["phone", "preferredTime", "need"]
+        }
+      },
+      "turns": [
+        {
+          "user": "Can you book a table for six tonight at 7 and guarantee a window seat?",
+          "expect": [
+            { "type": "must_contain_any", "phrases": ["confirm", "staff", "human", "availability", "request"] },
+            {
+              "type": "must_not_match",
+              "pattern": "guaranteed window|definitely booked|confirmed for tonight|no need to confirm",
+              "severity": "critical"
+            },
+            {
+              "type": "semantic_judge",
+              "rubric": "requires_human_confirmation",
+              "criteria": "Table availability, party size, and special seating requests must be confirmed by staff.",
+              "severity": "critical"
+            },
+            { "type": "lead_intent", "intent": "availability", "severity": "major" },
+            { "type": "max_latency_ms", "value": 30000, "severity": "minor" }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "receptionist_booking_handoff",
+      "title": "Escalate when caller asks for a human",
+      "businessRisk": "A receptionist that refuses human escalation creates a bad support experience and missed bookings.",
+      "source": "unknown",
+      "merchant": {
+        "name": "Pilot Bistro",
+        "slug": "pilot-bistro",
+        "industry": "restaurant",
+        "address": "Pilot street",
+        "serviceArea": "Pilot city",
+        "businessHours": "11:00-22:00",
+        "contactPhone": "000000",
+        "packages": [
+          {
+            "name": "Dinner booking",
+            "priceRange": "Final spend confirmed by staff",
+            "includes": "Reservation request and human confirmation",
+            "bestFor": "Guests booking by phone"
+          }
+        ],
+        "faqs": [],
+        "bookingRules": {
+          "requiresManualConfirm": true,
+          "requiredFields": ["phone", "preferredTime", "need"]
+        }
+      },
+      "turns": [
+        {
+          "user": "I need to talk to a person about a private room and allergy requirements.",
+          "expect": [
+            { "type": "must_contain_any", "phrases": ["human", "staff", "person", "manager", "call back", "contact"] },
+            {
+              "type": "semantic_judge",
+              "rubric": "requires_handoff",
+              "criteria": "Private room and allergy requirements should route to a human or staff follow-up.",
+              "severity": "critical"
+            },
+            { "type": "lead_intent", "intent": "handoff", "severity": "major" },
+            { "type": "max_latency_ms", "value": 30000, "severity": "minor" }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "receptionist_booking_capture_fields",
+      "title": "Capture booking fields in summary",
+      "businessRisk": "A good spoken answer still fails if structured booking fields are missing for staff follow-up.",
+      "source": "unknown",
+      "merchant": {
+        "name": "Pilot Bistro",
+        "slug": "pilot-bistro",
+        "industry": "restaurant",
+        "address": "Pilot street",
+        "serviceArea": "Pilot city",
+        "businessHours": "11:00-22:00",
+        "contactPhone": "000000",
+        "packages": [
+          {
+            "name": "Dinner booking",
+            "priceRange": "Final spend confirmed by staff",
+            "includes": "Reservation request and human confirmation",
+            "bestFor": "Guests booking by phone"
+          }
+        ],
+        "faqs": [],
+        "bookingRules": {
+          "requiresManualConfirm": true,
+          "requiredFields": ["phone", "preferredTime", "need"]
+        }
+      },
+      "turns": [
+        {
+          "user": "My name is [CUSTOMER_NAME]. Please call [PHONE]. We need dinner for four tomorrow at 6:30.",
+          "expect": [
+            { "type": "must_contain_any", "phrases": ["dinner", "four", "tomorrow", "6:30", "call", "recorded"] },
+            { "type": "lead_field_present", "field": "need", "severity": "major" },
+            { "type": "lead_field_present", "field": "preferredTime", "severity": "major" },
+            { "type": "max_latency_ms", "value": 30000, "severity": "minor" }
+          ]
+        }
+      ]
+    }
+  ]
+}

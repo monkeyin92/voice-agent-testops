@@ -30,6 +30,23 @@
 |---|---|---|---|---|---|---|---|---|---:|---|---|---|---|---|---|---|---|---|---|---|
 |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |
 
+
+
+## 外联触达队列（未试跑）
+
+这些记录只表示已发出明确试跑邀请；未拿到 endpoint 或脱敏 transcript 前，不计入 `ran_once`。
+
+| 日期 | 对象 | 入口 | 行业 starter | 接入方式 | 数据授权 | 当前状态 | 下一步动作 |
+|---|---|---|---|---|---|---|---|
+| 2026-05-08 | Awaisali36 outbound real-estate Vapi agent | https://github.com/Awaisali36/Outbound-Real-State-Voice-AI-Agent-/issues/6 | real_estate / outbound_leadgen | Vapi / Transcript import | 未确认 | contacted | 2026-05-10 follow-up：endpoint 或 1 条脱敏 transcript |
+| 2026-05-08 | santmun Sofia voice agent | https://github.com/santmun/sofia-voice-agent/issues/2 | real_estate | Retell / Twilio / Transcript import | 未确认 | contacted | 2026-05-10 follow-up：endpoint 或 1 条脱敏 transcript |
+| 2026-05-08 | askjohngeorge Pipecat lead qualifier | https://github.com/askjohngeorge/pipecat-lead-qualifier/issues/1 | outbound_leadgen | Pipecat / HTTP | 未确认 | contacted | 2026-05-10 follow-up：lead qualifier endpoint 或 transcript |
+| 2026-05-08 | kylecampbell LiveKit outbound caller | https://github.com/kylecampbell/livekit-outbound-caller-agent/issues/4 | outbound_leadgen | LiveKit / Twilio / HTTP | 未确认 | contacted | 2026-05-10 follow-up：dev endpoint 或 sanitized call |
+| 2026-05-08 | tetratensor LiveKit outbound caller | https://github.com/tetratensor/LiveKit-Outbound-Caller-Voice-Agent/issues/1 | outbound_leadgen | LiveKit SIP / HTTP | 未确认 | contacted | 2026-05-10 follow-up：dev endpoint 或 transcript |
+| 2026-05-08 | kirklandsig AIReceptionist | https://github.com/kirklandsig/AIReceptionist/issues/12 | restaurant / custom receptionist | HTTP / Transcript import | 未确认 | contacted | 2026-05-10 follow-up：booking endpoint 或 sanitized call |
+| 2026-05-08 | blackdwarftech siphon | https://github.com/blackdwarftech/siphon/issues/19 | outbound_leadgen | Framework adapter / HTTP | 未确认 | contacted | 2026-05-10 follow-up：adapter interest or demo endpoint |
+| 2026-05-08 | intellwe AI calling agent | https://github.com/intellwe/ai-calling-agent/issues/2 | outbound_leadgen | Twilio / HTTP | 未确认 | contacted | 2026-05-10 follow-up：test endpoint or transcript |
+
 ## 字段字典
 
 | 字段 | 填写规则 |

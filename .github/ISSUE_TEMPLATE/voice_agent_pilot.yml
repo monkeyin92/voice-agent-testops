@@ -1,0 +1,60 @@
+name: Voice agent pilot
+about: Share a safe test endpoint or sanitized transcript for a Voice Agent TestOps pilot
+title: "Voice agent pilot: <project/domain>"
+labels: [pilot]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for trying a Voice Agent TestOps pilot. Please do not paste production secrets, raw phone numbers, private recording URLs, customer names, cookies, API keys, or CRM exports.
+  - type: dropdown
+    id: input_type
+    attributes:
+      label: What can you provide?
+      options:
+        - Temporary dev/test endpoint
+        - 1-3 sanitized transcripts
+        - Public sample only
+        - Not sure yet
+    validations:
+      required: true
+  - type: input
+    id: domain
+    attributes:
+      label: Business domain
+      placeholder: real estate outbound, receptionist booking, lead qualifier, insurance, restaurant
+    validations:
+      required: true
+  - type: textarea
+    id: endpoint_contract
+    attributes:
+      label: Endpoint contract, if available
+      description: Share shape and auth method only. Do not paste tokens.
+      placeholder: |
+        POST /test-turn
+        response: { "spoken": string, "summary"?: object }
+  - type: textarea
+    id: transcript
+    attributes:
+      label: Sanitized transcript, if available
+      description: Replace real values with placeholders like [CUSTOMER_NAME], [PHONE], [CALL_ID], [ADDRESS].
+      placeholder: |
+        Source: sanitized production transcript / synthetic sample
+        Permission: aggregate results only; do not quote raw transcript publicly
+
+        Customer: ...
+        Assistant: ...
+  - type: checkboxes
+    id: safety
+    attributes:
+      label: Safety confirmation
+      options:
+        - label: I removed or replaced real phone numbers, customer names, private recording URLs, tokens, cookies, call ids, and CRM exports.
+          required: true
+        - label: I understand public issues should contain only synthetic or sanitized content.
+          required: true
+  - type: textarea
+    id: success
+    attributes:
+      label: What would make this pilot useful?
+      placeholder: Find one risky turn, verify lead capture, validate handoff, produce CI report, adapt a suite.
