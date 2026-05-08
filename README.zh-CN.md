@@ -341,7 +341,7 @@ npx voice-agent-testops recording-intake \
   --summary .voice-testops/recordings/intake-summary.md
 ```
 
-报告会汇总 `keep` / `maybe` / `discard`、`business_type`、`risk_tag`、`quality`、`turn_role_hint`，并列出可进入下一步的 `regression_candidate=yes` 样本。`audio_url_private` 不会写进 summary；真实 URL、缺字段、非法枚举和授权/质量冲突会作为问题行标出。
+输入可以是完整 manifest 模板，也可以是一行一个 URL 的私有录音列表。裸 URL 列表会先保守归一成 `maybe`、`pii`、`consent_status=unknown`、`regression_candidate=no`，等人工复核后再提级。报告会汇总 `keep` / `maybe` / `discard`、`business_type`、`risk_tag`、`quality`、`turn_role_hint`，并列出可进入下一步的 `regression_candidate=yes` 样本。`audio_url_private` 不会写进 summary；真实 URL、缺字段、非法枚举和授权/质量冲突会作为问题行标出。
 
 ## 校准 Semantic Judge
 

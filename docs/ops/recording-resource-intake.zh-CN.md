@@ -84,7 +84,7 @@ cp examples/voice-testops/recording-intake-template.csv \
   .voice-testops/recordings/recording-intake.csv
 ```
 
-2. 填写 20-30 条录音 manifest。不要把真实 URL、手机号文件名或 call id 复制到仓库文件。
+2. 填写 20-30 条录音 manifest。不要把真实 URL、手机号文件名或 call id 复制到仓库文件。如果手上只有一行一个 URL 的私有列表，也可以先直接作为 `--input` 跑 triage；工具会保守归一成 `maybe` / `pii` / `consent_status=unknown` / `regression_candidate=no`，再等人工补字段。
 
 3. 先跑 intake triage，确认字段、授权状态和候选样本边界：
 

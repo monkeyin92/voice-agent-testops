@@ -411,7 +411,7 @@ npx voice-agent-testops recording-intake \
   --summary .voice-testops/recordings/intake-summary.md
 ```
 
-The summary groups `keep` / `maybe` / `discard`, `business_type`, `risk_tag`, `quality`, and `turn_role_hint`, then lists `regression_candidate=yes` rows that are ready for the next step. `audio_url_private` is never printed in the summary; real URLs, missing fields, invalid enums, and consent/quality conflicts are reported as issue rows.
+The input can be the full manifest template or a one-URL-per-line private recording list. Raw URL lists are normalized conservatively as `maybe`, `pii`, `consent_status=unknown`, and `regression_candidate=no` until a human reviews them. The summary groups `keep` / `maybe` / `discard`, `business_type`, `risk_tag`, `quality`, and `turn_role_hint`, then lists `regression_candidate=yes` rows that are ready for the next step. `audio_url_private` is never printed in the summary; real URLs, missing fields, invalid enums, and consent/quality conflicts are reported as issue rows.
 
 ## Calibrate Semantic Judge
 

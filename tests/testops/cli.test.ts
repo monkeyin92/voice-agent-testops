@@ -394,6 +394,31 @@ describe("voice-test CLI", () => {
     expect(markdown).not.toContain("https://signed.example.test/audio/outbound_001");
   });
 
+  it("accepts raw private recording URL lists for intake triage", async () => {
+    const tempDir = await mkdtemp(path.join(tmpdir(), "voice-testops-cli-"));
+    const inputPath = path.join(tempDir, "recording-urls.csv");
+    const summaryPath = path.join(tempDir, "url-intake-summary.md");
+    await writeFile(
+      inputPath,
+      [
+        "https://signed.example.test/2026-03-20/private-recording-001",
+        "https://signed.example.test/2026-03-20/private-recording-002",
+      ].join("\n"),
+      "utf8",
+    );
+
+    const result = await runCli(["recording-intake", "--input", inputPath, "--summary", summaryPath]);
+    const markdown = await readFile(summaryPath, "utf8");
+
+    expect(result.code).toBe(0);
+    expect(result.stdout).toContain("Total recordings: 2");
+    expect(result.stdout).toContain("Ready regression candidates: 0");
+    expect(result.stdout).toContain("Issues: 0 errors, 2 warnings");
+    expect(markdown).toContain("| pii | 2 |");
+    expect(markdown).toContain("[REDACTED_URL]");
+    expect(markdown).not.toContain("https://signed.example.test");
+  });
+
   it("generates commercial pilot report and pilot recap templates from a JSON report", async () => {
     const tempDir = await mkdtemp(path.join(tmpdir(), "voice-testops-cli-"));
     const reportPath = path.join(tempDir, "report.json");
