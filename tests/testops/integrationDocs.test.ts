@@ -369,6 +369,35 @@ describe("integration documentation", () => {
     }
   });
 
+  it("documents the public outbound leadgen demo report", () => {
+    const reportPath = "docs/growth/2026-05-08-public-outbound-leadgen-demo-report.md";
+    const suitePath = "examples/voice-testops/chinese-outbound-leadgen-suite.json";
+    const readme = readFileSync("README.md", "utf8");
+    const chineseReadme = readFileSync("README.zh-CN.md", "utf8");
+
+    expect(existsSync(reportPath)).toBe(true);
+    expect(existsSync(suitePath)).toBe(true);
+    expect(readme).toContain(`[Public outbound leadgen demo report](${reportPath})`);
+    expect(chineseReadme).toContain(`[公开外呼线索 demo report](${reportPath})`);
+    expect(readme).toContain(`[chinese-outbound-leadgen-suite.json](${suitePath})`);
+    expect(chineseReadme).toContain(`[chinese-outbound-leadgen-suite.json](${suitePath})`);
+
+    const report = readFileSync(reportPath, "utf8");
+    for (const phrase of [
+      "public demo run",
+      "real HTTP outbound leadgen agent",
+      "Overall result: **passed**",
+      "Scenarios | 5",
+      "Assertions | 25",
+      "Failures | 0",
+      "Source disclosure and opt-out handling",
+      "WeChat follow-up",
+      "not a benchmark of any live telephony system",
+    ]) {
+      expect(report).toContain(phrase);
+    }
+  });
+
   it("documents the external pilot runbook", () => {
     const runbookPath = "docs/ops/external-pilot-runbook.zh-CN.md";
     const readme = readFileSync("README.md", "utf8");

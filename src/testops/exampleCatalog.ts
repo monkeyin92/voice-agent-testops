@@ -61,6 +61,14 @@ export const exampleCatalog: ExampleCatalogEntry[] = [
     risks: "多轮询价、档期、质量承诺、转人工",
   },
   {
+    title: "Outbound leadgen demo",
+    industry: "photography",
+    industryLabel: "Photography",
+    language: "zh-CN",
+    path: "examples/voice-testops/chinese-outbound-leadgen-suite.json",
+    risks: "来源说明、勿扰偏好、价格边界、档期确认、留资摘要",
+  },
+  {
     title: "Expected failing demo",
     industry: "photography",
     industryLabel: "Photography",
