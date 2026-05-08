@@ -18,6 +18,8 @@ Supported starter verticals:
 - `dental_clinic`
 - `restaurant`
 - `real_estate`
+- `home_design`
+- `insurance`
 
 Supported languages:
 

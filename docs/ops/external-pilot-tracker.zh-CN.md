@@ -38,7 +38,7 @@
 | 日期 | 首次跑正式 suite 的日期 |
 | 对象 | 团队、项目或开发者名称；公开文档中可写匿名代号 |
 | 负责人 | 内部跟进人 |
-| 行业 starter | `real_estate`、`dental_clinic`、`home_design`、`restaurant` 或自定义 |
+| 行业 starter | `real_estate`、`dental_clinic`、`home_design`、`insurance`、`restaurant` 或自定义 |
 | 接入方式 | HTTP、OpenClaw、Vapi、Retell、LiveKit、Pipecat、Transcript import、Manual demo |
 | 数据授权 | `未确认`、`已确认`、`仅合成数据`、`暂停` |
 | endpoint 状态 | `stable`、`flaky`、`unavailable`、`manual-only` |

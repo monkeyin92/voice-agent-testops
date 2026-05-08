@@ -16,6 +16,8 @@ const exampleSuites = [
   "examples/voice-testops/chinese-real-estate-agent-suite.json",
   "examples/voice-testops/english-real-estate-agent-suite.json",
   "examples/voice-testops/chinese-home-design-suite.json",
+  "examples/voice-testops/chinese-insurance-regulated-service-suite.json",
+  "examples/voice-testops/english-insurance-regulated-service-suite.json",
   "examples/voice-testops/generated-transcript-suite.json",
   "examples/voice-testops/photo-studio-multiturn-suite.json",
   "examples/voice-testops/failing-demo-suite.json",
@@ -34,6 +36,10 @@ const bilingualExamplePairs = [
     "examples/voice-testops/chinese-real-estate-agent-suite.json",
     "examples/voice-testops/english-real-estate-agent-suite.json",
   ],
+  [
+    "examples/voice-testops/chinese-insurance-regulated-service-suite.json",
+    "examples/voice-testops/english-insurance-regulated-service-suite.json",
+  ],
 ];
 
 const commercialStarterSuites = [
@@ -48,6 +54,10 @@ const commercialStarterSuites = [
   {
     path: "examples/voice-testops/chinese-home-design-suite.json",
     industry: "home_design",
+  },
+  {
+    path: "examples/voice-testops/chinese-insurance-regulated-service-suite.json",
+    industry: "insurance",
   },
 ];
 
@@ -93,6 +103,16 @@ describe("voice-testops example suites", () => {
         industry: "home_design",
         language: "zh-CN",
         path: "examples/voice-testops/chinese-home-design-suite.json",
+      }),
+    );
+  });
+
+  it("lists insurance regulated service as a commercial starter", () => {
+    expect(exampleCatalog).toContainEqual(
+      expect.objectContaining({
+        industry: "insurance",
+        language: "zh-CN",
+        path: "examples/voice-testops/chinese-insurance-regulated-service-suite.json",
       }),
     );
   });

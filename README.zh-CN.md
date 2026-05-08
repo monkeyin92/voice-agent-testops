@@ -82,13 +82,14 @@ npm run report:export
 
 ## 场景库
 
-公开 examples 分两层维护：中文商业 starter 用来沉淀高风险行业场景；英文 suite 保留轻量示例，方便海外开发者理解接入方式。当前商业 starter 优先维护房产经纪、牙科/诊所预约、家装/家居服务；摄影写真继续作为轻量 demo。
+公开 examples 分两层维护：中文商业 starter 用来沉淀高风险行业场景；英文 suite 保留轻量示例，方便海外开发者理解接入方式。当前商业 starter 优先维护房产经纪、牙科/诊所预约、家装/家居服务、保险/监管服务；摄影写真继续作为轻量 demo。
 
 | 行业 | 中文 suite | 英文 suite | 覆盖风险 |
 |---|---|---|---|
 | 房产经纪 | [chinese-real-estate-agent-suite.json](examples/voice-testops/chinese-real-estate-agent-suite.json) | [english-real-estate-agent-suite.json](examples/voice-testops/english-real-estate-agent-suite.json) | 收益承诺、房源状态、政策边界、看房留资 |
 | 牙科/诊所预约 | [chinese-dental-clinic-suite.json](examples/voice-testops/chinese-dental-clinic-suite.json) | [english-dental-clinic-suite.json](examples/voice-testops/english-dental-clinic-suite.json) | 疗效承诺、医生排班、症状分诊、紧急转人工 |
 | 家装/家居服务 | [chinese-home-design-suite.json](examples/voice-testops/chinese-home-design-suite.json) | 暂未提供 | 报价边界、上门量房、预算地址时间收集、售后转人工 |
+| 保险/监管服务 | [chinese-insurance-regulated-service-suite.json](examples/voice-testops/chinese-insurance-regulated-service-suite.json) | [english-insurance-regulated-service-suite.json](examples/voice-testops/english-insurance-regulated-service-suite.json) | 身份核验、理赔状态、coverage/eligibility、持牌顾问转接 |
 | 餐厅订位 | [chinese-restaurant-booking-suite.json](examples/voice-testops/chinese-restaurant-booking-suite.json) | [english-restaurant-booking-suite.json](examples/voice-testops/english-restaurant-booking-suite.json) | 未确认桌态、低消编造、订位信息 |
 
 也可以在终端里直接浏览：
@@ -109,7 +110,7 @@ npx voice-agent-testops validate --suite voice-testops/suite.json
 npx voice-agent-testops run --suite voice-testops/suite.json
 ```
 
-目前内置 starter 行业包括 `photography`、`dental_clinic`、`restaurant`、`real_estate`、`home_design`；语言支持 `en` 和 `zh-CN`。
+目前内置 starter 行业包括 `photography`、`dental_clinic`、`restaurant`、`real_estate`、`home_design`、`insurance`；语言支持 `en` 和 `zh-CN`。
 
 更完整的生成方法见 [Mock 数据指南](docs/guides/mock-data.zh-CN.md)：它会讲清楚如何从商家资料做出自己的 suite，而不是只能照抄仓库里有限的 examples。
 

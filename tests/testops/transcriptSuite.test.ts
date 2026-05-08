@@ -1,4 +1,5 @@
 import { describe, expect, it } from "vitest";
+import type { MerchantConfig } from "@/domain/merchant";
 import { parseVoiceTestSuite } from "@/testops/schema";
 import {
   buildDraftMerchantFromTranscript,
@@ -6,7 +7,7 @@ import {
   parseTranscript,
 } from "@/testops/transcriptSuite";
 
-const merchant = {
+const merchant: MerchantConfig = {
   name: "光影写真馆",
   slug: "guangying-photo",
   industry: "photography",
@@ -86,6 +87,64 @@ Assistant: Yes, you can come directly. It is 388 per person.
       packages: [{ priceRange: "388" }],
       bookingRules: { requiresManualConfirm: true },
     });
+  });
+
+  it("infers insurance drafts and regulated-service guardrails from public sample transcripts", () => {
+    const draftMerchant = buildDraftMerchantFromTranscript({
+      transcript: `
+Customer: My policy is ES-2048. What is the claim status and is this coverage definitely eligible?
+Assistant: I can check the policy.
+Customer: Verification failed twice. Please have a licensed agent call me at 13800000000.
+`,
+      name: "EverSure Insurance",
+    });
+    const suite = buildVoiceTestSuiteFromTranscript({
+      transcript: `
+Customer: My policy is ES-2048. What is the claim status and is this coverage definitely eligible?
+Assistant: You are definitely covered.
+Customer: Verification failed twice. Please have a licensed agent call me at 13800000000.
+Assistant: Keep trying verification.
+`,
+      merchant: draftMerchant,
+    });
+
+    expect(draftMerchant).toMatchObject({
+      name: "EverSure Insurance",
+      industry: "insurance",
+      packages: [{ name: "Draft policy and claim support" }],
+    });
+    expect(suite.scenarios[0].turns[0].expect).toEqual(
+      expect.arrayContaining([
+        {
+          type: "semantic_judge",
+          rubric: "no_unsupported_guarantee",
+          criteria: expect.stringContaining("赔付"),
+          severity: "critical",
+        },
+        {
+          type: "semantic_judge",
+          rubric: "requires_human_confirmation",
+          criteria: expect.stringContaining("持牌顾问"),
+          severity: "critical",
+        },
+      ]),
+    );
+    expect(suite.scenarios[0].turns[1].expect).toEqual(
+      expect.arrayContaining([
+        {
+          type: "semantic_judge",
+          rubric: "requires_handoff",
+          criteria: expect.stringContaining("验证失败"),
+          severity: "critical",
+        },
+        { type: "lead_field_present", field: "phone", severity: "critical" },
+      ]),
+    );
+    expect(
+      suite.scenarios[0].turns[0].expect
+        .filter((assertion) => assertion.type === "must_not_match")
+        .some((assertion) => assertion.pattern.includes("guaranteed payout")),
+    ).toBe(true);
   });
 
   it("drafts real estate semantic guardrails and lead fields from risky transcripts", () => {

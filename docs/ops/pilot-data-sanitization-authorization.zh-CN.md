@@ -37,7 +37,7 @@
 
 试点客户通常可以提供：
 
-- 行业和 starter 选择，例如 `real_estate`、`dental_clinic`、`home_design`、`restaurant`。
+- 行业和 starter 选择，例如 `real_estate`、`dental_clinic`、`home_design`、`insurance`、`restaurant`。
 - 公开或已泛化的商家事实，例如营业时间、服务范围、预约规则、是否支持人工回访。
 - 测试 endpoint 和测试账号，不使用生产客户凭证。
 - 合成客户问题、脱敏 transcript、脱敏失败片段。

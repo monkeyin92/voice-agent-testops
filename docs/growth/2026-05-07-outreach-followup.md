@@ -38,7 +38,7 @@ Issue：[kev-hu/vapi-voice-agent#1](https://github.com/kev-hu/vapi-voice-agent/i
 - 已用公开 `demo/sample-call.md` 跑通 transcript-to-suite、validate、run、draft-regressions 和 pilot-report 路径。
 - 这是 public sample dry run，不代表仓库作者背书，也不是 live Vapi endpoint 的真实行为评测。
 - 原始 transcript 和 `.voice-testops/kev-hu-public-sample/` 生成产物均未提交到公开仓库。
-- 当前 starter library 没有 insurance profile，生成器把商家草稿推断为 `real_estate`，因此结果主要暴露行业覆盖缺口，而不是对方 prototype 的质量结论。
+- 这次 dry run 暴露的 insurance 覆盖缺口已经转成产品能力：新增 `insurance` starter、regulated-service transcript guardrails，以及身份核验、claim status、coverage/eligibility、持牌顾问转接的公开 suite。
 
 ## 当前下一步
 

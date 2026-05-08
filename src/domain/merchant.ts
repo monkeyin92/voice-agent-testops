@@ -1,7 +1,14 @@
 import { createHash } from "node:crypto";
 import { z } from "zod";
 
-export const industrySchema = z.enum(["photography", "home_design", "dental_clinic", "restaurant", "real_estate"]);
+export const industrySchema = z.enum([
+  "photography",
+  "home_design",
+  "dental_clinic",
+  "restaurant",
+  "real_estate",
+  "insurance",
+]);
 export type Industry = z.infer<typeof industrySchema>;
 
 export const merchantPackageSchema = z.object({

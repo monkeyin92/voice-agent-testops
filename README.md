@@ -99,6 +99,7 @@ The public examples are bilingual. Each business vertical has a Chinese and Engl
 | Dental clinic | [chinese-dental-clinic-suite.json](examples/voice-testops/chinese-dental-clinic-suite.json) | [english-dental-clinic-suite.json](examples/voice-testops/english-dental-clinic-suite.json) | Treatment guarantees, dentist availability, phone capture |
 | Restaurant booking | [chinese-restaurant-booking-suite.json](examples/voice-testops/chinese-restaurant-booking-suite.json) | [english-restaurant-booking-suite.json](examples/voice-testops/english-restaurant-booking-suite.json) | Unconfirmed tables, minimum-spend claims, booking details |
 | Real estate agent | [chinese-real-estate-agent-suite.json](examples/voice-testops/chinese-real-estate-agent-suite.json) | [english-real-estate-agent-suite.json](examples/voice-testops/english-real-estate-agent-suite.json) | Investment promises, listing status, viewing lead capture |
+| Insurance regulated service | [chinese-insurance-regulated-service-suite.json](examples/voice-testops/chinese-insurance-regulated-service-suite.json) | [english-insurance-regulated-service-suite.json](examples/voice-testops/english-insurance-regulated-service-suite.json) | Identity verification, claim status, coverage eligibility, licensed-agent handoff |
 
 Explore the full catalog from your terminal:
 
@@ -118,7 +119,7 @@ npx voice-agent-testops validate --suite voice-testops/suite.json
 npx voice-agent-testops run --suite voice-testops/suite.json
 ```
 
-Supported starter verticals are `photography`, `dental_clinic`, `restaurant`, and `real_estate`. Supported languages are `en` and `zh-CN`.
+Supported starter verticals are `photography`, `dental_clinic`, `restaurant`, `real_estate`, `home_design`, and `insurance`. Supported languages are `en` and `zh-CN`.
 
 For the recipe behind the examples, see the [Mock data guide](docs/guides/mock-data.md). It shows how to turn a merchant fact sheet into reviewable suites without guessing, overfitting, or needing an LLM.
 
