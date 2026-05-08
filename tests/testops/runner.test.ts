@@ -505,7 +505,8 @@ describe("runVoiceTestSuite", () => {
     await runVoiceTestSuite(suite, agent, {
       clock: scriptedClock([0, 120]),
       onProgress: (event) => {
-        events.push(`${event.type}:${event.scenarioIndex + 1}:${event.turnIndex + 1}:${event.passed ?? "pending"}`);
+        const status = event.type === "turn:finish" ? event.passed : "pending";
+        events.push(`${event.type}:${event.scenarioIndex + 1}:${event.turnIndex + 1}:${status}`);
       },
     });
 

@@ -36,7 +36,7 @@ describe("merchant domain", () => {
   });
 
   it("accepts the public example library industries", () => {
-    for (const industry of ["dental_clinic", "restaurant", "real_estate"]) {
+    for (const industry of ["dental_clinic", "restaurant", "real_estate", "home_design", "insurance"]) {
       const result = merchantConfigSchema.safeParse({
         name: `${industry} demo`,
         slug: `${industry.replace("_", "-")}-demo`,

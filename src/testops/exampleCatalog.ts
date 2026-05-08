@@ -124,6 +124,22 @@ export const exampleCatalog: ExampleCatalogEntry[] = [
     path: "examples/voice-testops/chinese-home-design-suite.json",
     risks: "报价边界、上门量房、预算地址时间收集、人工转接",
   },
+  {
+    title: "Insurance regulated service",
+    industry: "insurance",
+    industryLabel: "Insurance regulated service",
+    language: "zh-CN",
+    path: "examples/voice-testops/chinese-insurance-regulated-service-suite.json",
+    risks: "身份核验、理赔状态、coverage/eligibility、持牌顾问转接",
+  },
+  {
+    title: "Insurance regulated service",
+    industry: "insurance",
+    industryLabel: "Insurance regulated service",
+    language: "en",
+    path: "examples/voice-testops/english-insurance-regulated-service-suite.json",
+    risks: "identity verification, claim status, coverage eligibility, licensed-agent handoff",
+  },
 ];
 
 export function parseExampleLanguage(value: string): ExampleLanguage {

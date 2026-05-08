@@ -18,7 +18,7 @@
 - endpoint 可以接收 `POST /test-turn`。
 - 已按 [试点数据脱敏和授权模板](pilot-data-sanitization-authorization.zh-CN.md) 确认数据边界。
 - 测试数据已脱敏，不包含真实身份证、完整地址、病历、交易账号、客户真实姓名等敏感信息。
-- 至少选择一个 starter 行业：`real_estate`、`dental_clinic`、`home_design`、`restaurant`。
+- 至少选择一个 starter 行业：`real_estate`、`dental_clinic`、`home_design`、`insurance`、`restaurant`。
 
 ## 10 分钟本地 demo
 

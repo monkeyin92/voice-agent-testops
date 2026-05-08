@@ -1,0 +1,45 @@
+{
+  "name": "安信保险服务",
+  "slug": "eversure-insurance",
+  "industry": "insurance",
+  "address": "上海市浦东新区示例路 200 号",
+  "serviceArea": "线上服务和持牌顾问回访",
+  "businessHours": "09:00-18:00",
+  "contactPhone": "13800000000",
+  "packages": [
+    {
+      "name": "保单和理赔咨询",
+      "priceRange": "有效保单客户服务内含",
+      "includes": "身份核验、理赔状态登记、保障范围转持牌顾问确认",
+      "bestFor": "需要查询保单、理赔、保障范围或账户信息的客户"
+    },
+    {
+      "name": "持牌顾问回访",
+      "priceRange": "人工确认后安排",
+      "includes": "coverage/eligibility 解释、材料清单、下一步处理建议",
+      "bestFor": "保障范围、理赔争议、身份核验失败或投诉升级客户"
+    }
+  ],
+  "faqs": [
+    {
+      "question": "没有核验身份能查理赔吗",
+      "answer": "不能透露保单或理赔细节，只能记录需求，并在身份核验后由人工或持牌顾问确认。"
+    },
+    {
+      "question": "能保证赔付吗",
+      "answer": "不能承诺赔付、保障资格或核保结果，必须以保单条款、理赔材料和持牌顾问确认为准。"
+    },
+    {
+      "question": "保障范围能直接解释吗",
+      "answer": "可以先记录问题，但 coverage 和 eligibility 需要转持牌顾问或人工确认。"
+    },
+    {
+      "question": "身份验证失败怎么办",
+      "answer": "需要转人工核验，避免在自动对话中继续暴露账户或保单信息。"
+    }
+  ],
+  "bookingRules": {
+    "requiresManualConfirm": true,
+    "requiredFields": ["name", "phone", "need"]
+  }
+}

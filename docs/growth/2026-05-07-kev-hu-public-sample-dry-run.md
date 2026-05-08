@@ -2,6 +2,8 @@
 
 Date: 2026-05-07
 
+Rerun: 2026-05-08
+
 Status: Public sample dry run only. This is not endorsed by the repository owner, does not use a private Vapi endpoint, and is not a benchmark of the live prototype.
 
 ## Source and boundary
@@ -33,7 +35,7 @@ This maps well to our external pilot thesis: voice agents do not only need PII r
 
 ## Commands run
 
-Normalize speaker labels from the Markdown sample and generate a local suite:
+Normalize speaker labels from the Markdown sample and generate a local suite. The 2026-05-08 rerun explicitly pins the transcript draft to `--industry insurance` so the proof covers the new insurance suite instead of relying on automatic industry inference:
 
 ```bash
 mkdir -p .voice-testops/kev-hu-public-sample
@@ -46,10 +48,30 @@ gh api repos/kev-hu/vapi-voice-agent/contents/demo/sample-call.md --jq .content 
       --out .voice-testops/kev-hu-public-sample/suite.json \
       --merchant-out .voice-testops/kev-hu-public-sample/merchant.json \
       --merchant-name "EverSure Insurance" \
+      --industry insurance \
       --name "Kevin Hu public sample dry run" \
       --source website \
       --scenario-id "kev_hu_insurance_public_sample" \
       --scenario-title "Kevin Hu insurance public sample"
+```
+
+Rerun proof:
+
+```text
+Generated suite: .voice-testops/kev-hu-public-sample/suite.json
+Transcript: read from stdin
+Merchant draft: .voice-testops/kev-hu-public-sample/merchant.json
+Customer turns: 14
+```
+
+Generated merchant proof:
+
+```json
+{
+  "name": "EverSure Insurance",
+  "industry": "insurance",
+  "packages": [{ "name": "Draft policy and claim support" }]
+}
 ```
 
 Validate the generated suite:
@@ -65,7 +87,7 @@ Validation output:
 Suite valid: Kevin Hu public sample dry run
 Scenarios: 1
 Turns: 14
-Assertions: 42
+Assertions: 46
 ```
 
 Run the local dry run and produce review artifacts:
@@ -83,7 +105,7 @@ npx voice-agent-testops run \
 Run output:
 
 ```text
-Kevin Hu public sample dry run: failed (13 failures, 42 assertions)
+Kevin Hu public sample dry run: failed (11 failures, 46 assertions)
 Severity gate: passed (0 failures at or above critical)
 ```
 
@@ -125,21 +147,32 @@ Observed dry run result:
 
 - Scenarios: 1
 - Customer turns: 14
-- Assertions: 42
-- Failures: 13
+- Assertions: 46
+- Assertion mix: 14 `must_not_match`, 14 `max_latency_ms`, 14 `lead_intent`, 4 `semantic_judge`
+- Failures: 11
 - Critical failures: 0
 - Severity gate: passed
-- Failure cluster: `lead_intent_mismatch`
+- Failure cluster: `lead_intent_mismatch` only, all `major`
 
-The main product limitation is explicit: the current starter library has no insurance industry profile. The transcript generator inferred `real_estate`, which caused generic lead-intent checks to expect `other` while local output looked like `service_info`. That is a tooling coverage gap, not evidence that the insurance prototype is unsafe.
+Before the insurance increment, the dry run exposed a product limitation: the starter library had no insurance industry profile, so the transcript generator inferred `real_estate` and produced generic intent checks. The result had 13 failures across 42 assertions and mainly proved that the tooling lacked regulated-service coverage.
+
+After the insurance increment, the same public sample generates an insurance merchant draft and insurance-specific assertions. The generated suite now includes the insurance forbidden-promise pattern plus semantic judge rubrics for `requires_human_confirmation` and `no_unsupported_guarantee`. Product coverage now includes:
+
+- `insurance` starter, industry schema, and `init --industry insurance` project generator.
+- English and Chinese insurance regulated-service suites.
+- Regulated-service local receptionist responses for claim, coverage, eligibility, verification failure, complaint, and licensed-agent handoff paths.
+- Transcript guardrails for identity verification, claim status, coverage / eligibility, payout or underwriting guarantees, address changes, and human escalation.
+
+The remaining failures are not critical safety failures. They are 11 `lead_intent_mismatch` checks where the transcript draft expected `other` for short follow-up answers such as policy numbers or names, while the local regulated-service agent summarized them as `service_info`. This is useful follow-up evidence for intent continuity, but it no longer blocks the insurance suite proof.
 
 ## Product learning
 
 This dry run adds three concrete next steps:
 
-1. Add a regulated-service or insurance starter before presenting this as industry-specific coverage.
+1. Keep `--industry insurance` in public-sample reruns whenever the source sample is known to be an insurance or regulated-service flow.
 2. Keep the transcript import path strict about speaker labels, but document common Markdown speaker forms such as `**Alex:**` and `**Alex (AI):**`.
-3. Treat public samples as acquisition artifacts: they show time-to-first-report and workflow coverage, while private customer data remains outside the open repository.
+3. After this product increment lands, add insurance semantic judge annotation seed so the insurance path has a human-labeled baseline, not only deterministic suite coverage.
+4. Treat public samples as acquisition artifacts: they show time-to-first-report and workflow coverage, while private customer data remains outside the open repository.
 
 ## Next external step
 

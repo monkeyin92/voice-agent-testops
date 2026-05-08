@@ -905,8 +905,10 @@ describe("voice-test CLI", () => {
     expect(allExamples.stdout).toContain("Dental clinic");
     expect(allExamples.stdout).toContain("examples/voice-testops/english-dental-clinic-suite.json");
     expect(allExamples.stdout).toContain("examples/voice-testops/chinese-dental-clinic-suite.json");
+    expect(allExamples.stdout).toContain("Insurance regulated service");
+    expect(allExamples.stdout).toContain("examples/voice-testops/chinese-insurance-regulated-service-suite.json");
     expect(allExamples.stdout).toContain("Create your own mock suite");
-    expect(allExamples.stdout).toContain("npx voice-agent-testops init --industry restaurant --lang en");
+    expect(allExamples.stdout).toContain("npx voice-agent-testops init --industry insurance --lang en");
 
     expect(englishRestaurantExamples.code).toBe(0);
     expect(englishRestaurantExamples.stdout).toContain("Restaurant booking");
@@ -1073,6 +1075,8 @@ describe("voice-test CLI", () => {
     };
 
     const scenarioProperties = schema.properties?.scenarios?.items?.properties;
+    const merchantDefinition = (schema as { $defs?: { merchant?: { properties?: { industry?: { enum?: string[] } } } } }).$defs
+      ?.merchant;
     const assertionVariants = scenarioProperties?.turns?.items?.properties?.expect?.items?.oneOf ?? [];
     const leadIntentVariant = assertionVariants.find((variant) => variant.properties?.type?.const === "lead_intent");
     const semanticJudgeVariant = assertionVariants.find((variant) => variant.properties?.type?.const === "semantic_judge");
@@ -1098,6 +1102,7 @@ describe("voice-test CLI", () => {
     expect(schema.$schema).toBe("https://json-schema.org/draft/2020-12/schema");
     expect(schema.title).toBe("Voice Agent TestOps Suite");
     expect(scenarioProperties?.source?.enum).toContain("website");
+    expect(merchantDefinition?.properties?.industry?.enum).toContain("insurance");
     expect(scenarioProperties?.merchantRef).toBeDefined();
     expect(scenarioProperties?.merchant).toBeDefined();
     expect(assertionVariants.map((variant) => variant.properties?.type?.const)).toEqual(
@@ -1199,6 +1204,42 @@ describe("voice-test CLI", () => {
     expect(suite.scenarios[0].turns[0].expect).toEqual(
       expect.arrayContaining([expect.objectContaining({ type: "must_not_match", severity: "critical" })]),
     );
+  });
+
+  it("initializes an insurance regulated-service starter suite that runs immediately", async () => {
+    const tempDir = await mkdtemp(path.join(tmpdir(), "voice-testops-cli-"));
+    const outDir = path.join(tempDir, "voice-testops");
+
+    const initResult = await runCli([
+      "init",
+      "--industry",
+      "insurance",
+      "--lang",
+      "zh-CN",
+      "--name",
+      "安信保险服务",
+      "--out",
+      outDir,
+    ]);
+    const runResult = await runCli(["run", "--suite", path.join(outDir, "suite.json"), "--fail-on-severity", "critical"]);
+
+    const suite = JSON.parse(await readFile(path.join(outDir, "suite.json"), "utf8")) as {
+      scenarios: Array<{
+        businessRisk?: string;
+        turns: Array<{ expect: Array<{ type: string; severity?: string }> }>;
+      }>;
+    };
+    const generatedMerchant = JSON.parse(await readFile(path.join(outDir, "merchant.json"), "utf8")) as typeof merchant;
+
+    expect(initResult.code).toBe(0);
+    expect(generatedMerchant.industry).toBe("insurance");
+    expect(generatedMerchant.packages[0].name).toBe("保单和理赔咨询");
+    expect(suite.scenarios[0].businessRisk).toContain("身份核验");
+    expect(suite.scenarios[0].turns[0].expect).toEqual(
+      expect.arrayContaining([expect.objectContaining({ type: "must_not_match", severity: "critical" })]),
+    );
+    expect(runResult.code).toBe(0);
+    expect(runResult.stdout).toContain("安信保险服务 Voice Agent TestOps: passed");
   });
 
   it("can initialize a CI workflow for the generated suite", async () => {

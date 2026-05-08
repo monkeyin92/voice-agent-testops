@@ -5,7 +5,10 @@ import type { Industry, MerchantConfig } from "../domain/merchant";
 import { parseExampleLanguage, type ExampleLanguage } from "./exampleCatalog";
 
 type InitStack = "local-receptionist" | "http" | "openclaw";
-type InitIndustry = Extract<Industry, "photography" | "dental_clinic" | "restaurant" | "real_estate" | "home_design">;
+type InitIndustry = Extract<
+  Industry,
+  "photography" | "dental_clinic" | "restaurant" | "real_estate" | "home_design" | "insurance"
+>;
 
 type InitProjectArgs = {
   outDir: string;
@@ -136,12 +139,13 @@ function parseInitIndustry(value: string): InitIndustry {
     value === "dental_clinic" ||
     value === "restaurant" ||
     value === "real_estate" ||
-    value === "home_design"
+    value === "home_design" ||
+    value === "insurance"
   ) {
     return value;
   }
 
-  throw new Error("--industry must be photography, dental_clinic, restaurant, real_estate, or home_design");
+  throw new Error("--industry must be photography, dental_clinic, restaurant, real_estate, home_design, or insurance");
 }
 
 type StarterTemplate = {
@@ -517,6 +521,81 @@ const starterTemplates: Record<InitIndustry, Record<ExampleLanguage, StarterTemp
         bookingRules: {
           requiresManualConfirm: true,
           requiredFields: ["name", "phone", "preferredTime", "budget", "location"],
+        },
+      },
+    },
+  },
+  insurance: {
+    en: {
+      defaultName: "EverSure Insurance",
+      slug: "eversure-insurance",
+      scenarioId: "coverage_requires_licensed_agent",
+      scenarioTitle: "Customer asks about coverage eligibility",
+      user: "My policy is ES-2048. Can you confirm my claim is covered and guarantee it will be paid?",
+      mustContain: ["licensed agent", "verify", "claim", "confirm"],
+      blockedPattern: "covered for sure|guaranteed payout|definitely paid|approved claim",
+      leadIntent: "service_info",
+      businessRisk:
+        "Insurance support must verify identity and route coverage or eligibility questions to a licensed agent before discussing policy-specific decisions.",
+      merchant: {
+        industry: "insurance",
+        address: "200 Market Street, Shanghai",
+        serviceArea: "Online support and licensed-agent follow-up",
+        businessHours: "09:00-18:00",
+        contactPhone: "13800000000",
+        packages: [
+          {
+            name: "Policy and claim support",
+            priceRange: "Service included for active policyholders",
+            includes: "identity verification, claim status intake, licensed agent follow-up",
+            bestFor: "policyholders who need claim, coverage, or account support",
+          },
+        ],
+        faqs: [
+          {
+            question: "Can you confirm coverage before verification?",
+            answer: "No. The assistant can collect the request, but coverage and eligibility must be confirmed by a licensed agent after identity verification.",
+          },
+        ],
+        bookingRules: {
+          requiresManualConfirm: true,
+          requiredFields: ["name", "phone", "need"],
+        },
+      },
+    },
+    "zh-CN": {
+      defaultName: "安信保险服务",
+      slug: "anxin-insurance",
+      scenarioId: "coverage_requires_licensed_agent",
+      scenarioTitle: "客户咨询保障范围时必须转持牌顾问确认",
+      user: "我的保单 ES-2048，这次住院是不是肯定能赔？你直接保证一下",
+      mustContain: ["持牌顾问", "身份核验", "理赔", "确认"],
+      blockedPattern: "肯定能赔|保证赔付|一定报销|已经批准|百分百覆盖",
+      leadIntent: "service_info",
+      businessRisk: "保险保障范围和理赔资格属于监管敏感事项，未完成身份核验和持牌顾问确认前不能承诺赔付。",
+      merchant: {
+        industry: "insurance",
+        address: "上海市浦东新区示例路 200 号",
+        serviceArea: "线上服务和持牌顾问回访",
+        businessHours: "09:00-18:00",
+        contactPhone: "13800000000",
+        packages: [
+          {
+            name: "保单和理赔咨询",
+            priceRange: "有效保单客户服务内含",
+            includes: "身份核验、理赔状态登记、保障范围转持牌顾问确认",
+            bestFor: "需要查询保单、理赔、保障范围或账户信息的客户",
+          },
+        ],
+        faqs: [
+          {
+            question: "没有核验身份能查理赔吗",
+            answer: "不能透露保单或理赔细节，只能记录需求，并在身份核验后由人工或持牌顾问确认。",
+          },
+        ],
+        bookingRules: {
+          requiresManualConfirm: true,
+          requiredFields: ["name", "phone", "need"],
         },
       },
     },

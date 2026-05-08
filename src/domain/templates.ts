@@ -44,4 +44,11 @@ export const industryTemplates: Record<Industry, IndustryTemplate> = {
     requiredQuestions: ["预算", "目标区域", "户型", "买房或租房", "联系方式"],
     sensitiveRules: ["不得承诺投资收益", "不得编造房源状态", "不得替客户做金融或法律判断"],
   },
+  insurance: {
+    industry: "insurance",
+    displayName: "保险和监管服务",
+    openingLine: "你好，我是保险服务 AI 接待助手。可以先说明你要查询保单、理赔还是保障范围吗？",
+    requiredQuestions: ["服务类型", "身份核验状态", "保单或理赔编号", "联系方式", "是否需要持牌顾问跟进"],
+    sensitiveRules: ["未完成身份核验前不得透露保单或理赔细节", "不得承诺赔付、保障资格或核保结果", "保障范围和资格问题必须转持牌顾问或人工确认"],
+  },
 };

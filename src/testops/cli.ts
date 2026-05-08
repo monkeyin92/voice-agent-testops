@@ -220,7 +220,7 @@ function listExamples(argv: string[]): number {
   }
 
   console.log("\nCreate your own mock suite:");
-  console.log("npx voice-agent-testops init --industry restaurant --lang en --name \"Maple Bistro\"");
+  console.log("npx voice-agent-testops init --industry insurance --lang en --name \"EverSure Insurance\"");
   console.log("npx voice-agent-testops validate --suite voice-testops/suite.json");
   console.log("npx voice-agent-testops run --suite voice-testops/suite.json");
 

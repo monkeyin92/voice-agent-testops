@@ -66,4 +66,34 @@ describe("respondWithLocalReceptionist", () => {
     expect(response.summary.intent).toBe("availability");
     expect(response.summary.level).toBe("high");
   });
+
+  it("keeps insurance claim and coverage questions inside regulated-service boundaries", async () => {
+    const response = await respondWithLocalReceptionist({
+      merchant: {
+        ...merchant,
+        industry: "insurance",
+        packages: [
+          {
+            name: "保单和理赔咨询",
+            priceRange: "有效保单客户服务内含",
+            includes: "身份核验、理赔状态登记、保障范围转持牌顾问确认",
+            bestFor: "保单和理赔客户",
+          },
+        ],
+      },
+      source: "website",
+      messages: [
+        {
+          role: "customer",
+          text: "我的保单 ES-2048，这次住院 coverage 是不是肯定能赔？",
+          at: "2026-05-03T10:00:00.000Z",
+        },
+      ],
+    });
+
+    expect(response.spoken).toContain("身份核验");
+    expect(response.spoken).toContain("持牌顾问");
+    expect(response.spoken).not.toMatch(/肯定能赔|保证赔付|一定报销/);
+    expect(response.summary.intent).toBe("service_info");
+  });
 });

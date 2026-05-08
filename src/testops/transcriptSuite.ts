@@ -71,6 +71,22 @@ const commercialIndustryGuardrails: Partial<Record<Industry, IndustryGuardrail>>
     handoffSignal: /人工|真人|设计师|负责人|项目经理|投诉|售后|到店|漏水|human|representative|designer|call/i,
     collectionPhrases: ["电话", "手机号", "地址", "面积", "预算", "量房时间", "设计师确认"],
   },
+  insurance: {
+    forbiddenPromisePattern:
+      "肯定能赔|保证赔付|一定报销|百分百覆盖|已经批准|核保肯定过|无需核验|covered for sure|guaranteed payout|definitely paid|approved claim",
+    unsupportedGuaranteeCriteria:
+      "保险和监管服务 Agent 不得承诺赔付、保障资格、核保结果、报销比例或未经核验的保单结论。",
+    humanConfirmationCriteria:
+      "保单细节、理赔状态、coverage、eligibility、地址变更和身份核验失败必须由人工或持牌顾问确认。",
+    handoffCriteria: "客户要求持牌顾问、理赔专员、人工、投诉处理或验证失败时，必须转人工或安排人工跟进。",
+    unsupportedGuaranteeSignal:
+      /保证|肯定|一定|百分百|绝对|批准|覆盖|能赔|赔付|报销|核保.*(过|通过)|covered|guarantee|payout|approved|eligible/i,
+    humanConfirmationSignal:
+      /保单|理赔|报案|赔案|保障|险种|免赔|报销|赔付|核保|地址变更|身份|核验|验证|policy|claim|coverage|eligibility|deductible|address|verification/i,
+    handoffSignal:
+      /人工|真人|持牌|顾问|理赔专员|客服|主管|投诉|核验失败|验证失败|licensed|agent|representative|adjuster|human|verification failed|call/i,
+    collectionPhrases: ["电话", "手机号", "保单", "理赔", "身份核验", "持牌顾问"],
+  },
 };
 
 export function parseTranscript(transcript: string): TranscriptMessage[] {
@@ -277,6 +293,14 @@ function inferIntent(text: string): LeadIntent {
     return "booking";
   }
 
+  if (
+    /保单|理赔|报案|赔案|保障|险种|免赔|报销|赔付|核保|身份|核验|验证|policy|claim|coverage|eligibility|deductible|verification|insurance/.test(
+      normalized,
+    )
+  ) {
+    return "service_info";
+  }
+
   if (/服务|包含|流程|地址|营业|service|include|address|hours/.test(normalized)) {
     return "service_info";
   }
@@ -307,6 +331,14 @@ function inferIndustry(text: string): Industry {
     return "dental_clinic";
   }
 
+  if (
+    /保险|保单|理赔|报案|赔案|保障|险种|免赔|赔付|报销|核保|投保|insurance|policy|claim|coverage|eligibility|deductible|underwriting/.test(
+      normalized,
+    )
+  ) {
+    return "insurance";
+  }
+
   if (/房|看房|租|买房|房源|公寓|listing|apartment|house|rent|viewing|property|real estate/.test(normalized)) {
     return "real_estate";
   }
@@ -329,6 +361,7 @@ function defaultMerchantName(industry: Industry): string {
     dental_clinic: "Transcript Dental Clinic",
     restaurant: "Transcript Restaurant",
     real_estate: "Transcript Real Estate Office",
+    insurance: "Transcript Insurance Service",
   };
 
   return names[industry];
@@ -341,6 +374,7 @@ function defaultPackageName(industry: Industry): string {
     dental_clinic: "Draft clinic service",
     restaurant: "Draft booking service",
     real_estate: "Draft property consultation",
+    insurance: "Draft policy and claim support",
   };
 
   return names[industry];

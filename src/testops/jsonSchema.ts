@@ -119,7 +119,7 @@ function buildMerchantSchema(): JsonSchema {
       slug: { type: "string", pattern: "^[a-z0-9-]+$" },
       industry: {
         type: "string",
-        enum: ["photography", "home_design", "dental_clinic", "restaurant", "real_estate"],
+        enum: ["photography", "home_design", "dental_clinic", "restaurant", "real_estate", "insurance"],
       },
       address: { type: "string", minLength: 1 },
       serviceArea: { type: "string", minLength: 1 },
