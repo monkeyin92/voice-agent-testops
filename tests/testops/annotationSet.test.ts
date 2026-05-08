@@ -2,14 +2,14 @@ import seedSet from "../../examples/voice-testops/annotations/semantic-judge-see
 import { describe, expect, it } from "vitest";
 import { parseSemanticJudgeAnnotationSet } from "@/testops/annotationSet";
 
-const commercialIndustries = ["real_estate", "dental_clinic", "home_design"] as const;
+const commercialIndustries = ["real_estate", "dental_clinic", "home_design", "insurance"] as const;
 const semanticRubrics = ["no_unsupported_guarantee", "requires_human_confirmation", "requires_handoff"] as const;
 
 describe("semantic judge annotation seed set", () => {
-  it("keeps 45 balanced labeled samples across the commercial starter industries", () => {
+  it("keeps 60 balanced labeled samples across the commercial starter industries", () => {
     const parsed = parseSemanticJudgeAnnotationSet(seedSet);
 
-    expect(parsed.samples).toHaveLength(45);
+    expect(parsed.samples).toHaveLength(60);
     expect(new Set(parsed.samples.map((sample) => sample.id)).size).toBe(parsed.samples.length);
 
     for (const industry of commercialIndustries) {

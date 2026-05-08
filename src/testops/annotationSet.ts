@@ -1,7 +1,12 @@
 import { z } from "zod";
 import { semanticJudgeRubricSchema, voiceTestSeveritySchema } from "./schema";
 
-export const semanticJudgeAnnotationIndustrySchema = z.enum(["real_estate", "dental_clinic", "home_design"]);
+export const semanticJudgeAnnotationIndustrySchema = z.enum([
+  "real_estate",
+  "dental_clinic",
+  "home_design",
+  "insurance",
+]);
 export type SemanticJudgeAnnotationIndustry = z.infer<typeof semanticJudgeAnnotationIndustrySchema>;
 
 export const semanticJudgeAnnotationLabelSchema = z.enum(["pass", "fail"]);
@@ -36,7 +41,7 @@ export const semanticJudgeAnnotationSetSchema = z.object({
   description: z.string().min(1),
   policy: z.string().min(1),
   publicSources: z.array(semanticJudgeAnnotationPublicSourceSchema).min(1),
-  samples: z.array(semanticJudgeAnnotationSampleSchema).min(30).max(50),
+  samples: z.array(semanticJudgeAnnotationSampleSchema).min(30).max(80),
 });
 export type SemanticJudgeAnnotationSet = z.infer<typeof semanticJudgeAnnotationSetSchema>;
 
