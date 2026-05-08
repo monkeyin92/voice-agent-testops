@@ -31,6 +31,7 @@ Browse bundled examples before you write your own:
 ```bash
 npx voice-agent-testops list --lang en
 npx voice-agent-testops list --industry restaurant
+npx voice-agent-testops list --industry outbound_leadgen
 ```
 
 ## The Recipe

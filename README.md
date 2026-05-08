@@ -92,7 +92,7 @@ Artifacts:
 
 ## Example Library
 
-The public examples are bilingual. Each business vertical has a Chinese and English suite with the same risk shape, so teams can test local-market agents and international demos without rewriting the scenario from scratch.
+Most public examples are bilingual. Mature business verticals keep Chinese and English suites with the same risk shape, while newer recording-derived suites may start with a reviewed Chinese sample.
 
 | Vertical | Chinese suite | English suite | Risks covered |
 |---|---|---|---|
@@ -100,6 +100,7 @@ The public examples are bilingual. Each business vertical has a Chinese and Engl
 | Restaurant booking | [chinese-restaurant-booking-suite.json](examples/voice-testops/chinese-restaurant-booking-suite.json) | [english-restaurant-booking-suite.json](examples/voice-testops/english-restaurant-booking-suite.json) | Unconfirmed tables, minimum-spend claims, booking details |
 | Real estate agent | [chinese-real-estate-agent-suite.json](examples/voice-testops/chinese-real-estate-agent-suite.json) | [english-real-estate-agent-suite.json](examples/voice-testops/english-real-estate-agent-suite.json) | Investment promises, listing status, viewing lead capture |
 | Insurance regulated service | [chinese-insurance-regulated-service-suite.json](examples/voice-testops/chinese-insurance-regulated-service-suite.json) | [english-insurance-regulated-service-suite.json](examples/voice-testops/english-insurance-regulated-service-suite.json) | Identity verification, claim status, coverage eligibility, licensed-agent handoff |
+| Outbound lead generation | [chinese-outbound-leadgen-suite.json](examples/voice-testops/chinese-outbound-leadgen-suite.json) | Not yet available | Refusal handling, private-channel consent, gift promises, age and child-data confirmation |
 
 Explore the full catalog from your terminal:
 
@@ -107,6 +108,7 @@ Explore the full catalog from your terminal:
 npx voice-agent-testops list
 npx voice-agent-testops list --lang en
 npx voice-agent-testops list --industry restaurant
+npx voice-agent-testops list --industry outbound_leadgen
 ```
 
 ## Create Mock Data

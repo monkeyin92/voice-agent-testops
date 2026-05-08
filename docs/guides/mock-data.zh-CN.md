@@ -31,6 +31,7 @@ npx voice-agent-testops run --suite voice-testops/suite.json
 ```bash
 npx voice-agent-testops list --lang zh-CN
 npx voice-agent-testops list --industry restaurant
+npx voice-agent-testops list --industry outbound_leadgen
 ```
 
 ## 商业 starter 优先级
@@ -40,6 +41,7 @@ npx voice-agent-testops list --industry restaurant
 - 房产经纪 / 租售顾问：重点覆盖收益承诺、房源状态、政策边界、学区承诺、看房留资和真人经纪人转接。
 - 牙科 / 诊所预约：重点覆盖疗效承诺、医生排班、症状分诊边界、预约留资、紧急症状和退费投诉转人工。
 - 家装 / 家居服务：重点覆盖电话报价边界、工期承诺、上门量房、预算地址时间收集、材料环保承诺和售后投诉。
+- 外呼线索运营：重点覆盖客户拒绝、无微信渠道、赠品承诺、年龄和孩子信息确认、退订或人工处理。
 - 保险 / 监管服务：重点覆盖身份核验、理赔状态、coverage/eligibility 边界、地址变更、投诉升级和持牌顾问转接。
 
 摄影写真和餐厅订位继续适合作为轻量 demo。金融贷款、外卖配送等行业先暂缓：前者比保险客服更依赖强监管牌照和授信决策，后者更依赖订单、配送和退款等实时业务状态。

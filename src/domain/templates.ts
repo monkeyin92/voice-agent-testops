@@ -51,4 +51,15 @@ export const industryTemplates: Record<Industry, IndustryTemplate> = {
     requiredQuestions: ["服务类型", "身份核验状态", "保单或理赔编号", "联系方式", "是否需要持牌顾问跟进"],
     sensitiveRules: ["未完成身份核验前不得透露保单或理赔细节", "不得承诺赔付、保障资格或核保结果", "保障范围和资格问题必须转持牌顾问或人工确认"],
   },
+  outbound_leadgen: {
+    industry: "outbound_leadgen",
+    displayName: "外呼线索运营",
+    openingLine: "你好，我是回访助手。请问现在方便确认是否还需要这份资料吗？",
+    requiredQuestions: ["是否同意继续沟通", "需求主题", "合规联系方式", "是否需要人工回访"],
+    sensitiveRules: [
+      "客户拒绝、投诉或要求停止联系时必须停止推销并记录退订",
+      "不得承诺赠品一定送达、课程收益、健康效果或资格结果",
+      "添加微信、年龄资格和赠品领取必须经过客户同意或人工确认",
+    ],
+  },
 };

@@ -1183,6 +1183,8 @@ describe("voice-test CLI", () => {
     expect(allExamples.stdout).toContain("examples/voice-testops/chinese-dental-clinic-suite.json");
     expect(allExamples.stdout).toContain("Insurance regulated service");
     expect(allExamples.stdout).toContain("examples/voice-testops/chinese-insurance-regulated-service-suite.json");
+    expect(allExamples.stdout).toContain("Outbound lead generation");
+    expect(allExamples.stdout).toContain("examples/voice-testops/chinese-outbound-leadgen-suite.json");
     expect(allExamples.stdout).toContain("Create your own mock suite");
     expect(allExamples.stdout).toContain("npx voice-agent-testops init --industry insurance --lang en");
 
