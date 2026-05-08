@@ -1,3 +1,4 @@
+import { readFile } from "node:fs/promises";
 import { describe, expect, it } from "vitest";
 import { createLocalReceptionistAgent } from "@/testops/adapters/localReceptionist";
 import { exampleCatalog } from "@/testops/exampleCatalog";
@@ -18,6 +19,7 @@ const exampleSuites = [
   "examples/voice-testops/chinese-home-design-suite.json",
   "examples/voice-testops/chinese-insurance-regulated-service-suite.json",
   "examples/voice-testops/english-insurance-regulated-service-suite.json",
+  "examples/voice-testops/chinese-outbound-leadgen-suite.json",
   "examples/voice-testops/generated-transcript-suite.json",
   "examples/voice-testops/photo-studio-multiturn-suite.json",
   "examples/voice-testops/failing-demo-suite.json",
@@ -115,6 +117,28 @@ describe("voice-testops example suites", () => {
         path: "examples/voice-testops/chinese-insurance-regulated-service-suite.json",
       }),
     );
+  });
+
+  it("lists outbound lead generation as a reviewed recording-derived starter", () => {
+    expect(exampleCatalog).toContainEqual(
+      expect.objectContaining({
+        industry: "outbound_leadgen",
+        language: "zh-CN",
+        path: "examples/voice-testops/chinese-outbound-leadgen-suite.json",
+      }),
+    );
+  });
+
+  it("keeps outbound recording-derived examples sanitized", async () => {
+    for (const path of [
+      "examples/voice-testops/chinese-outbound-leadgen-suite.json",
+      "examples/voice-testops/transcripts/outbound-leadgen-reviewed.txt",
+    ]) {
+      const content = await readFile(path, "utf8");
+
+      expect(content, path).not.toMatch(/https?:\/\//i);
+      expect(content, path).not.toMatch(/(?<!\d)1[3-9]\d{9}(?!\d)/);
+    }
   });
 
   it("keeps each Chinese commercial starter deep enough for a first pilot", async () => {

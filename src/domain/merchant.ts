@@ -8,6 +8,7 @@ export const industrySchema = z.enum([
   "restaurant",
   "real_estate",
   "insurance",
+  "outbound_leadgen",
 ]);
 export type Industry = z.infer<typeof industrySchema>;
 
