@@ -498,8 +498,9 @@ function validateRiskTags(row: RecordingIntakeRow, issues: RecordingIntakeIssue[
   if (tags.length === 0) {
     return;
   }
+  const allowedRiskTags: readonly string[] = enumValues.risk_tag;
   for (const tag of tags) {
-    if (!enumValues.risk_tag.includes(tag)) {
+    if (!allowedRiskTags.includes(tag)) {
       addRowIssue(
         issues,
         row,
