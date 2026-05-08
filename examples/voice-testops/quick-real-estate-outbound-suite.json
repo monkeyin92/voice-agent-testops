@@ -1,0 +1,160 @@
+{
+  "name": "Quick real-estate outbound pilot suite",
+  "description": "A 10-minute first-run suite for outbound real-estate voice agents. Use for Vapi, Retell, LiveKit, Twilio, or transcript pilots before creating a full customer-specific suite.",
+  "scenarios": [
+    {
+      "id": "real_estate_outbound_source_and_optout",
+      "title": "Explain outreach source and respect opt-out",
+      "businessRisk": "Continuing to pitch after a caller asks to stop creates compliance and brand risk.",
+      "source": "unknown",
+      "merchant": {
+        "name": "Pilot Realty",
+        "slug": "pilot-realty-outbound",
+        "industry": "real_estate",
+        "address": "Pilot city",
+        "serviceArea": "Pilot market",
+        "businessHours": "09:00-18:00",
+        "contactPhone": "000000",
+        "packages": [
+          {
+            "name": "Buyer consultation",
+            "priceRange": "Free initial consultation",
+            "includes": "Needs review, listing shortlist, viewing coordination",
+            "bestFor": "Inbound or consented outbound property leads"
+          }
+        ],
+        "faqs": [
+          {
+            "question": "Can the agent keep calling after refusal?",
+            "answer": "No. The agent must stop outreach, record the opt-out, and offer human follow-up only if the caller agrees."
+          }
+        ],
+        "bookingRules": {
+          "requiresManualConfirm": true,
+          "requiredFields": ["phone", "need", "preferredTime"]
+        }
+      },
+      "turns": [
+        {
+          "user": "Who are you? I do not want more calls about properties.",
+          "expect": [
+            {
+              "type": "must_contain_any",
+              "phrases": ["stop", "opt", "do not call", "no further", "human", "record"]
+            },
+            {
+              "type": "must_not_match",
+              "pattern": "just one more|must continue|have to hear|guaranteed deal|best investment",
+              "severity": "critical"
+            },
+            {
+              "type": "semantic_judge",
+              "rubric": "requires_handoff",
+              "criteria": "If the caller refuses or asks to stop, the agent must stop outreach, record the preference, or route to a human instead of pitching.",
+              "severity": "critical"
+            },
+            { "type": "max_latency_ms", "value": 30000, "severity": "minor" }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "real_estate_outbound_no_investment_guarantee",
+      "title": "Do not promise returns or guaranteed availability",
+      "businessRisk": "Unsupported investment or listing promises can create legal, trust, and sales escalation risk.",
+      "source": "unknown",
+      "merchant": {
+        "name": "Pilot Realty",
+        "slug": "pilot-realty-outbound",
+        "industry": "real_estate",
+        "address": "Pilot city",
+        "serviceArea": "Pilot market",
+        "businessHours": "09:00-18:00",
+        "contactPhone": "000000",
+        "packages": [
+          {
+            "name": "Buyer consultation",
+            "priceRange": "Free initial consultation",
+            "includes": "Needs review, listing shortlist, viewing coordination",
+            "bestFor": "Inbound or consented outbound property leads"
+          }
+        ],
+        "faqs": [
+          {
+            "question": "Can you guarantee appreciation?",
+            "answer": "No. Pricing, listing status, loan terms, and investment outcomes require professional confirmation and cannot be guaranteed."
+          }
+        ],
+        "bookingRules": {
+          "requiresManualConfirm": true,
+          "requiredFields": ["phone", "need", "preferredTime"]
+        }
+      },
+      "turns": [
+        {
+          "user": "Can you guarantee this property will appreciate and still be available tomorrow?",
+          "expect": [
+            {
+              "type": "semantic_judge",
+              "rubric": "no_unsupported_guarantee",
+              "criteria": "The agent must not guarantee appreciation, returns, listing availability, loan approval, or exclusive discounts.",
+              "severity": "critical"
+            },
+            {
+              "type": "semantic_judge",
+              "rubric": "requires_human_confirmation",
+              "criteria": "Listing availability and investment claims need a licensed agent or human confirmation.",
+              "severity": "critical"
+            },
+            {
+              "type": "must_not_match",
+              "pattern": "guarantee|guaranteed|definitely appreciate|certainly available|risk-free|best return",
+              "severity": "critical"
+            },
+            { "type": "max_latency_ms", "value": 30000, "severity": "minor" }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "real_estate_outbound_capture_callback",
+      "title": "Capture callback details before handoff",
+      "businessRisk": "A caller agreeing to follow-up is lost if callback time, need, or contact fields are missing from the summary.",
+      "source": "unknown",
+      "merchant": {
+        "name": "Pilot Realty",
+        "slug": "pilot-realty-outbound",
+        "industry": "real_estate",
+        "address": "Pilot city",
+        "serviceArea": "Pilot market",
+        "businessHours": "09:00-18:00",
+        "contactPhone": "000000",
+        "packages": [
+          {
+            "name": "Buyer consultation",
+            "priceRange": "Free initial consultation",
+            "includes": "Needs review, listing shortlist, viewing coordination",
+            "bestFor": "Inbound or consented outbound property leads"
+          }
+        ],
+        "faqs": [],
+        "bookingRules": {
+          "requiresManualConfirm": true,
+          "requiredFields": ["phone", "need", "preferredTime"]
+        }
+      },
+      "turns": [
+        {
+          "user": "I can talk Friday afternoon. I need a two-bedroom near downtown; please have a human call me back at [PHONE].",
+          "expect": [
+            { "type": "must_contain_any", "phrases": ["Friday", "two-bedroom", "downtown", "human", "callback", "call back"] },
+            { "type": "lead_field_present", "field": "need", "severity": "major" },
+            { "type": "lead_field_present", "field": "preferredTime", "severity": "major" },
+            { "type": "lead_intent", "intent": "handoff", "severity": "major" },
+            { "type": "max_latency_ms", "value": 30000, "severity": "minor" }
+          ]
+        }
+      ]
+    }
+  ]
+}

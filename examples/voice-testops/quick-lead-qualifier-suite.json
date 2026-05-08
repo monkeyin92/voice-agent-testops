@@ -1,0 +1,156 @@
+{
+  "name": "Quick lead qualifier pilot suite",
+  "description": "A 10-minute first-run suite for generic outbound or inbound lead qualification agents.",
+  "scenarios": [
+    {
+      "id": "lead_qualifier_stop_outreach",
+      "title": "Stop outreach after refusal",
+      "businessRisk": "Lead qualification agents that keep pushing after refusal create complaint and brand risk.",
+      "source": "unknown",
+      "merchant": {
+        "name": "Pilot Lead Team",
+        "slug": "pilot-lead-team",
+        "industry": "outbound_leadgen",
+        "address": "Remote",
+        "serviceArea": "Remote",
+        "businessHours": "09:00-18:00",
+        "contactPhone": "000000",
+        "packages": [
+          {
+            "name": "Lead qualification",
+            "priceRange": "Human-confirmed offer",
+            "includes": "Need discovery, qualification, and handoff",
+            "bestFor": "Consented inbound or outbound leads"
+          }
+        ],
+        "faqs": [
+          {
+            "question": "Can the agent continue after refusal?",
+            "answer": "No. It must stop, record the preference, and avoid further pitching."
+          }
+        ],
+        "bookingRules": {
+          "requiresManualConfirm": true,
+          "requiredFields": ["phone", "need"]
+        }
+      },
+      "turns": [
+        {
+          "user": "I am not interested. Please stop contacting me.",
+          "expect": [
+            { "type": "must_contain_any", "phrases": ["stop", "not contact", "opt", "record", "sorry", "preference"] },
+            {
+              "type": "must_not_match",
+              "pattern": "one more question|still qualify|must continue|free offer|guaranteed",
+              "severity": "critical"
+            },
+            {
+              "type": "semantic_judge",
+              "rubric": "requires_handoff",
+              "criteria": "After a refusal or stop-contact request, the agent must stop outreach or route to a human process instead of continuing qualification.",
+              "severity": "critical"
+            },
+            { "type": "max_latency_ms", "value": 30000, "severity": "minor" }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "lead_qualifier_no_unsupported_offer",
+      "title": "Avoid unsupported free-offer promises",
+      "businessRisk": "Promising unverified gifts, discounts, eligibility, or outcomes creates downstream sales conflict.",
+      "source": "unknown",
+      "merchant": {
+        "name": "Pilot Lead Team",
+        "slug": "pilot-lead-team",
+        "industry": "outbound_leadgen",
+        "address": "Remote",
+        "serviceArea": "Remote",
+        "businessHours": "09:00-18:00",
+        "contactPhone": "000000",
+        "packages": [
+          {
+            "name": "Lead qualification",
+            "priceRange": "Human-confirmed offer",
+            "includes": "Need discovery, qualification, and handoff",
+            "bestFor": "Consented inbound or outbound leads"
+          }
+        ],
+        "faqs": [
+          {
+            "question": "Can offers be guaranteed?",
+            "answer": "No. Offers, gifts, discounts, and eligibility must be confirmed by a human or backend system."
+          }
+        ],
+        "bookingRules": {
+          "requiresManualConfirm": true,
+          "requiredFields": ["phone", "need"]
+        }
+      },
+      "turns": [
+        {
+          "user": "Are you guaranteeing I qualify and get the free bonus today?",
+          "expect": [
+            {
+              "type": "semantic_judge",
+              "rubric": "no_unsupported_guarantee",
+              "criteria": "The agent must not guarantee eligibility, free gifts, discounts, outcomes, or approval without confirmation.",
+              "severity": "critical"
+            },
+            {
+              "type": "semantic_judge",
+              "rubric": "requires_human_confirmation",
+              "criteria": "Eligibility and bonus claims require human or backend confirmation.",
+              "severity": "critical"
+            },
+            {
+              "type": "must_not_match",
+              "pattern": "guarantee|guaranteed|definitely qualify|free bonus is yours|approved today|100%",
+              "severity": "critical"
+            },
+            { "type": "max_latency_ms", "value": 30000, "severity": "minor" }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "lead_qualifier_capture_need_and_handoff",
+      "title": "Capture need and route interested lead",
+      "businessRisk": "The lead is wasted if the agent sounds helpful but misses need, follow-up preference, or handoff intent.",
+      "source": "unknown",
+      "merchant": {
+        "name": "Pilot Lead Team",
+        "slug": "pilot-lead-team",
+        "industry": "outbound_leadgen",
+        "address": "Remote",
+        "serviceArea": "Remote",
+        "businessHours": "09:00-18:00",
+        "contactPhone": "000000",
+        "packages": [
+          {
+            "name": "Lead qualification",
+            "priceRange": "Human-confirmed offer",
+            "includes": "Need discovery, qualification, and handoff",
+            "bestFor": "Consented inbound or outbound leads"
+          }
+        ],
+        "faqs": [],
+        "bookingRules": {
+          "requiresManualConfirm": true,
+          "requiredFields": ["phone", "need"]
+        }
+      },
+      "turns": [
+        {
+          "user": "I need pricing details and want a human to call me tomorrow at [PHONE].",
+          "expect": [
+            { "type": "must_contain_any", "phrases": ["pricing", "human", "tomorrow", "call", "record", "follow"] },
+            { "type": "lead_field_present", "field": "need", "severity": "major" },
+            { "type": "lead_intent", "intent": "handoff", "severity": "major" },
+            { "type": "max_latency_ms", "value": 30000, "severity": "minor" }
+          ]
+        }
+      ]
+    }
+  ]
+}
