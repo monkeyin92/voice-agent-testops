@@ -378,6 +378,18 @@ npx voice-agent-testops import-calls \
 
 `call-sample.json` is the automation manifest. `call-sampling.md` is for weekly human review. `call-transcripts` contains labeled text files that can be passed into `from-transcript` when a sampled call should become a regression test. Add `--risk-only` when you only want calls with inferred risk tags such as handoff requests, pricing questions, shared lead info, unsupported promises, or long conversations.
 
+## Triage Recording Intake
+
+When the input is a private manifest of raw recording links, validate the manifest before transcribing the batch:
+
+```bash
+npx voice-agent-testops recording-intake \
+  --input .voice-testops/recordings/recording-intake.csv \
+  --summary .voice-testops/recordings/intake-summary.md
+```
+
+The summary groups `keep` / `maybe` / `discard`, `business_type`, `risk_tag`, `quality`, and `turn_role_hint`, then lists `regression_candidate=yes` rows that are ready for the next step. `audio_url_private` is never printed in the summary; real URLs, missing fields, invalid enums, and consent/quality conflicts are reported as issue rows.
+
 ## Create Pilot Deliverables
 
 After a test run, generate customer-facing pilot artifacts from the JSON report:
