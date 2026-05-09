@@ -48,6 +48,7 @@
     "voice-test": "tsx src/testops/cli.ts",
     "judge:calibrate": "tsx src/testops/cli.ts calibrate-judge",
     "suite:from-transcript": "tsx src/testops/cli.ts from-transcript",
+    "transcript:intake": "tsx src/testops/cli.ts transcript-intake",
     "calls:import": "tsx src/testops/cli.ts import-calls",
     "voice-test:openclaw": "scripts/openclaw-docker.sh voice-test",
     "voice-test:photo-demo": "scripts/openclaw-docker.sh voice-test examples/voice-testops/photo-studio-multiturn-suite.json",

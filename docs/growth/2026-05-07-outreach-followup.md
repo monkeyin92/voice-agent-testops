@@ -66,3 +66,12 @@ Issue：[kev-hu/vapi-voice-agent#1](https://github.com/kev-hu/vapi-voice-agent/i
 为降低对方提供样本的成本，已补充可直接复制填写的 intake 包：[Insurance transcript intake pack](../ops/insurance-transcript-intake.md)。下一次 follow-up 优先贴这个模板，而不是继续泛泛请求“提供 transcript”。
 
 已将 intake 包回贴到 `kev-hu/vapi-voice-agent#1`：[issuecomment-4403442303](https://github.com/kev-hu/vapi-voice-agent/issues/1#issuecomment-4403442303)。对方现在只需按模板粘贴一条脱敏 transcript，或明确标注 synthetic/public sample。
+
+## 2026-05-09 reply check
+
+检查时间：2026-05-09 13:58 CST。
+
+- `streamcoreai/streamcore-server#4`：对方明确同意测试，提示可先测 `streamcore.ai` demo，但 demo 只有基础 Streamcore knowledge；已回复请求可脚本化 HTTP/WebSocket 测试入口或脱敏 transcript：[issuecomment-4411642368](https://github.com/streamcoreai/streamcore-server/issues/4#issuecomment-4411642368)。
+- `codewithmuh/ai-voice-agent#2`：对方给出弱正向回复；已回复请求 dev/test endpoint 或一条脱敏 booking / missed-call / handoff transcript：[issuecomment-4411642357](https://github.com/codewithmuh/ai-voice-agent/issues/2#issuecomment-4411642357)。
+
+当前优先级：Streamcore > codewithmuh。拿到 endpoint 走 `doctor` / `run`；拿到 transcript 先跑 `transcript-intake`，只公开 aggregate 结果，不贴原始 transcript。

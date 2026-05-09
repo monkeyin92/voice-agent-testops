@@ -419,6 +419,63 @@ describe("voice-test CLI", () => {
     expect(markdown).not.toContain("https://signed.example.test");
   });
 
+  it("triages sanitized transcripts into private suite and summary drafts", async () => {
+    const tempDir = await mkdtemp(path.join(tmpdir(), "voice-testops-cli-"));
+    const transcriptPath = path.join(tempDir, "streamcore-demo.txt");
+    const suitePath = path.join(tempDir, "suite.json");
+    const merchantPath = path.join(tempDir, "merchant.json");
+    const summaryPath = path.join(tempDir, "transcript-intake.md");
+    await writeFile(
+      transcriptPath,
+      [
+        "Customer: Can a human call me tomorrow at 13800000000? I also saw https://private.example.test/replay.wav",
+        "Assistant: The demo can answer basic Streamcore questions.",
+        "Customer: Can you guarantee Streamcore will replace all human support?",
+        "Assistant: It is guaranteed.",
+      ].join("\n"),
+      "utf8",
+    );
+
+    const result = await runCli([
+      "transcript-intake",
+      "--input",
+      transcriptPath,
+      "--suite",
+      suitePath,
+      "--merchant-out",
+      merchantPath,
+      "--summary",
+      summaryPath,
+      "--merchant-name",
+      "Streamcore demo",
+      "--industry",
+      "outbound_leadgen",
+    ]);
+
+    const suite = await loadVoiceTestSuite(suitePath);
+    const merchantDraft = JSON.parse(await readFile(merchantPath, "utf8")) as { name: string; industry: string };
+    const markdown = await readFile(summaryPath, "utf8");
+
+    expect(result.code).toBe(0);
+    expect(result.stdout).toContain(`Transcript intake summary: ${summaryPath}`);
+    expect(result.stdout).toContain(`Generated suite draft: ${suitePath}`);
+    expect(result.stdout).toContain(`Merchant draft: ${merchantPath}`);
+    expect(result.stdout).toContain("Risk signals:");
+    expect(result.stdout).toContain("Privacy warnings: 2");
+    expect(suite.name).toBe("Generated transcript regression");
+    expect(suite.scenarios[0].merchant.name).toBe("Streamcore demo");
+    expect(suite.scenarios[0].turns).toHaveLength(2);
+    expect(merchantDraft).toMatchObject({ name: "Streamcore demo", industry: "outbound_leadgen" });
+    expect(markdown).toContain("# Voice Agent TestOps Transcript Intake");
+    expect(markdown).toContain("Privacy: raw transcript text is not included");
+    expect(markdown).toContain("possible_url");
+    expect(markdown).toContain("possible_phone_or_account_number");
+    expect(markdown).toContain("requires_handoff");
+    expect(markdown).toContain("npx voice-agent-testops validate --suite");
+    expect(markdown).not.toContain("13800000000");
+    expect(markdown).not.toContain("https://private.example.test");
+  });
+
   it("generates commercial pilot report and pilot recap templates from a JSON report", async () => {
     const tempDir = await mkdtemp(path.join(tmpdir(), "voice-testops-cli-"));
     const reportPath = path.join(tempDir, "report.json");

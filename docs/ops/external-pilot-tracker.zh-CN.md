@@ -38,6 +38,7 @@
 
 | 日期 | 对象 | 入口 | 行业 starter | 接入方式 | 数据授权 | 当前状态 | 下一步动作 |
 |---|---|---|---|---|---|---|---|
+| 2026-05-06 | Streamcore server | https://github.com/streamcoreai/streamcore-server/issues/4 | custom platform / realtime voice agent | HTTP / WebSocket / Transcript import | 未确认 | replied | 已回复需求；等待可脚本化 demo endpoint、WebSocket route 或 sanitized transcript |
 | 2026-05-08 | Awaisali36 outbound real-estate Vapi agent | https://github.com/Awaisali36/Outbound-Real-State-Voice-AI-Agent-/issues/6 | real_estate / outbound_leadgen | Vapi / Transcript import | 未确认 | contacted | 2026-05-10 follow-up：endpoint 或 1 条脱敏 transcript |
 | 2026-05-08 | santmun Sofia voice agent | https://github.com/santmun/sofia-voice-agent/issues/2 | real_estate | Retell / Twilio / Transcript import | 未确认 | contacted | 2026-05-10 follow-up：endpoint 或 1 条脱敏 transcript |
 | 2026-05-08 | askjohngeorge Pipecat lead qualifier | https://github.com/askjohngeorge/pipecat-lead-qualifier/issues/1 | outbound_leadgen | Pipecat / HTTP | 未确认 | contacted | 2026-05-10 follow-up：lead qualifier endpoint 或 transcript |
@@ -49,7 +50,7 @@
 | 2026-05-09 | videosdk WhatsApp AI calling agent | https://github.com/videosdk-community/videosdk-whatsapp-ai-calling-agent/issues/2 | outbound_leadgen / custom channel | WhatsApp / Twilio / VideoSDK / Transcript import | 未确认 | contacted | 2026-05-11 follow-up：0.1.19 comment 已补；等 endpoint 或 sanitized transcript |
 | 2026-05-09 | VoiceBlender | https://github.com/VoiceBlender/voiceblender/issues/28 | outbound_leadgen / platform adapter | REST / Webhook / WebSocket adapter | 未确认 | contacted | 2026-05-11 follow-up：0.1.19 comment 已补；问 adapter interest 或 demo endpoint |
 | 2026-05-09 | theaifutureguy LiveKit voice agent | https://github.com/theaifutureguy/livekit-voice-agent/issues/6 | outbound_leadgen / receptionist | LiveKit / Telephony / HTTP | 未确认 | contacted | 2026-05-11 follow-up：0.1.19 comment 已补；等 dev endpoint 或 one sanitized call |
-| 2026-05-09 | codewithmuh AI voice receptionist | https://github.com/codewithmuh/ai-voice-agent/issues/2 | restaurant / custom receptionist | Vapi / HTTP / Transcript import | 未确认 | contacted | 2026-05-11 follow-up：booking endpoint 或 one sanitized transcript |
+| 2026-05-09 | codewithmuh AI voice receptionist | https://github.com/codewithmuh/ai-voice-agent/issues/2 | restaurant / custom receptionist | Vapi / HTTP / Transcript import | 未确认 | replied | 已回复需求；等待 booking endpoint 或 one sanitized transcript |
 | 2026-05-09 | Teleglobals voicebot calling agent | https://github.com/Teleglobals-org/voicebot-calling-agent/issues/1 | real_estate | Twilio / AWS / HTTP / Transcript import | 未确认 | contacted | 2026-05-11 follow-up：real-estate endpoint 或 one sanitized transcript |
 | 2026-05-09 | frejun Teler Vapi bridge | https://github.com/frejun-tech/teler-vapi-bridge/issues/6 | outbound_leadgen / platform bridge | Vapi bridge / HTTP / WebSocket | 未确认 | contacted | 2026-05-11 follow-up：contract-test adapter interest 或 dev endpoint |
 
