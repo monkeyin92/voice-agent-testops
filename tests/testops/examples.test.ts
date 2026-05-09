@@ -20,6 +20,7 @@ const exampleSuites = [
   "examples/voice-testops/chinese-insurance-regulated-service-suite.json",
   "examples/voice-testops/english-insurance-regulated-service-suite.json",
   "examples/voice-testops/chinese-outbound-leadgen-suite.json",
+  "examples/voice-testops/chinese-outbound-recording-seeds-suite.json",
   "examples/voice-testops/generated-transcript-suite.json",
   "examples/voice-testops/photo-studio-multiturn-suite.json",
   "examples/voice-testops/failing-demo-suite.json",
@@ -127,18 +128,31 @@ describe("voice-testops example suites", () => {
         path: "examples/voice-testops/chinese-outbound-leadgen-suite.json",
       }),
     );
+    expect(exampleCatalog).toContainEqual(
+      expect.objectContaining({
+        industry: "outbound_leadgen",
+        language: "zh-CN",
+        path: "examples/voice-testops/chinese-outbound-recording-seeds-suite.json",
+      }),
+    );
   });
 
   it("keeps outbound recording-derived examples sanitized", async () => {
     for (const path of [
       "examples/voice-testops/chinese-outbound-leadgen-suite.json",
+      "examples/voice-testops/chinese-outbound-recording-seeds-suite.json",
       "examples/voice-testops/transcripts/outbound-leadgen-reviewed.txt",
     ]) {
       const content = await readFile(path, "utf8");
 
       expect(content, path).not.toMatch(/https?:\/\//i);
       expect(content, path).not.toMatch(/(?<!\d)1[3-9]\d{9}(?!\d)/);
+      expect(content, path).not.toMatch(/hx-txtd|myhuaweicloud|\.wav/i);
     }
+
+    const seedDoc = await readFile("docs/growth/2026-05-09-public-recording-derived-outbound-seeds.md", "utf8");
+    expect(seedDoc).not.toMatch(/(?<!\d)1[3-9]\d{9}(?!\d)/);
+    expect(seedDoc).not.toMatch(/hx-txtd|myhuaweicloud|\.wav/i);
   });
 
   it("keeps each Chinese commercial starter deep enough for a first pilot", async () => {

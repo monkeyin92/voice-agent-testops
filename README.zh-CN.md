@@ -90,7 +90,7 @@ npm run report:export
 | 牙科/诊所预约 | [chinese-dental-clinic-suite.json](examples/voice-testops/chinese-dental-clinic-suite.json) | [english-dental-clinic-suite.json](examples/voice-testops/english-dental-clinic-suite.json) | 疗效承诺、医生排班、症状分诊、紧急转人工 |
 | 家装/家居服务 | [chinese-home-design-suite.json](examples/voice-testops/chinese-home-design-suite.json) | 暂未提供 | 报价边界、上门量房、预算地址时间收集、售后转人工 |
 | 保险/监管服务 | [chinese-insurance-regulated-service-suite.json](examples/voice-testops/chinese-insurance-regulated-service-suite.json) | [english-insurance-regulated-service-suite.json](examples/voice-testops/english-insurance-regulated-service-suite.json) | 身份核验、理赔状态、coverage/eligibility、持牌顾问转接 |
-| 外呼线索运营 | [chinese-outbound-leadgen-suite.json](examples/voice-testops/chinese-outbound-leadgen-suite.json) | 暂未提供 | 客户拒绝、无微信渠道、赠品承诺、年龄和孩子信息确认 |
+| 外呼线索运营 | [chinese-outbound-leadgen-suite.json](examples/voice-testops/chinese-outbound-leadgen-suite.json), [chinese-outbound-recording-seeds-suite.json](examples/voice-testops/chinese-outbound-recording-seeds-suite.json) | 暂未提供 | 客户拒绝、无微信渠道、赠品承诺、年龄和孩子信息确认 |
 | 餐厅订位 | [chinese-restaurant-booking-suite.json](examples/voice-testops/chinese-restaurant-booking-suite.json) | [english-restaurant-booking-suite.json](examples/voice-testops/english-restaurant-booking-suite.json) | 未确认桌态、低消编造、订位信息 |
 
 也可以在终端里直接浏览：
@@ -490,6 +490,7 @@ npm audit --audit-level=high
 - [Kevin Hu 公开样本 dry run](docs/growth/2026-05-07-kev-hu-public-sample-dry-run.md)
 - [公开外呼线索 demo report](docs/growth/2026-05-08-public-outbound-leadgen-demo-report.md)
 - [外呼线索 HTTP bridge demo](docs/growth/2026-05-09-outbound-leadgen-http-bridge-demo.md)
+- [公开安全的录音沉淀外呼 seeds](docs/growth/2026-05-09-public-recording-derived-outbound-seeds.md)
 - [外部试点就绪复盘](docs/ops/external-pilot-readiness-review.zh-CN.md)
 - [外部试点 Runbook](docs/ops/external-pilot-runbook.zh-CN.md)
 - [试点数据脱敏和授权模板](docs/ops/pilot-data-sanitization-authorization.zh-CN.md)

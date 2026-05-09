@@ -156,6 +156,14 @@ export const exampleCatalog: ExampleCatalogEntry[] = [
     path: "examples/voice-testops/chinese-outbound-leadgen-suite.json",
     risks: "客户拒绝、无微信渠道、赠品承诺、年龄和孩子信息确认",
   },
+  {
+    title: "Outbound recording-derived seeds",
+    industry: "outbound_leadgen",
+    industryLabel: "Outbound lead generation",
+    language: "zh-CN",
+    path: "examples/voice-testops/chinese-outbound-recording-seeds-suite.json",
+    risks: "录音沉淀风险模式、赠品承诺、私聊渠道、年龄询问、通话异常",
+  },
 ];
 
 export function parseExampleLanguage(value: string): ExampleLanguage {

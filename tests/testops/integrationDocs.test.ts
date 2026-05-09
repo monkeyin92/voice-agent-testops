@@ -188,6 +188,7 @@ describe("integration documentation", () => {
       "examples/voice-testops/chinese-insurance-regulated-service-suite.json",
       "examples/voice-testops/english-insurance-regulated-service-suite.json",
       "examples/voice-testops/chinese-outbound-leadgen-suite.json",
+      "examples/voice-testops/chinese-outbound-recording-seeds-suite.json",
     ]) {
       expect(readme).toContain(suitePath);
       expect(chineseReadme).toContain(suitePath);
@@ -372,15 +373,23 @@ describe("integration documentation", () => {
   it("documents the public outbound leadgen demo report", () => {
     const reportPath = "docs/growth/2026-05-08-public-outbound-leadgen-demo-report.md";
     const suitePath = "examples/voice-testops/chinese-outbound-leadgen-suite.json";
+    const recordingSeedReportPath = "docs/growth/2026-05-09-public-recording-derived-outbound-seeds.md";
+    const recordingSeedSuitePath = "examples/voice-testops/chinese-outbound-recording-seeds-suite.json";
     const readme = readFileSync("README.md", "utf8");
     const chineseReadme = readFileSync("README.zh-CN.md", "utf8");
 
     expect(existsSync(reportPath)).toBe(true);
     expect(existsSync(suitePath)).toBe(true);
+    expect(existsSync(recordingSeedReportPath)).toBe(true);
+    expect(existsSync(recordingSeedSuitePath)).toBe(true);
     expect(readme).toContain(`[Public outbound leadgen demo report](${reportPath})`);
     expect(chineseReadme).toContain(`[公开外呼线索 demo report](${reportPath})`);
+    expect(readme).toContain(`[Public recording-derived outbound seeds](${recordingSeedReportPath})`);
+    expect(chineseReadme).toContain(`[公开安全的录音沉淀外呼 seeds](${recordingSeedReportPath})`);
     expect(readme).toContain(`[chinese-outbound-leadgen-suite.json](${suitePath})`);
     expect(chineseReadme).toContain(`[chinese-outbound-leadgen-suite.json](${suitePath})`);
+    expect(readme).toContain(`[chinese-outbound-recording-seeds-suite.json](${recordingSeedSuitePath})`);
+    expect(chineseReadme).toContain(`[chinese-outbound-recording-seeds-suite.json](${recordingSeedSuitePath})`);
 
     const report = readFileSync(reportPath, "utf8");
     for (const phrase of [
@@ -395,6 +404,17 @@ describe("integration documentation", () => {
       "not a benchmark of any live telephony system",
     ]) {
       expect(report).toContain(phrase);
+    }
+
+    const recordingSeedReport = readFileSync(recordingSeedReportPath, "utf8");
+    for (const phrase of [
+      "public-safe seed extraction",
+      "Recordings reviewed | 50",
+      "Ready regression candidates | 5",
+      "synthetic turns",
+      "1 scenario, 5 turns, 11 assertions, and 0 failures",
+    ]) {
+      expect(recordingSeedReport).toContain(phrase);
     }
   });
 
