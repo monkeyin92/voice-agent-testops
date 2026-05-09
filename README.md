@@ -609,6 +609,7 @@ If your team has ever watched a voice agent sound confident at exactly the wrong
 - [External pilot outreach follow-up](docs/growth/2026-05-07-outreach-followup.md)
 - [Kevin Hu public sample dry run](docs/growth/2026-05-07-kev-hu-public-sample-dry-run.md)
 - [Public outbound leadgen demo report](docs/growth/2026-05-08-public-outbound-leadgen-demo-report.md)
+- [Outbound leadgen HTTP bridge demo](docs/growth/2026-05-09-outbound-leadgen-http-bridge-demo.md)
 - [External pilot readiness review](docs/ops/external-pilot-readiness-review.zh-CN.md)
 - [External pilot runbook](docs/ops/external-pilot-runbook.zh-CN.md)
 - [Pilot data sanitization and authorization template](docs/ops/pilot-data-sanitization-authorization.zh-CN.md)

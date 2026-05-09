@@ -489,6 +489,7 @@ npm audit --audit-level=high
 - [外部试点跟进记录](docs/growth/2026-05-07-outreach-followup.md)
 - [Kevin Hu 公开样本 dry run](docs/growth/2026-05-07-kev-hu-public-sample-dry-run.md)
 - [公开外呼线索 demo report](docs/growth/2026-05-08-public-outbound-leadgen-demo-report.md)
+- [外呼线索 HTTP bridge demo](docs/growth/2026-05-09-outbound-leadgen-http-bridge-demo.md)
 - [外部试点就绪复盘](docs/ops/external-pilot-readiness-review.zh-CN.md)
 - [外部试点 Runbook](docs/ops/external-pilot-runbook.zh-CN.md)
 - [试点数据脱敏和授权模板](docs/ops/pilot-data-sanitization-authorization.zh-CN.md)
