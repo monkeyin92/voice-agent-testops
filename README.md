@@ -100,7 +100,7 @@ Most public examples are bilingual. Mature business verticals keep Chinese and E
 | Restaurant booking | [chinese-restaurant-booking-suite.json](examples/voice-testops/chinese-restaurant-booking-suite.json) | [english-restaurant-booking-suite.json](examples/voice-testops/english-restaurant-booking-suite.json) | Unconfirmed tables, minimum-spend claims, booking details |
 | Real estate agent | [chinese-real-estate-agent-suite.json](examples/voice-testops/chinese-real-estate-agent-suite.json) | [english-real-estate-agent-suite.json](examples/voice-testops/english-real-estate-agent-suite.json) | Investment promises, listing status, viewing lead capture |
 | Insurance regulated service | [chinese-insurance-regulated-service-suite.json](examples/voice-testops/chinese-insurance-regulated-service-suite.json) | [english-insurance-regulated-service-suite.json](examples/voice-testops/english-insurance-regulated-service-suite.json) | Identity verification, claim status, coverage eligibility, licensed-agent handoff |
-| Outbound lead generation | [chinese-outbound-leadgen-suite.json](examples/voice-testops/chinese-outbound-leadgen-suite.json) | Not yet available | Refusal handling, private-channel consent, gift promises, age and child-data confirmation |
+| Outbound lead generation | [chinese-outbound-leadgen-suite.json](examples/voice-testops/chinese-outbound-leadgen-suite.json), [chinese-outbound-recording-seeds-suite.json](examples/voice-testops/chinese-outbound-recording-seeds-suite.json) | Not yet available | Refusal handling, private-channel consent, gift promises, age and child-data confirmation |
 
 Explore the full catalog from your terminal:
 
@@ -610,6 +610,7 @@ If your team has ever watched a voice agent sound confident at exactly the wrong
 - [Kevin Hu public sample dry run](docs/growth/2026-05-07-kev-hu-public-sample-dry-run.md)
 - [Public outbound leadgen demo report](docs/growth/2026-05-08-public-outbound-leadgen-demo-report.md)
 - [Outbound leadgen HTTP bridge demo](docs/growth/2026-05-09-outbound-leadgen-http-bridge-demo.md)
+- [Public recording-derived outbound seeds](docs/growth/2026-05-09-public-recording-derived-outbound-seeds.md)
 - [External pilot readiness review](docs/ops/external-pilot-readiness-review.zh-CN.md)
 - [External pilot runbook](docs/ops/external-pilot-runbook.zh-CN.md)
 - [Pilot data sanitization and authorization template](docs/ops/pilot-data-sanitization-authorization.zh-CN.md)
