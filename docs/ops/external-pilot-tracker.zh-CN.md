@@ -46,6 +46,9 @@
 | 2026-05-08 | kirklandsig AIReceptionist | https://github.com/kirklandsig/AIReceptionist/issues/12 | restaurant / custom receptionist | HTTP / Transcript import | 未确认 | contacted | 2026-05-10 follow-up：booking endpoint 或 sanitized call |
 | 2026-05-08 | blackdwarftech siphon | https://github.com/blackdwarftech/siphon/issues/19 | outbound_leadgen | Framework adapter / HTTP | 未确认 | contacted | 2026-05-10 follow-up：adapter interest or demo endpoint |
 | 2026-05-08 | intellwe AI calling agent | https://github.com/intellwe/ai-calling-agent/issues/2 | outbound_leadgen | Twilio / HTTP | 未确认 | contacted | 2026-05-10 follow-up：test endpoint or transcript |
+| 2026-05-09 | videosdk WhatsApp AI calling agent | https://github.com/videosdk-community/videosdk-whatsapp-ai-calling-agent/issues/2 | outbound_leadgen / custom channel | WhatsApp / Twilio / VideoSDK / Transcript import | 未确认 | contacted | 2026-05-11 follow-up：0.1.19 comment 已补；等 endpoint 或 sanitized transcript |
+| 2026-05-09 | VoiceBlender | https://github.com/VoiceBlender/voiceblender/issues/28 | outbound_leadgen / platform adapter | REST / Webhook / WebSocket adapter | 未确认 | contacted | 2026-05-11 follow-up：0.1.19 comment 已补；问 adapter interest 或 demo endpoint |
+| 2026-05-09 | theaifutureguy LiveKit voice agent | https://github.com/theaifutureguy/livekit-voice-agent/issues/6 | outbound_leadgen / receptionist | LiveKit / Telephony / HTTP | 未确认 | contacted | 2026-05-11 follow-up：0.1.19 comment 已补；等 dev endpoint 或 one sanitized call |
 
 ## 字段字典
 

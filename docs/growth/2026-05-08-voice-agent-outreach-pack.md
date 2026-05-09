@@ -35,6 +35,23 @@ Would you be open to a lightweight trial? If issue comments are not the right pl
 I’m looking for one real voice-agent endpoint or sanitized transcript to test Voice Agent TestOps against. It runs scripted customer turns, checks risky behavior, and returns JSON/HTML reports. I can adapt the suite to your domain and share the report back privately. Would that be useful for this project?
 ```
 
+## 0.1.19 recording-seed reply
+
+Use this for outbound / Vapi / Retell / LiveKit projects after the `0.1.19` release:
+
+```text
+Quick update: I just published voice-agent-testops@0.1.19 with a public-safe outbound recording seed suite.
+
+The shape is: 50 private outbound recordings -> 5 reviewed regression candidates -> public synthetic turns for opt-out, private-channel pressure, gift promises, age/health qualification, and call-quality fallback.
+
+You can inspect it without cloning:
+
+npx --yes voice-agent-testops@0.1.19 list --industry outbound_leadgen
+npx --yes voice-agent-testops@0.1.19 validate --suite examples/voice-testops/chinese-outbound-recording-seeds-suite.json
+
+If you have one dev endpoint or one sanitized transcript, I can adapt this into a tiny project-specific report and share the output back. No raw recording URLs, phone numbers, or customer names are needed.
+```
+
 ## Higher-response target list
 
 Prioritize projects with clear business voice-agent use cases, recent updates, open issues, and small/medium maintainer footprint.
@@ -80,6 +97,9 @@ Prioritize projects with clear business voice-agent use cases, recent updates, o
 | 2026-05-08 | 6 | kirklandsig AIReceptionist | https://github.com/kirklandsig/AIReceptionist/issues/12 | contacted | 2026-05-10 |
 | 2026-05-08 | 7 | blackdwarftech siphon | https://github.com/blackdwarftech/siphon/issues/19 | contacted | 2026-05-10 |
 | 2026-05-08 | 8 | intellwe AI calling agent | https://github.com/intellwe/ai-calling-agent/issues/2 | contacted | 2026-05-10 |
+| 2026-05-09 | 9 | videosdk WhatsApp AI calling agent | https://github.com/videosdk-community/videosdk-whatsapp-ai-calling-agent/issues/2 | contacted + 0.1.19 note | 2026-05-11 |
+| 2026-05-09 | 10 | VoiceBlender | https://github.com/VoiceBlender/voiceblender/issues/28 | contacted + 0.1.19 note | 2026-05-11 |
+| 2026-05-09 | 12 | theaifutureguy LiveKit voice agent | https://github.com/theaifutureguy/livekit-voice-agent/issues/6 | contacted + 0.1.19 note | 2026-05-11 |
 
 ## 48-hour follow-up templates
 
