@@ -100,6 +100,9 @@ Prioritize projects with clear business voice-agent use cases, recent updates, o
 | 2026-05-09 | 9 | videosdk WhatsApp AI calling agent | https://github.com/videosdk-community/videosdk-whatsapp-ai-calling-agent/issues/2 | contacted + 0.1.19 note | 2026-05-11 |
 | 2026-05-09 | 10 | VoiceBlender | https://github.com/VoiceBlender/voiceblender/issues/28 | contacted + 0.1.19 note | 2026-05-11 |
 | 2026-05-09 | 12 | theaifutureguy LiveKit voice agent | https://github.com/theaifutureguy/livekit-voice-agent/issues/6 | contacted + 0.1.19 note | 2026-05-11 |
+| 2026-05-09 | 13 | codewithmuh AI voice receptionist | https://github.com/codewithmuh/ai-voice-agent/issues/2 | contacted | 2026-05-11 |
+| 2026-05-09 | 15 | Teleglobals voicebot calling agent | https://github.com/Teleglobals-org/voicebot-calling-agent/issues/1 | contacted | 2026-05-11 |
+| 2026-05-09 | 16 | frejun Teler Vapi bridge | https://github.com/frejun-tech/teler-vapi-bridge/issues/6 | contacted | 2026-05-11 |
 
 ## 48-hour follow-up templates
 
