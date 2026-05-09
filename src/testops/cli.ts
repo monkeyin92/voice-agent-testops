@@ -38,7 +38,13 @@ import {
   renderSemanticJudgeCalibrationMarkdown,
 } from "./semanticJudgeCalibration";
 import { loadVoiceTestSuite } from "./suiteLoader";
-import { getTranscriptIntakeDefaults, parseTranscriptIntakePreset, type TranscriptIntakePreset } from "./transcriptIntake";
+import {
+  analyzeTranscriptIntake,
+  getTranscriptIntakeDefaults,
+  parseTranscriptIntakePreset,
+  renderTranscriptIntakeMarkdown,
+  type TranscriptIntakePreset,
+} from "./transcriptIntake";
 import { buildDraftMerchantFromTranscript, buildVoiceTestSuiteFromTranscript } from "./transcriptSuite";
 
 const severityRank: Record<VoiceTestSeverity, number> = {
@@ -82,6 +88,10 @@ async function main(argv: string[]): Promise<number> {
 
   if (argv[0] === "recording-intake") {
     return recordingIntake(argv.slice(1));
+  }
+
+  if (argv[0] === "transcript-intake") {
+    return transcriptIntake(argv.slice(1));
   }
 
   if (argv[0] === "pilot-report") {
@@ -531,6 +541,23 @@ type RecordingIntakeArgs = {
   summaryPath?: string;
 };
 
+type TranscriptIntakeArgs = {
+  transcriptPath?: string;
+  readFromStdin: boolean;
+  suitePath: string;
+  merchantPath?: string;
+  merchantOutPath?: string;
+  summaryPath: string;
+  merchantName?: string;
+  industry?: Industry;
+  name?: string;
+  scenarioId?: string;
+  scenarioTitle?: string;
+  source: LeadSource;
+  intake?: TranscriptIntakePreset;
+  turnRole: FromTranscriptTurnRole;
+};
+
 type PilotReportArgs = {
   reportPath: string;
   commercialPath?: string;
@@ -704,6 +731,144 @@ function parseRecordingIntakeArgs(argv: string[]): RecordingIntakeArgs {
   return {
     inputPath,
     summaryPath: values.get("summary"),
+  };
+}
+
+async function transcriptIntake(argv: string[]): Promise<number> {
+  const args = parseTranscriptIntakeArgs(argv);
+  const transcript = args.readFromStdin
+    ? await readFromStdin()
+    : await readFile(await resolveReadablePath(args.transcriptPath ?? ""), "utf8");
+  const intakeDefaults = args.intake ? getTranscriptIntakeDefaults(args.intake) : undefined;
+  const merchantName = args.merchantName ?? intakeDefaults?.merchantName;
+  const industry = args.industry ?? intakeDefaults?.industry;
+  const merchant = args.merchantPath
+    ? merchantConfigSchema.parse(JSON.parse(await readFile(await resolveReadablePath(args.merchantPath), "utf8")))
+    : buildDraftMerchantFromTranscript({ transcript, name: merchantName, industry });
+  const suite = buildVoiceTestSuiteFromTranscript({
+    transcript,
+    merchant,
+    name: args.name ?? intakeDefaults?.suiteName,
+    scenarioId: args.scenarioId ?? intakeDefaults?.scenarioId,
+    scenarioTitle: args.scenarioTitle ?? intakeDefaults?.scenarioTitle,
+    source: args.source,
+    turnRole: args.turnRole,
+  });
+  const suiteOutput = args.merchantOutPath
+    ? buildSuiteWithMerchantRef(suite, relativeMerchantRef(args.suitePath, args.merchantOutPath))
+    : suite;
+  const report = analyzeTranscriptIntake({
+    transcript,
+    suite,
+    sourcePath: args.readFromStdin ? undefined : args.transcriptPath,
+    selectedTurnRole: args.turnRole,
+    artifacts: {
+      suitePath: args.suitePath,
+      merchantPath: args.merchantOutPath,
+      summaryPath: args.summaryPath,
+    },
+  });
+
+  if (args.merchantOutPath) {
+    await writeReport(args.merchantOutPath, `${JSON.stringify(merchant, null, 2)}\n`);
+  }
+  await writeReport(args.suitePath, `${JSON.stringify(suiteOutput, null, 2)}\n`);
+  await writeReport(args.summaryPath, renderTranscriptIntakeMarkdown(report));
+
+  console.log(`Transcript intake summary: ${args.summaryPath}`);
+  console.log(`Generated suite draft: ${args.suitePath}`);
+  if (args.merchantOutPath) {
+    console.log(`${args.merchantPath ? "Merchant profile" : "Merchant draft"}: ${args.merchantOutPath}`);
+  }
+  console.log(`Transcript: ${args.readFromStdin ? "read from stdin" : args.transcriptPath}`);
+  if (args.intake) {
+    console.log(`Transcript intake: ${args.intake}`);
+  }
+  console.log(`Suite: ${suite.name}`);
+  console.log(`Scenario: ${suite.scenarios[0].id} - ${suite.scenarios[0].title}`);
+  printTurnCount(args.turnRole, suite.scenarios[0].turns.length);
+  console.log(`Assertions: ${report.assertionCount}`);
+  console.log(`Risk signals: ${report.riskSignals.length}`);
+  console.log(`Privacy warnings: ${report.privacyWarnings.length}`);
+
+  return 0;
+}
+
+function parseTranscriptIntakeArgs(argv: string[]): TranscriptIntakeArgs {
+  const values = new Map<string, string>();
+  const flags = new Set<string>();
+  const knownValues = new Set([
+    "transcript",
+    "input",
+    "suite",
+    "out",
+    "merchant",
+    "merchant-out",
+    "summary",
+    "merchant-name",
+    "industry",
+    "name",
+    "scenario-id",
+    "scenario-title",
+    "source",
+    "intake",
+    "turn-role",
+  ]);
+
+  for (let index = 0; index < argv.length; index += 1) {
+    const arg = argv[index];
+    if (!arg.startsWith("--")) {
+      throw new Error(`Unexpected argument: ${arg}`);
+    }
+
+    const name = arg.slice(2);
+    if (name === "stdin") {
+      flags.add(name);
+      continue;
+    }
+    if (!knownValues.has(name)) {
+      throw new Error(`Unknown transcript-intake option: --${name}`);
+    }
+
+    const value = argv[index + 1];
+    if (!value || value.startsWith("--")) {
+      throw new Error(`${arg} requires a value`);
+    }
+
+    values.set(name, value);
+    index += 1;
+  }
+
+  const readFromStdin = flags.has("stdin");
+  const transcriptPath = values.get("transcript") ?? values.get("input");
+  if (readFromStdin && transcriptPath) {
+    throw new Error("--stdin cannot be combined with --transcript or --input");
+  }
+  if (!readFromStdin && !transcriptPath) {
+    throw new Error("--transcript, --input, or --stdin is required");
+  }
+
+  const suitePath = values.get("suite") ?? values.get("out") ?? ".voice-testops/transcript-intake/suite.json";
+  const merchantPath = values.get("merchant");
+  const merchantOutPath = values.get("merchant-out") ?? (merchantPath ? undefined : ".voice-testops/transcript-intake/merchant.json");
+  const summaryPath = values.get("summary") ?? ".voice-testops/transcript-intake/summary.md";
+  const intake = values.get("intake");
+
+  return {
+    transcriptPath,
+    readFromStdin,
+    suitePath,
+    merchantPath,
+    merchantOutPath,
+    summaryPath,
+    merchantName: values.get("merchant-name"),
+    industry: values.has("industry") ? industrySchema.parse(values.get("industry")) : undefined,
+    name: values.get("name"),
+    scenarioId: values.get("scenario-id"),
+    scenarioTitle: values.get("scenario-title"),
+    source: leadSourceSchema.parse(values.get("source") ?? "website"),
+    intake: intake ? parseTranscriptIntakePreset(intake) : undefined,
+    turnRole: parseTranscriptTurnRole(values.get("turn-role") ?? "customer"),
   };
 }
 

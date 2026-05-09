@@ -217,6 +217,19 @@ npm run voice-test -- \
 
 ## 把真实失败对话变成回归测试
 
+如果试点对象先回复了一条脱敏 transcript，还没有 endpoint，先跑 intake 包装命令。它会写出私有 suite 草稿、商家草稿和 triage 摘要；summary 不会引用原始 transcript 文本：
+
+```bash
+pbpaste | npx voice-agent-testops transcript-intake \
+  --stdin \
+  --suite .voice-testops/transcript-intake/suite.json \
+  --merchant-out .voice-testops/transcript-intake/merchant.json \
+  --summary .voice-testops/transcript-intake/summary.md \
+  --merchant-name "Pilot demo agent"
+```
+
+这个 summary 会列出推断行业、turn 数、断言分布、风险信号、隐私警告、生成产物和下一步 `validate` / `doctor` / `run` 命令，但不输出原始 transcript。
+
 如果你已经遇到过一次真实失败，可以直接复制 transcript，生成一个可编辑的 suite 和商家资料草稿：
 
 ```bash

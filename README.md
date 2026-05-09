@@ -287,6 +287,19 @@ This runs the photo-studio multi-turn suite and exports a customer-ready report.
 
 ## Turn A Real Failure Into A Regression Test
 
+When a pilot replies with one sanitized transcript, start with the intake wrapper. It writes a private suite draft, merchant draft, and triage summary without quoting the raw transcript in the summary:
+
+```bash
+pbpaste | npx voice-agent-testops transcript-intake \
+  --stdin \
+  --suite .voice-testops/transcript-intake/suite.json \
+  --merchant-out .voice-testops/transcript-intake/merchant.json \
+  --summary .voice-testops/transcript-intake/summary.md \
+  --merchant-name "Pilot demo agent"
+```
+
+Use this before a live endpoint is ready. The summary highlights inferred industry, turn counts, assertion mix, risk signals, privacy warnings, generated artifacts, and the next `validate` / `doctor` / `run` commands. It does not print raw transcript text.
+
 Paste a failed call and generate a starter suite plus an editable merchant draft:
 
 ```bash

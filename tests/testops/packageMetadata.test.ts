@@ -42,6 +42,7 @@ describe("package metadata", () => {
     expect(packageJson.dependencies).not.toHaveProperty("react");
     expect(packageJson.dependencies).not.toHaveProperty("@prisma/client");
     expect(packageJson.scripts?.["judge:calibrate"]).toContain("calibrate-judge");
+    expect(packageJson.scripts?.["transcript:intake"]).toContain("transcript-intake");
     expect(lockRoot.packages[""].dependencies).toHaveProperty("tsx");
     expect(lockRoot.packages[""].dependencies).toHaveProperty("zod");
     expect(lockRoot.packages[""].dependencies).not.toHaveProperty("next");
