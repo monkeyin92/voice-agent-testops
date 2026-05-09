@@ -8,6 +8,10 @@ export function createTestAgentResponse(input) {
   const customerText = String(input.customerText ?? "");
   const source = input.source ?? "unknown";
   const messages = Array.isArray(input.messages) ? input.messages : [];
+  if (input.merchant?.industry === "outbound_leadgen") {
+    return createOutboundLeadgenResponse({ customerText, source, messages });
+  }
+
   const firstPackage = input.merchant?.packages?.[0] ?? {
     name: "service",
     priceRange: "configured price",
@@ -45,6 +49,38 @@ export function createTestAgentResponse(input) {
       level: phone ? "high" : asksHandoff || asksPrice || asksTime ? "medium" : "low",
       nextAction: asksHandoff ? "Route to a human operator" : "Review the lead and follow up",
       transcript: [...messages, { role: "assistant", text: spoken, at: now }],
+    },
+  };
+}
+
+function createOutboundLeadgenResponse({ customerText, source, messages }) {
+  const asksGift = /赠品|领取|送达|礼品/.test(customerText);
+  const refuses = /没时间|不要|别打|不方便|投诉|退订/.test(customerText);
+  const noPrivateChannel = /没有微信|不想加|私聊/.test(customerText);
+  const asksChildData = /孩子|小朋友|几年级|年龄|多大/.test(customerText);
+  const intent = refuses || noPrivateChannel || asksGift || asksChildData ? "handoff" : "other";
+
+  let spoken = "我先记录您的需求，不继续推销；涉及领取或后续沟通的事项会由人工客服确认。";
+  if (refuses) {
+    spoken = "收到，我会停止推销并记录不再联系；如需处理退订，会转人工客服确认。";
+  } else if (asksGift) {
+    spoken = "我不能承诺赠品配送结果；领取资格和方式需要人工客服确认。";
+  } else if (noPrivateChannel) {
+    spoken = "没有微信也可以，我不会要求私聊；我会停止微信引导，并转人工客服确认其他合规渠道。";
+  } else if (asksChildData) {
+    spoken = "孩子年级或年龄不是必须提供；涉及未成年人信息需要家长同意，并由人工客服确认。";
+  }
+
+  return {
+    spoken,
+    summary: {
+      source,
+      intent,
+      need: customerText || "Outbound lead follow-up",
+      questions: customerText ? [customerText] : [],
+      level: intent === "handoff" ? "high" : "medium",
+      nextAction: "Stop sales pressure and route sensitive confirmation to human follow-up",
+      transcript: [...messages, { role: "assistant", text: spoken, at: new Date().toISOString() }],
     },
   };
 }
