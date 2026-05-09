@@ -1,5 +1,16 @@
 # Changelog
 
+## 0.1.19 - 2026-05-09
+
+### Features
+- Add public-safe recording-derived outbound lead-generation seed suite.
+- Add deterministic outbound lead-generation handling to the public HTTP agent example.
+- Add quick pilot suites for receptionist booking, lead qualification, and real-estate outbound workflows.
+
+### Documentation
+- Add public recording-derived outbound seed report.
+- Add npm dogfood, outbound HTTP bridge, public outbound demo, and pilot response workflow notes.
+
 ## 0.1.18 - 2026-05-08
 
 ### Features
