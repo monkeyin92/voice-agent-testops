@@ -74,6 +74,7 @@ const integrationDocs = [
       "--agent sip",
       "--sip-uri",
       "--sip-driver-command",
+      "--sip-driver-retries",
       "examples/sip-driver/mock-driver.mjs",
       "examples/sip-driver/baresip-driver.mjs",
       "VOICE_TESTOPS_SIP_USERNAME",

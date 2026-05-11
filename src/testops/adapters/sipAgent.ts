@@ -7,6 +7,7 @@ export type SipAgentOptions = {
   sipProxy?: string;
   sipFrom?: string;
   callTimeoutMs?: number;
+  driverRetries?: number;
   mediaDir?: string;
   env?: Record<string, string | undefined>;
   runner?: SipDriverRunner;
@@ -60,17 +61,53 @@ export function createSipAgent(options: SipAgentOptions): VoiceAgentExecutor {
   }
 
   const callTimeoutMs = normalizeTimeout(options.callTimeoutMs);
+  const driverRetries = normalizeRetries(options.driverRetries);
   const runner = options.runner ?? runSipDriverCommand;
 
   return async (input) => {
-    const payload = buildSipDriverInput(input, { ...options, driverCommand, callTimeoutMs });
-    const body = await runner(driverCommand, payload, {
-      timeoutMs: callTimeoutMs,
-      env: buildDriverEnv(options, callTimeoutMs),
-    });
+    const payload = buildSipDriverInput(input, { ...options, driverCommand, callTimeoutMs, driverRetries });
+    const body = await runSipDriverWithRetries(
+      runner,
+      driverCommand,
+      payload,
+      {
+        timeoutMs: callTimeoutMs,
+        env: buildDriverEnv(options, callTimeoutMs, driverRetries),
+      },
+      driverRetries,
+    );
 
     return parseSipDriverOutput(body);
   };
+}
+
+async function runSipDriverWithRetries(
+  runner: SipDriverRunner,
+  command: string,
+  input: SipDriverInput,
+  options: SipDriverRunnerOptions,
+  driverRetries: number,
+): Promise<unknown> {
+  let lastError: unknown;
+  const maxAttempts = driverRetries + 1;
+
+  for (let attempt = 1; attempt <= maxAttempts; attempt += 1) {
+    try {
+      return await runner(command, input, {
+        timeoutMs: options.timeoutMs,
+        env: {
+          ...options.env,
+          VOICE_TESTOPS_SIP_DRIVER_ATTEMPT: String(attempt),
+          VOICE_TESTOPS_SIP_DRIVER_MAX_ATTEMPTS: String(maxAttempts),
+        },
+      });
+    } catch (error) {
+      lastError = error;
+    }
+  }
+
+  const suffix = lastError instanceof Error ? lastError.message : String(lastError);
+  throw new Error(`SIP driver failed after ${maxAttempts} attempt${maxAttempts === 1 ? "" : "s"}: ${suffix}`);
 }
 
 export async function runSipDriverCommand(
@@ -215,13 +252,25 @@ function normalizeTimeout(timeoutMs: number | undefined): number {
   return Math.floor(timeoutMs);
 }
 
-function buildDriverEnv(options: SipAgentOptions, callTimeoutMs: number): Record<string, string> {
+function normalizeRetries(driverRetries: number | undefined): number {
+  if (driverRetries === undefined) {
+    return 0;
+  }
+  if (!Number.isInteger(driverRetries) || driverRetries < 0) {
+    throw new Error("SIP driver retries must be a non-negative integer");
+  }
+
+  return driverRetries;
+}
+
+function buildDriverEnv(options: SipAgentOptions, callTimeoutMs: number, driverRetries: number): Record<string, string> {
   const env: Record<string, string> = {};
   assignEnv(env, "VOICE_TESTOPS_SIP_URI", options.sipUri);
   assignEnv(env, "VOICE_TESTOPS_SIP_PROXY", options.sipProxy);
   assignEnv(env, "VOICE_TESTOPS_SIP_FROM", options.sipFrom);
   assignEnv(env, "VOICE_TESTOPS_SIP_MEDIA_DIR", options.mediaDir);
   env.VOICE_TESTOPS_SIP_CALL_TIMEOUT_MS = String(callTimeoutMs);
+  env.VOICE_TESTOPS_SIP_DRIVER_RETRIES = String(driverRetries);
 
   for (const [key, value] of Object.entries(options.env ?? {})) {
     assignEnv(env, key, value);

@@ -276,10 +276,11 @@ npm run voice-test -- \
   --agent sip \
   --sip-uri sip:+8613800000000@10.0.0.8 \
   --sip-driver-command "node examples/sip-driver/mock-driver.mjs" \
-  --sip-media-dir .voice-testops/sip-media
+  --sip-media-dir .voice-testops/sip-media \
+  --sip-driver-retries 2
 ```
 
-The bundled mock driver does not dial; it verifies the adapter contract. For a real local SIP smoke test, use `node examples/sip-driver/baresip-driver.mjs` with private SIP credentials in environment variables. Replace either driver with your SIPp, Asterisk, baresip, LiveKit SIP, Twilio, or internal dialer script for production E2E voice tests. See [SIP Voice Agents](docs/integrations/sip.md).
+The bundled mock driver does not dial; it verifies the adapter contract. For a real local SIP smoke test, use `node examples/sip-driver/baresip-driver.mjs` with private SIP credentials in environment variables. Use `--sip-driver-retries` for one or two redials when the trunk occasionally misses call setup. Replace either driver with your SIPp, Asterisk, baresip, LiveKit SIP, Twilio, or internal dialer script for production E2E voice tests. See [SIP Voice Agents](docs/integrations/sip.md).
 
 ## Integration Guides
 

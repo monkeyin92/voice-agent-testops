@@ -1408,6 +1408,7 @@ function createAgentFromArgs(args: ReturnType<typeof parseCliArgs>) {
       sipProxy: args.sipProxy,
       sipFrom: args.sipFrom,
       callTimeoutMs: args.sipCallTimeoutMs,
+      driverRetries: args.sipDriverRetries,
       mediaDir: args.sipMediaDir,
     });
   }

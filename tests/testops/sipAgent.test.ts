@@ -59,6 +59,7 @@ describe("createSipAgent", () => {
       sipProxy: "sip:10.0.0.8:5060",
       sipFrom: "sip:testops@10.0.0.9",
       callTimeoutMs: 90_000,
+      driverRetries: 2,
       mediaDir: ".voice-testops/sip-media",
       runner,
     });
@@ -99,9 +100,63 @@ describe("createSipAgent", () => {
           VOICE_TESTOPS_SIP_FROM: "sip:testops@10.0.0.9",
           VOICE_TESTOPS_SIP_MEDIA_DIR: ".voice-testops/sip-media",
           VOICE_TESTOPS_SIP_CALL_TIMEOUT_MS: "90000",
+          VOICE_TESTOPS_SIP_DRIVER_RETRIES: "2",
+          VOICE_TESTOPS_SIP_DRIVER_ATTEMPT: "1",
+          VOICE_TESTOPS_SIP_DRIVER_MAX_ATTEMPTS: "3",
         }),
       }),
     );
+  });
+
+  it("retries failed driver invocations before returning a SIP turn", async () => {
+    const runner = vi
+      .fn()
+      .mockRejectedValueOnce(new Error("SIP call did not establish"))
+      .mockResolvedValue({
+        spoken: "您好，我们可以继续介绍产品价格。",
+      });
+    const agent = createSipAgent({
+      driverCommand: "node ./sip-driver.mjs",
+      sipUri: "sip:+8613800000000@10.0.0.8",
+      driverRetries: 1,
+      runner,
+    });
+
+    const output = await agent(agentInput);
+
+    expect(output.spoken).toContain("产品价格");
+    expect(runner).toHaveBeenCalledTimes(2);
+    expect(runner.mock.calls[0][2].env).toMatchObject({
+      VOICE_TESTOPS_SIP_DRIVER_ATTEMPT: "1",
+      VOICE_TESTOPS_SIP_DRIVER_MAX_ATTEMPTS: "2",
+    });
+    expect(runner.mock.calls[1][2].env).toMatchObject({
+      VOICE_TESTOPS_SIP_DRIVER_ATTEMPT: "2",
+      VOICE_TESTOPS_SIP_DRIVER_MAX_ATTEMPTS: "2",
+    });
+  });
+
+  it("reports the final driver failure after retries are exhausted", async () => {
+    const runner = vi.fn().mockRejectedValue(new Error("SIP call did not establish"));
+    const agent = createSipAgent({
+      driverCommand: "node ./sip-driver.mjs",
+      sipUri: "sip:+8613800000000@10.0.0.8",
+      driverRetries: 1,
+      runner,
+    });
+
+    await expect(agent(agentInput)).rejects.toThrow("SIP driver failed after 2 attempts: SIP call did not establish");
+    expect(runner).toHaveBeenCalledTimes(2);
+  });
+
+  it("rejects invalid driver retry counts", () => {
+    expect(() =>
+      createSipAgent({
+        driverCommand: "node ./sip-driver.mjs",
+        sipUri: "sip:+8613800000000@10.0.0.8",
+        driverRetries: -1,
+      }),
+    ).toThrow("SIP driver retries must be a non-negative integer");
   });
 
   it("fails fast when the driver does not return spoken text", async () => {

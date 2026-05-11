@@ -12,6 +12,7 @@ export type VoiceTestCliArgs = {
   sipProxy?: string;
   sipFrom?: string;
   sipCallTimeoutMs?: number;
+  sipDriverRetries?: number;
   sipMediaDir?: string;
   reportLocale: ReportLocale;
   failOnSeverity?: VoiceTestSeverity;
@@ -76,6 +77,10 @@ export function parseCliArgs(argv: string[]): VoiceTestCliArgs {
     values.get("sip-call-timeout-ms") ?? process.env.VOICE_TESTOPS_SIP_CALL_TIMEOUT_MS,
     "--sip-call-timeout-ms",
   );
+  const sipDriverRetries = parseOptionalNonNegativeInteger(
+    values.get("sip-driver-retries") ?? process.env.VOICE_TESTOPS_SIP_DRIVER_RETRIES,
+    "--sip-driver-retries",
+  );
   const openClawMode = values.get("openclaw-mode") ?? "custom";
   if (openClawMode !== "custom" && openClawMode !== "responses") {
     throw new Error("--openclaw-mode must be custom or responses");
@@ -111,6 +116,7 @@ export function parseCliArgs(argv: string[]): VoiceTestCliArgs {
     sipProxy: values.get("sip-proxy") ?? process.env.VOICE_TESTOPS_SIP_PROXY,
     sipFrom: values.get("sip-from") ?? process.env.VOICE_TESTOPS_SIP_FROM,
     sipCallTimeoutMs,
+    sipDriverRetries,
     sipMediaDir: values.get("sip-media-dir") ?? process.env.VOICE_TESTOPS_SIP_MEDIA_DIR,
     reportLocale,
     failOnSeverity,
@@ -122,6 +128,19 @@ export function parseCliArgs(argv: string[]): VoiceTestCliArgs {
     diffMarkdownPath: values.get("diff-markdown") ?? (values.has("baseline") ? ".voice-testops/diff.md" : undefined),
     failOnNew: flags.has("fail-on-new"),
   };
+}
+
+function parseOptionalNonNegativeInteger(value: string | undefined, label: string): number | undefined {
+  if (value === undefined) {
+    return undefined;
+  }
+
+  const parsed = Number(value);
+  if (!Number.isInteger(parsed) || parsed < 0) {
+    throw new Error(`${label} must be a non-negative integer`);
+  }
+
+  return parsed;
 }
 
 function parseOptionalPositiveInteger(value: string | undefined, label: string): number | undefined {

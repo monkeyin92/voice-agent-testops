@@ -36,7 +36,8 @@ npx voice-agent-testops run \
   --sip-uri "sip:2000@sip.example.com:5060" \
   --sip-driver-command "node examples/sip-driver/baresip-driver.mjs" \
   --sip-media-dir .voice-testops/sip-private/media \
-  --sip-call-timeout-ms 90000
+  --sip-call-timeout-ms 90000 \
+  --sip-driver-retries 2
 ```
 
 For a real bot, replace the driver command with a script that calls your SIP target:
@@ -50,6 +51,7 @@ npx voice-agent-testops run \
   --sip-from "$VOICE_TESTOPS_SIP_FROM" \
   --sip-driver-command "./scripts/sip-call-driver.sh" \
   --sip-call-timeout-ms 120000 \
+  --sip-driver-retries 2 \
   --sip-media-dir .voice-testops/sip-media
 ```
 
@@ -62,10 +64,13 @@ export VOICE_TESTOPS_SIP_PROXY="sip:10.0.0.8:5060"
 export VOICE_TESTOPS_SIP_FROM="sip:testops@10.0.0.9"
 export VOICE_TESTOPS_SIP_MEDIA_DIR=".voice-testops/sip-media"
 export VOICE_TESTOPS_SIP_CALL_TIMEOUT_MS="120000"
+export VOICE_TESTOPS_SIP_DRIVER_RETRIES="2"
 export VOICE_TESTOPS_BARESIP_CALL_SECONDS="35"
 ```
 
 Keep these variables in an ignored local file such as `.voice-testops/sip-private/real-sip.env`; do not commit SIP usernames, passwords, call recordings, or private transcripts.
+
+`--sip-driver-retries` is the number of extra driver invocations after a failed attempt. Keep it low for real SIP tests so transient trunk or registration misses get one or two redials without hiding a consistently broken bot.
 
 ## Driver Input
 

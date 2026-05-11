@@ -8,6 +8,7 @@ const sipEnvKeys = [
   "VOICE_TESTOPS_SIP_FROM",
   "VOICE_TESTOPS_SIP_MEDIA_DIR",
   "VOICE_TESTOPS_SIP_CALL_TIMEOUT_MS",
+  "VOICE_TESTOPS_SIP_DRIVER_RETRIES",
 ] as const;
 const originalSipEnv = Object.fromEntries(sipEnvKeys.map((key) => [key, process.env[key]]));
 
@@ -41,6 +42,7 @@ describe("parseCliArgs", () => {
       sipProxy: undefined,
       sipFrom: undefined,
       sipCallTimeoutMs: undefined,
+      sipDriverRetries: undefined,
       sipMediaDir: undefined,
       reportLocale: "zh-CN",
       failOnSeverity: undefined,
@@ -123,6 +125,8 @@ describe("parseCliArgs", () => {
         "sip:testops@10.0.0.9",
         "--sip-call-timeout-ms",
         "90000",
+        "--sip-driver-retries",
+        "2",
         "--sip-media-dir",
         ".voice-testops/sip-media",
       ]),
@@ -133,11 +137,22 @@ describe("parseCliArgs", () => {
       sipProxy: "sip:10.0.0.8:5060",
       sipFrom: "sip:testops@10.0.0.9",
       sipCallTimeoutMs: 90_000,
+      sipDriverRetries: 2,
       sipMediaDir: ".voice-testops/sip-media",
     });
   });
 
-  it("rejects invalid SIP call timeouts", () => {
+  it("parses SIP driver retries from the environment", () => {
+    process.env.VOICE_TESTOPS_SIP_DRIVER_COMMAND = "node examples/sip-driver/mock-driver.mjs";
+    process.env.VOICE_TESTOPS_SIP_URI = "sip:+8613800000000@10.0.0.8";
+    process.env.VOICE_TESTOPS_SIP_DRIVER_RETRIES = "3";
+
+    expect(parseCliArgs(["--suite", "suite.json", "--agent", "sip"])).toMatchObject({
+      sipDriverRetries: 3,
+    });
+  });
+
+  it("rejects invalid SIP call timeouts and driver retries", () => {
     expect(() =>
       parseCliArgs([
         "--suite",
@@ -152,6 +167,20 @@ describe("parseCliArgs", () => {
         "0",
       ]),
     ).toThrow("--sip-call-timeout-ms must be a positive integer");
+    expect(() =>
+      parseCliArgs([
+        "--suite",
+        "suite.json",
+        "--agent",
+        "sip",
+        "--sip-driver-command",
+        "node sip-driver.mjs",
+        "--sip-uri",
+        "sip:+8613800000000@10.0.0.8",
+        "--sip-driver-retries",
+        "-1",
+      ]),
+    ).toThrow("--sip-driver-retries must be a non-negative integer");
   });
 
   it("supports English report rendering", () => {
