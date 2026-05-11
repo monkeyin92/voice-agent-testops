@@ -91,6 +91,40 @@ describe("voice-test CLI", () => {
     expect(junit).toContain("NEVER_MATCHING_PHRASE");
   });
 
+  it("runs a suite through the SIP driver contract", async () => {
+    const tempDir = await mkdtemp(path.join(tmpdir(), "voice-testops-cli-"));
+    const suitePath = await writeSipHandoffSuite(tempDir);
+    const reportPath = path.join(tempDir, "report.json");
+    const mediaDir = path.join(tempDir, "sip-media");
+
+    const result = await runCli([
+      "--suite",
+      suitePath,
+      "--agent",
+      "sip",
+      "--sip-uri",
+      "sip:+8613800000000@10.0.0.8",
+      "--sip-driver-command",
+      "node examples/sip-driver/mock-driver.mjs",
+      "--sip-media-dir",
+      mediaDir,
+      "--json",
+      reportPath,
+    ]);
+
+    const report = JSON.parse(await readFile(reportPath, "utf8")) as {
+      summary: { failures: number };
+      scenarios: Array<{ turns: Array<{ assistant: string; audio?: { url: string }; voiceMetrics?: { turnLatencyMs?: number } }> }>;
+    };
+
+    expect(result.code).toBe(0);
+    expect(result.stdout).toContain("SIP driver contract demo: passed");
+    expect(report.summary.failures).toBe(0);
+    expect(report.scenarios[0].turns[0].assistant).toContain("转人工");
+    expect(report.scenarios[0].turns[0].audio?.url).toContain("/sip-media/sip_handoff-turn-1.wav");
+    expect(report.scenarios[0].turns[0].voiceMetrics?.turnLatencyMs).toBe(4200);
+  });
+
   it("writes a Markdown diff against a baseline JSON report", async () => {
     const tempDir = await mkdtemp(path.join(tmpdir(), "voice-testops-cli-"));
     const suitePath = await writeMinorFailureSuite(tempDir);
@@ -1515,6 +1549,7 @@ describe("voice-test CLI", () => {
     expect(schema.$schema).toBe("https://json-schema.org/draft/2020-12/schema");
     expect(schema.title).toBe("Voice Agent TestOps Suite");
     expect(scenarioProperties?.source?.enum).toContain("website");
+    expect(scenarioProperties?.source?.enum).toContain("phone");
     expect(merchantDefinition?.properties?.industry?.enum).toContain("insurance");
     expect(scenarioProperties?.merchantRef).toBeDefined();
     expect(scenarioProperties?.merchant).toBeDefined();
@@ -1803,6 +1838,41 @@ async function writeMinorFailureSuite(tempDir: string): Promise<string> {
               {
                 user: "How much is a portrait session?",
                 expect: [{ type: "must_contain_any", phrases: ["NEVER_MATCHING_PHRASE"], severity: "minor" }],
+              },
+            ],
+          },
+        ],
+      },
+      null,
+      2,
+    ),
+    "utf8",
+  );
+
+  return suitePath;
+}
+
+async function writeSipHandoffSuite(tempDir: string): Promise<string> {
+  const suitePath = path.join(tempDir, "sip-handoff-suite.json");
+  await writeFile(
+    suitePath,
+    JSON.stringify(
+      {
+        name: "SIP driver contract demo",
+        scenarios: [
+          {
+            id: "sip_handoff",
+            title: "SIP handoff",
+            source: "phone",
+            merchant,
+            turns: [
+              {
+                user: "帮我转人工",
+                expect: [
+                  { type: "must_contain_any", phrases: ["人工客服", "转人工"], severity: "critical" },
+                  { type: "audio_replay_present", severity: "major" },
+                  { type: "voice_metric_max", metric: "turnLatencyMs", value: 6000, severity: "major" },
+                ],
               },
             ],
           },

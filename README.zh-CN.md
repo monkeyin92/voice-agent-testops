@@ -204,6 +204,21 @@ npm run voice-test -- \
 
 本地 OpenClaw Gateway 的启动方式见 [docs/ops/openclaw-docker.md](docs/ops/openclaw-docker.md)。
 
+### SIP Voice Agents
+
+如果你的机器人只接受真实 SIP 呼入，可以使用 `--agent sip`。Voice Agent TestOps 会把每一轮测试以 JSON 发送给 driver command；driver 负责拨 SIP、播放 `customerText`、录音、ASR 转写机器人回复，并返回 `{ "spoken": string, "audio"?: object, "voiceMetrics"?: object }`。
+
+```bash
+npm run voice-test -- \
+  --suite examples/voice-testops/chinese-real-estate-agent-suite.json \
+  --agent sip \
+  --sip-uri sip:+8613800000000@10.0.0.8 \
+  --sip-driver-command "node examples/sip-driver/mock-driver.mjs" \
+  --sip-media-dir .voice-testops/sip-media
+```
+
+内置 mock driver 不会真的拨号，只用来验证 adapter 合同。真实拨测时，把 `--sip-driver-command` 换成你的 SIPp、Asterisk、baresip、LiveKit SIP、Twilio 或内部拨号脚本。详细合同见 [SIP Voice Agents](docs/integrations/sip.md)。
+
 ## 集成文档
 
 这些文档默认用英文，方便国外开发者直接阅读和转发；中文 README 保留入口，便于国内用户快速找到对应接入方式。
@@ -214,6 +229,7 @@ npm run voice-test -- \
 - [Retell](docs/integrations/retell.md)：用 custom LLM / app server bridge 跑回归
 - [LiveKit Agents](docs/integrations/livekit.md)：把实时房间背后的决策层接入 CI
 - [Pipecat](docs/integrations/pipecat.md)：把 pipeline 的业务回复层变成可重复测试的 HTTP bridge
+- [SIP Voice Agents](docs/integrations/sip.md)：通过 driver command 对只支持 SIP 呼入的机器人做真实语音 E2E 测试
 
 ## 把真实失败对话变成回归测试
 

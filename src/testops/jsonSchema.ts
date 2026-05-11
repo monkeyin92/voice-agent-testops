@@ -78,7 +78,7 @@ function buildScenarioSchema(): JsonSchema {
       },
       source: {
         type: "string",
-        enum: ["xiaohongshu", "douyin", "wechat", "website", "unknown"],
+        enum: ["xiaohongshu", "douyin", "wechat", "website", "phone", "unknown"],
       },
       merchant: {
         $ref: "#/$defs/merchant",

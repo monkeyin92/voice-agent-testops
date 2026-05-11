@@ -7,6 +7,7 @@ import { industrySchema, merchantConfigSchema, type Industry } from "../domain/m
 import { createHttpAgent } from "./adapters/httpAgent";
 import { createLocalReceptionistAgent } from "./adapters/localReceptionist";
 import { createOpenClawAgent } from "./adapters/openClawAgent";
+import { createSipAgent } from "./adapters/sipAgent";
 import { createTranscriptReplayAgent } from "./adapters/transcriptReplay";
 import { parseCliArgs } from "./cliArgs";
 import { renderCommercialPilotReport, renderPilotReviewTemplate } from "./commercialReport";
@@ -1398,6 +1399,17 @@ function createAgentFromArgs(args: ReturnType<typeof parseCliArgs>) {
 
   if (args.agent === "openclaw") {
     return createOpenClawAgent({ endpoint: args.endpoint ?? "", apiKey: args.apiKey, mode: args.openClawMode });
+  }
+
+  if (args.agent === "sip") {
+    return createSipAgent({
+      driverCommand: args.sipDriverCommand ?? "",
+      sipUri: args.sipUri ?? "",
+      sipProxy: args.sipProxy,
+      sipFrom: args.sipFrom,
+      callTimeoutMs: args.sipCallTimeoutMs,
+      mediaDir: args.sipMediaDir,
+    });
   }
 
   return createLocalReceptionistAgent();

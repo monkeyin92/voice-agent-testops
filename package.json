@@ -30,6 +30,7 @@
     "examples/voice-testops",
     "examples/http-agent-server",
     "examples/voice-platform-bridge",
+    "examples/sip-driver",
     "docs/demo-reports",
     "docs/guides",
     "docs/integrations",
@@ -59,6 +60,7 @@
     "report:export": "node scripts/export-testops-report.mjs",
     "example:http-agent": "node examples/http-agent-server/server.mjs",
     "example:voice-platform-bridge": "node examples/voice-platform-bridge/server.mjs",
+    "example:sip-driver": "node examples/sip-driver/mock-driver.mjs",
     "prisma:generate": "prisma generate",
     "prisma:migrate": "prisma migrate dev",
     "prisma:studio": "prisma studio"

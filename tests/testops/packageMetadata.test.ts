@@ -32,6 +32,7 @@ describe("package metadata", () => {
         "examples/voice-testops",
         "examples/http-agent-server",
         "examples/voice-platform-bridge",
+        "examples/sip-driver",
         "docs/demo-reports",
         "docs/guides",
         "docs/integrations",
@@ -45,6 +46,7 @@ describe("package metadata", () => {
     expect(packageJson.scripts?.["judge:calibrate"]).toContain("calibrate-judge");
     expect(packageJson.scripts?.["transcript:intake"]).toContain("transcript-intake");
     expect(packageJson.scripts?.["transcript:trial"]).toContain("transcript-trial");
+    expect(packageJson.scripts?.["example:sip-driver"]).toContain("examples/sip-driver/mock-driver.mjs");
     expect(lockRoot.packages[""].dependencies).toHaveProperty("tsx");
     expect(lockRoot.packages[""].dependencies).toHaveProperty("zod");
     expect(lockRoot.packages[""].dependencies).not.toHaveProperty("next");

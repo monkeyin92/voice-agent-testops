@@ -11,7 +11,7 @@
 
 Voice Agent TestOps runs scripted customer conversations against your agent, then checks the things demos usually hide: unsafe pricing, over-promising, missed phone numbers, wrong handoff intent, and latency that quietly kills the experience.
 
-It is not another voice-agent framework. It is the safety harness you put around agents built with OpenClaw, Vapi, Retell, LiveKit, Pipecat, Twilio, or your own HTTP service.
+It is not another voice-agent framework. It is the safety harness you put around agents built with OpenClaw, Vapi, Retell, LiveKit, Pipecat, Twilio, SIP trunks, or your own HTTP service.
 
 [Quick Start](#quick-start) · [Example Library](#example-library) · [Create Mock Data](#create-mock-data) · [Connect An Agent](#connect-an-agent) · [Turn A Real Failure Into A Regression Test](#turn-a-real-failure-into-a-regression-test) · [Draft Regressions From Failed Reports](#draft-regressions-from-failed-reports) · [Import Production Calls For Sampling](#import-production-calls-for-sampling) · [Suite Format](#suite-format)
 
@@ -150,7 +150,7 @@ The schema describes the raw authoring format, so both inline `merchant` objects
 
 ## Connect An Agent
 
-Start with HTTP if you want the shortest path. Use the OpenClaw adapter when you already have an OpenClaw-compatible `/v1/responses` endpoint. For hosted voice stacks, add a small test bridge so CI can test the same prompt, tool, and lead-summary logic without placing a real phone call.
+Start with HTTP if you want the shortest path. Use the OpenClaw adapter when you already have an OpenClaw-compatible `/v1/responses` endpoint. For hosted voice stacks, add a small test bridge so CI can test the same prompt, tool, and lead-summary logic without placing a real phone call. If the only real entry point is a SIP number or trunk, use the SIP driver contract to place a voice call while keeping the same suite and report format.
 
 ### Generic HTTP Agent
 
@@ -266,6 +266,21 @@ npm run voice-test -- \
 
 For a local OpenClaw Gateway setup, see [docs/ops/openclaw-docker.md](docs/ops/openclaw-docker.md).
 
+### SIP Voice Agents
+
+When your bot only accepts real SIP calls, run with `--agent sip` and point Voice Agent TestOps at a driver command. The driver receives each test turn as JSON on stdin, places or controls the SIP call, plays `customerText`, records and transcribes the bot reply, then returns `{ "spoken": string, "audio"?: object, "voiceMetrics"?: object }`.
+
+```bash
+npm run voice-test -- \
+  --suite examples/voice-testops/chinese-real-estate-agent-suite.json \
+  --agent sip \
+  --sip-uri sip:+8613800000000@10.0.0.8 \
+  --sip-driver-command "node examples/sip-driver/mock-driver.mjs" \
+  --sip-media-dir .voice-testops/sip-media
+```
+
+The bundled mock driver does not dial; it verifies the adapter contract. Replace it with your SIPp, Asterisk, baresip, LiveKit SIP, Twilio, or internal dialer script for real E2E voice tests. See [SIP Voice Agents](docs/integrations/sip.md).
+
 ## Integration Guides
 
 - [Generic HTTP Agent](docs/integrations/http.md)
@@ -274,6 +289,7 @@ For a local OpenClaw Gateway setup, see [docs/ops/openclaw-docker.md](docs/ops/o
 - [Retell](docs/integrations/retell.md)
 - [LiveKit Agents](docs/integrations/livekit.md)
 - [Pipecat](docs/integrations/pipecat.md)
+- [SIP Voice Agents](docs/integrations/sip.md)
 
 ## Sales Demo
 

@@ -67,6 +67,20 @@ const integrationDocs = [
     title: "Pipecat",
     phrases: ["pipeline", "test-turn bridge", "--agent http", "PIPECAT_TEST_AGENT_URL"],
   },
+  {
+    path: "docs/integrations/sip.md",
+    title: "SIP Voice Agents",
+    phrases: [
+      "--agent sip",
+      "--sip-uri",
+      "--sip-driver-command",
+      "examples/sip-driver/mock-driver.mjs",
+      "driver contract",
+      "spoken",
+      "audio",
+      "voiceMetrics",
+    ],
+  },
 ];
 
 describe("integration documentation", () => {
@@ -84,6 +98,7 @@ describe("integration documentation", () => {
     expect(readme).toContain("集成文档");
     expect(readme).toContain("[HTTP](docs/integrations/http.md)");
     expect(readme).toContain("[OpenClaw](docs/integrations/openclaw.md)");
+    expect(readme).toContain("[SIP Voice Agents](docs/integrations/sip.md)");
     expect(readme).toContain("--fail-on-severity critical");
   });
 

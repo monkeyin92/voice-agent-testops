@@ -58,6 +58,23 @@ describe("parseVoiceTestSuite", () => {
     expect(suite.scenarios[0].businessRisk).toBe("避免经纪人在未核实政策和市场信息时承诺升值或收益。");
   });
 
+  it("accepts phone as a lead source for SIP and telephony tests", () => {
+    const suite = parseVoiceTestSuite({
+      name: "电话回归测试",
+      scenarios: [
+        {
+          id: "phone_source",
+          title: "电话来源",
+          source: "phone",
+          merchant,
+          turns: [{ user: "帮我转人工", expect: [] }],
+        },
+      ],
+    });
+
+    expect(suite.scenarios[0].source).toBe("phone");
+  });
+
   it("accepts semantic judge assertions with rubric and criteria", () => {
     const suite = parseVoiceTestSuite({
       name: "语义评测",

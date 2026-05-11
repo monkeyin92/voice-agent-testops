@@ -1,7 +1,34 @@
-import { describe, expect, it } from "vitest";
+import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import { parseCliArgs } from "@/testops/cliArgs";
 
+const sipEnvKeys = [
+  "VOICE_TESTOPS_SIP_DRIVER_COMMAND",
+  "VOICE_TESTOPS_SIP_URI",
+  "VOICE_TESTOPS_SIP_PROXY",
+  "VOICE_TESTOPS_SIP_FROM",
+  "VOICE_TESTOPS_SIP_MEDIA_DIR",
+  "VOICE_TESTOPS_SIP_CALL_TIMEOUT_MS",
+] as const;
+const originalSipEnv = Object.fromEntries(sipEnvKeys.map((key) => [key, process.env[key]]));
+
 describe("parseCliArgs", () => {
+  beforeEach(() => {
+    for (const key of sipEnvKeys) {
+      delete process.env[key];
+    }
+  });
+
+  afterEach(() => {
+    for (const key of sipEnvKeys) {
+      const original = originalSipEnv[key];
+      if (original === undefined) {
+        delete process.env[key];
+      } else {
+        process.env[key] = original;
+      }
+    }
+  });
+
   it("parses local receptionist defaults", () => {
     expect(parseCliArgs(["--suite", "examples/suite.json"])).toEqual({
       suitePath: "examples/suite.json",
@@ -9,6 +36,12 @@ describe("parseCliArgs", () => {
       endpoint: undefined,
       apiKey: undefined,
       openClawMode: "custom",
+      sipDriverCommand: undefined,
+      sipUri: undefined,
+      sipProxy: undefined,
+      sipFrom: undefined,
+      sipCallTimeoutMs: undefined,
+      sipMediaDir: undefined,
       reportLocale: "zh-CN",
       failOnSeverity: undefined,
       jsonPath: ".voice-testops/report.json",
@@ -62,6 +95,63 @@ describe("parseCliArgs", () => {
       endpoint: "http://localhost:18889/v1/responses",
       openClawMode: "responses",
     });
+  });
+
+  it("requires a driver command and SIP URI for SIP agents", () => {
+    expect(() => parseCliArgs(["--suite", "suite.json", "--agent", "sip"])).toThrow(
+      "--sip-driver-command is required for --agent sip",
+    );
+    expect(() =>
+      parseCliArgs(["--suite", "suite.json", "--agent", "sip", "--sip-driver-command", "node sip-driver.mjs"]),
+    ).toThrow("--sip-uri is required for --agent sip");
+  });
+
+  it("parses SIP agent settings", () => {
+    expect(
+      parseCliArgs([
+        "--suite",
+        "suite.json",
+        "--agent",
+        "sip",
+        "--sip-driver-command",
+        "node examples/sip-driver/mock-driver.mjs",
+        "--sip-uri",
+        "sip:+8613800000000@10.0.0.8",
+        "--sip-proxy",
+        "sip:10.0.0.8:5060",
+        "--sip-from",
+        "sip:testops@10.0.0.9",
+        "--sip-call-timeout-ms",
+        "90000",
+        "--sip-media-dir",
+        ".voice-testops/sip-media",
+      ]),
+    ).toMatchObject({
+      agent: "sip",
+      sipDriverCommand: "node examples/sip-driver/mock-driver.mjs",
+      sipUri: "sip:+8613800000000@10.0.0.8",
+      sipProxy: "sip:10.0.0.8:5060",
+      sipFrom: "sip:testops@10.0.0.9",
+      sipCallTimeoutMs: 90_000,
+      sipMediaDir: ".voice-testops/sip-media",
+    });
+  });
+
+  it("rejects invalid SIP call timeouts", () => {
+    expect(() =>
+      parseCliArgs([
+        "--suite",
+        "suite.json",
+        "--agent",
+        "sip",
+        "--sip-driver-command",
+        "node sip-driver.mjs",
+        "--sip-uri",
+        "sip:+8613800000000@10.0.0.8",
+        "--sip-call-timeout-ms",
+        "0",
+      ]),
+    ).toThrow("--sip-call-timeout-ms must be a positive integer");
   });
 
   it("supports English report rendering", () => {

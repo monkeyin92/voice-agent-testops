@@ -1,6 +1,6 @@
 import { z } from "zod";
 
-export const leadSourceSchema = z.enum(["xiaohongshu", "douyin", "wechat", "website", "unknown"]);
+export const leadSourceSchema = z.enum(["xiaohongshu", "douyin", "wechat", "website", "phone", "unknown"]);
 export type LeadSource = z.infer<typeof leadSourceSchema>;
 
 export const leadIntentSchema = z.enum([
