@@ -1,5 +1,16 @@
 # Changelog
 
+## 0.1.21 - 2026-05-11
+
+### Features
+- Add `--agent sip` with a SIP driver command contract for real voice-call regression tests.
+- Add bundled mock SIP driver for contract smoke tests without placing a real call.
+- Add `phone` as a first-class lead source for SIP and telephony suites.
+
+### Documentation
+- Add SIP integration guide covering driver input, return contract, audio replay, and voice metrics.
+- Document SIP setup in English and Chinese READMEs.
+
 ## 0.1.20 - 2026-05-11
 
 ### Features
