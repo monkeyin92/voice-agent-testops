@@ -1,5 +1,14 @@
 # Changelog
 
+## 0.1.23 - 2026-05-11
+
+### Fixes
+- Normalize common Simplified/Traditional Chinese ASR drift for `must_contain_any` phrase checks.
+- Apply the same normalization to `must_not_match` forbidden-pattern checks so robot-only SIP tests can catch variants such as `轉人工`.
+
+### Documentation
+- Document Chinese assertion normalization in the README and SIP integration guide.
+
 ## 0.1.22 - 2026-05-11
 
 ### Features
