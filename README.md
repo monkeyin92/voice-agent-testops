@@ -553,8 +553,8 @@ You can also keep merchant profiles in separate files and reference them with `m
 
 | Assertion | Purpose |
 |---|---|
-| `must_contain_any` | Require at least one expected phrase in the spoken answer |
-| `must_not_match` | Block forbidden regex patterns such as absolute promises |
+| `must_contain_any` | Require at least one expected phrase in the spoken answer; Chinese matching normalizes common Simplified/Traditional ASR drift |
+| `must_not_match` | Block forbidden regex patterns such as absolute promises; Chinese matching also checks a normalized Simplified/Traditional copy |
 | `max_latency_ms` | Fail turns that exceed a latency threshold |
 | `lead_field_present` | Require structured lead fields such as `phone` |
 | `lead_intent` | Require the summary intent to match the scenario |

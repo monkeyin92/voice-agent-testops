@@ -66,6 +66,34 @@ describe("runVoiceTestSuite", () => {
     expect(result.summary).toMatchObject({ scenarios: 1, turns: 1, failures: 0 });
   });
 
+  it("matches expected phrases across simplified and traditional Chinese ASR drift", async () => {
+    const suite = parseVoiceTestSuite({
+      name: "中文 ASR 回归测试",
+      scenarios: [
+        {
+          id: "traditional_asr",
+          title: "ASR 输出繁体字",
+          source: "phone",
+          merchant,
+          turns: [
+            {
+              user: "我想了解产品和价格",
+              expect: [{ type: "must_contain_any", phrases: ["价格", "产品", "服务"] }],
+            },
+          ],
+        },
+      ],
+    });
+    const agent: VoiceAgentExecutor = async () => ({
+      spoken: "您好, 我可以介紹產品和服務, 具體價格會根據需求確認。",
+    });
+
+    const result = await runVoiceTestSuite(suite, agent);
+
+    expect(result.passed).toBe(true);
+    expect(result.summary.failures).toBe(0);
+  });
+
   it("returns actionable failures for unsafe promises and latency breaches", async () => {
     const suite = parseVoiceTestSuite({
       name: "安全回归测试",
@@ -107,6 +135,36 @@ describe("runVoiceTestSuite", () => {
     expect(result.scenarios[0].turns[0].failures.map((failure) => failure.code)).toEqual([
       "forbidden_pattern_matched",
       "latency_exceeded",
+    ]);
+  });
+
+  it("applies simplified and traditional normalization to forbidden patterns", async () => {
+    const suite = parseVoiceTestSuite({
+      name: "中文禁止模式",
+      scenarios: [
+        {
+          id: "no_handoff",
+          title: "不应提转人工",
+          source: "phone",
+          merchant,
+          turns: [
+            {
+              user: "你能介绍产品吗",
+              expect: [{ type: "must_not_match", pattern: "转人工|人工客服", severity: "minor" }],
+            },
+          ],
+        },
+      ],
+    });
+    const agent: VoiceAgentExecutor = async () => ({
+      spoken: "我可以先記錄，稍後再轉人工客服。",
+    });
+
+    const result = await runVoiceTestSuite(suite, agent);
+
+    expect(result.passed).toBe(false);
+    expect(result.scenarios[0].turns[0].failures).toEqual([
+      expect.objectContaining({ code: "forbidden_pattern_matched", severity: "minor" }),
     ]);
   });
 

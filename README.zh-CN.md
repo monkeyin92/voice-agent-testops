@@ -431,7 +431,7 @@ npx voice-agent-testops proof-card \
 
 Suite 就是 JSON。它描述商家资料、客户对话，以及每一轮必须满足的断言。
 
-常用断言包括：`must_contain_any`、`must_not_match`、`max_latency_ms`、`lead_field_present`、`lead_intent`、`semantic_judge`、`tool_called`、`backend_state_present`、`backend_state_equals`、`audio_replay_present`、`voice_metric_max` 和 `voice_metric_min`。前几类检查回复和摘要，中间几类检查工具调用和后端状态，最后几类检查录音 replay 和语音原生体验指标。
+常用断言包括：`must_contain_any`、`must_not_match`、`max_latency_ms`、`lead_field_present`、`lead_intent`、`semantic_judge`、`tool_called`、`backend_state_present`、`backend_state_equals`、`audio_replay_present`、`voice_metric_max` 和 `voice_metric_min`。前几类检查回复和摘要，中间几类检查工具调用和后端状态，最后几类检查录音 replay 和语音原生体验指标。中文短语和禁止模式会做常见简繁归一化，避免 ASR 把 `价格` 转成 `價格` 时误报。
 
 ```json
 {

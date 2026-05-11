@@ -132,6 +132,7 @@ The driver should turn `customerText` into caller audio, send it into the SIP ca
 Voice Agent TestOps reuses the existing assertions after the driver returns:
 
 - `must_contain_any`, `must_not_match`, and semantic assertions read `spoken`.
+- Chinese phrase and forbidden-pattern checks normalize common Simplified/Traditional ASR drift, so `价格` can match `價格` and `转人工` can catch `轉人工`.
 - `lead_*` assertions read `summary`.
 - `audio_replay_present` reads `audio.url`.
 - `voice_metric_max` and `voice_metric_min` read `voiceMetrics`.
