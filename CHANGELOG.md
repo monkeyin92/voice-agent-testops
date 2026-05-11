@@ -1,5 +1,14 @@
 # Changelog
 
+## 0.1.24 - 2026-05-11
+
+### Features
+- Add `--sip-driver-retries` and `VOICE_TESTOPS_SIP_DRIVER_RETRIES` for limited SIP driver redials after transient call setup failures.
+- Expose per-attempt environment metadata to SIP drivers with `VOICE_TESTOPS_SIP_DRIVER_ATTEMPT` and `VOICE_TESTOPS_SIP_DRIVER_MAX_ATTEMPTS`.
+
+### Documentation
+- Document SIP retry usage in the README and SIP integration guide.
+
 ## 0.1.23 - 2026-05-11
 
 ### Fixes
