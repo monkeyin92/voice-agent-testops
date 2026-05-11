@@ -4,6 +4,10 @@ Date: 2026-05-08
 
 Goal: get one real voice-agent endpoint or 1-3 sanitized transcripts from smaller, more responsive voice-agent builders.
 
+Current operating plan after the first no-reply batch: [No-reply growth plan](2026-05-11-no-reply-growth-plan.md).
+
+Public-safe proof link for future outreach: [Public proof gallery](public-proof-gallery.md).
+
 ## Copy-paste issue / discussion message
 
 ```text
@@ -107,6 +111,8 @@ Prioritize projects with clear business voice-agent use cases, recent updates, o
 ## 48-hour follow-up templates
 
 Use one short reply only. Do not add a second wall of text.
+
+After 2026-05-11, prefer the warmer, proof-led drafts in the [no-reply growth plan](2026-05-11-no-reply-growth-plan.md). These older templates are still useful for short replies, but do not keep bumping zero-reply GitHub issues.
 
 ### Endpoint follow-up
 

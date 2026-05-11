@@ -75,3 +75,25 @@ Issue：[kev-hu/vapi-voice-agent#1](https://github.com/kev-hu/vapi-voice-agent/i
 - `codewithmuh/ai-voice-agent#2`：对方给出弱正向回复；已回复请求 dev/test endpoint 或一条脱敏 booking / missed-call / handoff transcript：[issuecomment-4411642357](https://github.com/codewithmuh/ai-voice-agent/issues/2#issuecomment-4411642357)。
 
 当前优先级：Streamcore > codewithmuh。拿到 endpoint 走 `doctor` / `run`；拿到 transcript 先跑 `transcript-intake`，只公开 aggregate 结果，不贴原始 transcript。
+
+## 2026-05-11 no-reply operating plan
+
+检查时间：2026-05-11 15:00 CST。
+
+- GitHub 未读通知为空。
+- 当前仓库 `monkeyin92/voice-agent-testops` 没有需要处理的新 issue 评论或 PR 评论。
+- 近期外部 issue 中，真正的对方回复仍只有 `streamcoreai/streamcore-server#4` 和 `codewithmuh/ai-voice-agent#2`；两条都已由 `monkeyin92` 跟进，之后暂无新回复。
+- 其他有评论的条目主要是自己的 0.1.19 或 transcript-intake follow-up；零评论 issue 不再持续顶帖。
+
+执行记录：
+
+- 新增 [public proof gallery](public-proof-gallery.md)，把公开外呼 demo、HTTP bridge demo、recording-derived seeds、Kevin Hu public sample dry run 汇总成后续外联链接。
+- 新增 [no-reply growth plan](2026-05-11-no-reply-growth-plan.md)，固定暖线跟进日期、冷线止损规则和可复制回复。
+- 2026-05-11 重新跑了 `examples/voice-testops/chinese-outbound-recording-seeds-suite.json` 对本地 HTTP example bridge 的 proof：`doctor` passed，`run` passed，11 assertions，0 failures，0 critical failures。生成产物留在 `.voice-testops/2026-05-11-public-proof/`，不提交。
+
+下一步节奏：
+
+1. 2026-05-12 只跟进 `streamcoreai/streamcore-server#4`，请求 public demo 背后的可脚本化 HTTP/WebSocket route，或一条脱敏 transcript。
+2. 2026-05-14 若 `codewithmuh/ai-voice-agent#2` 仍未给 endpoint/transcript，再发一次短 check-in。
+3. 2026-05-13 到 2026-05-15 对 2026-05-08 零回复批次最多发一次 close-the-loop；之后标记 dormant。
+4. 2026-05-18 起把新增触达转向 Discussions、Discord、email、LinkedIn，不继续依赖 GitHub issue 冷启动。

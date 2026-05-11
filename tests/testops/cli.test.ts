@@ -476,6 +476,53 @@ describe("voice-test CLI", () => {
     expect(markdown).not.toContain("https://private.example.test");
   });
 
+  it("runs a transcript-only trial and writes pilot-ready artifacts", async () => {
+    const tempDir = await mkdtemp(path.join(tmpdir(), "voice-testops-cli-"));
+    const transcriptPath = path.join(tempDir, "call.txt");
+    const outDir = path.join(tempDir, "trial");
+    await writeFile(
+      transcriptPath,
+      [
+        "Customer: I want a guaranteed free gift, and my phone is 13800000000.",
+        "Assistant: Yes, the gift is guaranteed and I will mark your phone.",
+      ].join("\n"),
+      "utf8",
+    );
+
+    const result = await runCli([
+      "transcript-trial",
+      "--input",
+      transcriptPath,
+      "--out-dir",
+      outDir,
+      "--merchant-name",
+      "Outbound proof",
+      "--industry",
+      "outbound_leadgen",
+      "--customer",
+      "Outbound proof",
+    ]);
+
+    const report = JSON.parse(await readFile(path.join(outDir, "report.json"), "utf8")) as {
+      summary: { failures: number };
+      scenarios: Array<{ turns: Array<{ assistant: string }> }>;
+    };
+    const proofCard = await readFile(path.join(outDir, "proof-card.md"), "utf8");
+    const intakeSummary = await readFile(path.join(outDir, "intake-summary.md"), "utf8");
+
+    expect(result.code).toBe(0);
+    expect(result.stdout).toContain(`Transcript trial: ${outDir}`);
+    expect(result.stdout).toContain(`Proof card: ${path.join(outDir, "proof-card.md")}`);
+    expect(result.stdout).toContain(`Regression draft: ${path.join(outDir, "regression-draft.json")}`);
+    expect(report.summary.failures).toBeGreaterThan(0);
+    expect(report.scenarios[0].turns[0].assistant).toContain("gift is guaranteed");
+    expect(proofCard).toContain("# Voice Agent TestOps Proof Card");
+    expect(proofCard).toContain("Target: Outbound proof");
+    expect(proofCard).toContain("Minimum next step");
+    expect(intakeSummary).toContain("Privacy: raw transcript text is not included");
+    expect(intakeSummary).not.toContain("13800000000");
+  });
+
   it("generates commercial pilot report and pilot recap templates from a JSON report", async () => {
     const tempDir = await mkdtemp(path.join(tmpdir(), "voice-testops-cli-"));
     const reportPath = path.join(tempDir, "report.json");
@@ -511,6 +558,37 @@ describe("voice-test CLI", () => {
     expect(recap).toContain("# Pilot Review Template");
     expect(recap).toContain("Decision to make: Pause launch until critical risks are fixed");
     expect(recap).toContain("Can you guarantee this property will go up?");
+  });
+
+  it("generates a proof card from a JSON report", async () => {
+    const tempDir = await mkdtemp(path.join(tmpdir(), "voice-testops-cli-"));
+    const reportPath = path.join(tempDir, "report.json");
+    const proofCardPath = path.join(tempDir, "proof-card.md");
+    await writePilotRunReport(reportPath);
+
+    const result = await runCli([
+      "proof-card",
+      "--report",
+      reportPath,
+      "--out",
+      proofCardPath,
+      "--customer",
+      "Anju Realty",
+      "--period",
+      "Pilot week 1",
+      "--proof-url",
+      "https://example.test/report.html",
+    ]);
+
+    const proofCard = await readFile(proofCardPath, "utf8");
+
+    expect(result.code).toBe(0);
+    expect(result.stdout).toContain(`Proof card: ${proofCardPath}`);
+    expect(proofCard).toContain("# Voice Agent TestOps Proof Card");
+    expect(proofCard).toContain("Target: Anju Realty");
+    expect(proofCard).toContain("Report link: https://example.test/report.html");
+    expect(proofCard).toContain("forbidden_pattern_matched");
+    expect(proofCard).toContain("Minimum next step");
   });
 
   it("calibrates the semantic judge against the bundled annotation seed set", async () => {

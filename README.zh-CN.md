@@ -220,6 +220,19 @@ npm run voice-test -- \
 如果试点对象先回复了一条脱敏 transcript，还没有 endpoint，先跑 intake 包装命令。它会写出私有 suite 草稿、商家草稿和 triage 摘要；summary 不会引用原始 transcript 文本：
 
 ```bash
+pbpaste | npx voice-agent-testops transcript-trial \
+  --stdin \
+  --out-dir .voice-testops/transcript-trial \
+  --merchant-name "Pilot demo agent" \
+  --industry outbound_leadgen \
+  --customer "Pilot demo agent"
+```
+
+`transcript-trial` 是没有 endpoint 时的最低摩擦路径。它会把脱敏 transcript 当作 replay source，生成 suite、商家草稿、intake summary、JSON/HTML/Markdown/JUnit 报告、`commercial-report.md`、`pilot-recap.md` 和 `proof-card.md`。如果 replay 后的 transcript 没过生成的断言，还会写出 `regression-draft.json` 和 `failure-clusters.md`。
+
+如果只想做 triage，不生成 replay report，用 `transcript-intake`：
+
+```bash
 pbpaste | npx voice-agent-testops transcript-intake \
   --stdin \
   --suite .voice-testops/transcript-intake/suite.json \
@@ -385,6 +398,19 @@ npx voice-agent-testops pilot-report \
 
 `commercial-report.md` 汇总上线建议、严重程度分布、证据链接和下一步试点动作。`pilot-recap.md` 用来开复盘会，记录决策、负责人和下一批要沉淀的 regression 资产。
 
+如果你只需要一段适合贴到 GitHub、邮件或 Discord 的短 follow-up，可以从同一份 JSON report 生成 proof card：
+
+```bash
+npx voice-agent-testops proof-card \
+  --report .voice-testops/report.json \
+  --out .voice-testops/proof-card.md \
+  --customer "安居房产" \
+  --period "试点第 1 周" \
+  --proof-url "https://example.com/report.html"
+```
+
+`proof-card.md` 会压缩成外联用短卡片：覆盖范围、pass/fail、严重程度分布、最关键失败轮次、下一步最小请求和隐私边界。它适合 public-safe demo 或 transcript-only trial 之后发给维护者。
+
 ## 场景格式
 
 Suite 就是 JSON。它描述商家资料、客户对话，以及每一轮必须满足的断言。
@@ -500,6 +526,9 @@ npm audit --audit-level=high
 - [贡献指南](CONTRIBUTING.md)
 - [商业化护城河路线图](docs/roadmap/2026-05-07-commercial-moat-roadmap.zh-CN.md)
 - [外部试点跟进记录](docs/growth/2026-05-07-outreach-followup.md)
+- [无回复增长计划](docs/growth/2026-05-11-no-reply-growth-plan.md)
+- [公开 proof gallery](docs/growth/public-proof-gallery.md)
+- [公开 demo reports](docs/demo-reports/README.md)
 - [Kevin Hu 公开样本 dry run](docs/growth/2026-05-07-kev-hu-public-sample-dry-run.md)
 - [公开外呼线索 demo report](docs/growth/2026-05-08-public-outbound-leadgen-demo-report.md)
 - [外呼线索 HTTP bridge demo](docs/growth/2026-05-09-outbound-leadgen-http-bridge-demo.md)

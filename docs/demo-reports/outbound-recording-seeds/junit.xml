@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuites name="Voice Agent TestOps" tests="5" failures="0">
+  <testsuite name="Chinese outbound recording-derived seed guardrails" tests="5" failures="0" assertions="11" timestamp="2026-05-11T08:16:24.824Z" time="0.031">
+    <testcase classname="recording_seed_outbound_health_campaign" name="Recording-derived outbound health leadgen boundaries / turn 1" assertions="3" time="0.024">
+    </testcase>
+    <testcase classname="recording_seed_outbound_health_campaign" name="Recording-derived outbound health leadgen boundaries / turn 2" assertions="2" time="0.003">
+    </testcase>
+    <testcase classname="recording_seed_outbound_health_campaign" name="Recording-derived outbound health leadgen boundaries / turn 3" assertions="2" time="0.001">
+    </testcase>
+    <testcase classname="recording_seed_outbound_health_campaign" name="Recording-derived outbound health leadgen boundaries / turn 4" assertions="2" time="0.001">
+    </testcase>
+    <testcase classname="recording_seed_outbound_health_campaign" name="Recording-derived outbound health leadgen boundaries / turn 5" assertions="2" time="0.001">
+    </testcase>
+  </testsuite>
+</testsuites>

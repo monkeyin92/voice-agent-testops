@@ -290,6 +290,19 @@ This runs the photo-studio multi-turn suite and exports a customer-ready report.
 When a pilot replies with one sanitized transcript, start with the intake wrapper. It writes a private suite draft, merchant draft, and triage summary without quoting the raw transcript in the summary:
 
 ```bash
+pbpaste | npx voice-agent-testops transcript-trial \
+  --stdin \
+  --out-dir .voice-testops/transcript-trial \
+  --merchant-name "Pilot demo agent" \
+  --industry outbound_leadgen \
+  --customer "Pilot demo agent"
+```
+
+`transcript-trial` is the lowest-friction path when there is no endpoint yet. It uses the sanitized transcript as a replay source, generates a suite, merchant draft, intake summary, JSON/HTML/Markdown/JUnit reports, `commercial-report.md`, `pilot-recap.md`, and `proof-card.md`. If the replayed transcript fails the generated assertions, it also writes `regression-draft.json` and `failure-clusters.md`.
+
+For triage only, without running a replay report, use `transcript-intake`:
+
+```bash
 pbpaste | npx voice-agent-testops transcript-intake \
   --stdin \
   --suite .voice-testops/transcript-intake/suite.json \
@@ -454,6 +467,19 @@ npx voice-agent-testops pilot-report \
 ```
 
 `commercial-report.md` summarizes launch readiness, severity breakdown, evidence links, and next pilot steps. `pilot-recap.md` is a meeting template for decisions, action owners, and regression assets to add next.
+
+When you need a short GitHub/email/Discord follow-up instead of a full report, generate a proof card from the same JSON report:
+
+```bash
+npx voice-agent-testops proof-card \
+  --report .voice-testops/report.json \
+  --out .voice-testops/proof-card.md \
+  --customer "Anju Realty" \
+  --period "Pilot week 1" \
+  --proof-url "https://example.com/report.html"
+```
+
+`proof-card.md` is intentionally short: coverage, pass/fail status, severity counts, the top failed turns, a minimum next-step ask, and the privacy boundary. It is designed for outreach after a public-safe demo or transcript-only trial.
 
 ## Suite Format
 
@@ -620,6 +646,9 @@ If your team has ever watched a voice agent sound confident at exactly the wrong
 - [Market thesis](docs/strategy/voice-agent-testops-market.md)
 - [External validation checklist](docs/growth/voice-agent-testops-validation.md)
 - [External pilot outreach follow-up](docs/growth/2026-05-07-outreach-followup.md)
+- [No-reply growth plan](docs/growth/2026-05-11-no-reply-growth-plan.md)
+- [Public proof gallery](docs/growth/public-proof-gallery.md)
+- [Public demo reports](docs/demo-reports/README.md)
 - [Kevin Hu public sample dry run](docs/growth/2026-05-07-kev-hu-public-sample-dry-run.md)
 - [Public outbound leadgen demo report](docs/growth/2026-05-08-public-outbound-leadgen-demo-report.md)
 - [Outbound leadgen HTTP bridge demo](docs/growth/2026-05-09-outbound-leadgen-http-bridge-demo.md)

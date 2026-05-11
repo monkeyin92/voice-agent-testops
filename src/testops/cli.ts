@@ -7,6 +7,7 @@ import { industrySchema, merchantConfigSchema, type Industry } from "../domain/m
 import { createHttpAgent } from "./adapters/httpAgent";
 import { createLocalReceptionistAgent } from "./adapters/localReceptionist";
 import { createOpenClawAgent } from "./adapters/openClawAgent";
+import { createTranscriptReplayAgent } from "./adapters/transcriptReplay";
 import { parseCliArgs } from "./cliArgs";
 import { renderCommercialPilotReport, renderPilotReviewTemplate } from "./commercialReport";
 import { diffVoiceTestReports, renderMarkdownDiff } from "./diffReport";
@@ -15,6 +16,7 @@ import { exampleCatalog, parseExampleLanguage, type ExampleCatalogEntry, type Ex
 import { initializeVoiceTestOpsProject } from "./initProject";
 import { buildVoiceTestSuiteJsonSchema } from "./jsonSchema";
 import { resolveReadablePath } from "./packagePaths";
+import { renderProofCard } from "./proofCard";
 import { renderHtmlReport, renderJsonReport, renderJunitReport, renderMarkdownSummary } from "./report";
 import { parseSemanticJudgeAnnotationSet } from "./annotationSet";
 import {
@@ -94,8 +96,16 @@ async function main(argv: string[]): Promise<number> {
     return transcriptIntake(argv.slice(1));
   }
 
+  if (argv[0] === "transcript-trial") {
+    return transcriptTrial(argv.slice(1));
+  }
+
   if (argv[0] === "pilot-report") {
     return generatePilotReport(argv.slice(1));
+  }
+
+  if (argv[0] === "proof-card") {
+    return generateProofCard(argv.slice(1));
   }
 
   if (argv[0] === "calibrate-judge") {
@@ -511,6 +521,26 @@ async function generatePilotReport(argv: string[]): Promise<number> {
   return 0;
 }
 
+async function generateProofCard(argv: string[]): Promise<number> {
+  const args = parseProofCardArgs(argv);
+  const report = await readVoiceTestReport(args.reportPath, "Proof card");
+  const markdown = renderProofCard(report, {
+    customerName: args.customerName,
+    period: args.period,
+    proofUrl: args.proofUrl,
+    nextAsk: args.nextAsk,
+  });
+
+  if (args.outPath) {
+    await writeReport(args.outPath, markdown);
+    console.log(`Proof card: ${args.outPath}`);
+    return 0;
+  }
+
+  process.stdout.write(markdown);
+  return 0;
+}
+
 type CompareArgs = {
   baselinePath: string;
   currentPath: string;
@@ -558,12 +588,39 @@ type TranscriptIntakeArgs = {
   turnRole: FromTranscriptTurnRole;
 };
 
+type TranscriptTrialArgs = {
+  transcriptPath?: string;
+  readFromStdin: boolean;
+  outDir: string;
+  merchantPath?: string;
+  merchantName?: string;
+  industry?: Industry;
+  name?: string;
+  scenarioId?: string;
+  scenarioTitle?: string;
+  source: LeadSource;
+  intake?: TranscriptIntakePreset;
+  customerName?: string;
+  period?: string;
+  proofUrl?: string;
+  failOnSeverity?: VoiceTestSeverity;
+};
+
 type PilotReportArgs = {
   reportPath: string;
   commercialPath?: string;
   recapPath?: string;
   customerName?: string;
   period?: string;
+};
+
+type ProofCardArgs = {
+  reportPath: string;
+  outPath?: string;
+  customerName?: string;
+  period?: string;
+  proofUrl?: string;
+  nextAsk?: string;
 };
 
 type CalibrateJudgeArgs = {
@@ -794,6 +851,148 @@ async function transcriptIntake(argv: string[]): Promise<number> {
   return 0;
 }
 
+async function transcriptTrial(argv: string[]): Promise<number> {
+  const args = parseTranscriptTrialArgs(argv);
+  const transcript = args.readFromStdin
+    ? await readFromStdin()
+    : await readFile(await resolveReadablePath(args.transcriptPath ?? ""), "utf8");
+  const paths = transcriptTrialPaths(args.outDir);
+  const intakeDefaults = args.intake ? getTranscriptIntakeDefaults(args.intake) : undefined;
+  const merchantName = args.merchantName ?? intakeDefaults?.merchantName;
+  const industry = args.industry ?? intakeDefaults?.industry;
+  const merchant = args.merchantPath
+    ? merchantConfigSchema.parse(JSON.parse(await readFile(await resolveReadablePath(args.merchantPath), "utf8")))
+    : buildDraftMerchantFromTranscript({ transcript, name: merchantName, industry });
+  const suite = buildVoiceTestSuiteFromTranscript({
+    transcript,
+    merchant,
+    name: args.name ?? intakeDefaults?.suiteName,
+    scenarioId: args.scenarioId ?? intakeDefaults?.scenarioId,
+    scenarioTitle: args.scenarioTitle ?? intakeDefaults?.scenarioTitle,
+    source: args.source,
+    turnRole: "customer",
+  });
+  const suiteOutput = buildSuiteWithMerchantRef(suite, relativeMerchantRef(paths.suitePath, paths.merchantPath));
+  const intakeReport = analyzeTranscriptIntake({
+    transcript,
+    suite,
+    sourcePath: args.readFromStdin ? undefined : args.transcriptPath,
+    selectedTurnRole: "customer",
+    artifacts: {
+      suitePath: paths.suitePath,
+      merchantPath: paths.merchantPath,
+      summaryPath: paths.intakeSummaryPath,
+    },
+  });
+  const result = await runVoiceTestSuite(suite, createTranscriptReplayAgent({ transcript, source: args.source }), {
+    onProgress: (event) => {
+      if (event.type === "turn:start") {
+        console.log(
+          `[${event.scenarioIndex + 1}/${suite.scenarios.length}] ${event.scenarioTitle} - turn ${
+            event.turnIndex + 1
+          }/${event.turnTotal}: replaying transcript`,
+        );
+        return;
+      }
+
+      console.log(
+        `[${event.scenarioIndex + 1}/${suite.scenarios.length}] ${event.scenarioTitle} - turn ${
+          event.turnIndex + 1
+        }/${event.turnTotal}: ${event.passed ? "passed" : "failed"} (${event.latencyMs}ms, ${
+          event.failures
+        } failures)`,
+      );
+    },
+  });
+  const pilotOptions = {
+    customerName: args.customerName ?? merchant.name,
+    period: args.period ?? "transcript-only trial",
+  };
+  const proofUrl = args.proofUrl;
+
+  await writeReport(paths.merchantPath, `${JSON.stringify(merchant, null, 2)}\n`);
+  await writeReport(paths.suitePath, `${JSON.stringify(suiteOutput, null, 2)}\n`);
+  await writeReport(paths.intakeSummaryPath, renderTranscriptIntakeMarkdown(intakeReport));
+  await writeReport(paths.reportJsonPath, renderJsonReport(result));
+  await writeReport(paths.reportHtmlPath, renderHtmlReport(result));
+  await writeReport(paths.runSummaryPath, renderMarkdownSummary(result));
+  await writeReport(paths.junitPath, renderJunitReport(result));
+  await writeReport(paths.commercialPath, renderCommercialPilotReport(result, pilotOptions));
+  await writeReport(paths.recapPath, renderPilotReviewTemplate(result, pilotOptions));
+  await writeReport(
+    paths.proofCardPath,
+    renderProofCard(result, {
+      ...pilotOptions,
+      proofUrl,
+    }),
+  );
+
+  if (result.summary.failures > 0) {
+    const clusters = buildFailureClusters(result);
+    const draftSuite = buildRegressionSuiteDraft(suite, result);
+    await writeReport(paths.regressionDraftPath, `${JSON.stringify(draftSuite, null, 2)}\n`);
+    await writeReport(paths.failureClustersPath, renderFailureClusterMarkdown(result, clusters));
+  }
+
+  console.log(`Transcript trial: ${args.outDir}`);
+  console.log(`Generated suite: ${paths.suitePath}`);
+  console.log(`Merchant draft: ${paths.merchantPath}`);
+  console.log(`Intake summary: ${paths.intakeSummaryPath}`);
+  console.log(`JSON report: ${paths.reportJsonPath}`);
+  console.log(`HTML report: ${paths.reportHtmlPath}`);
+  console.log(`Markdown summary: ${paths.runSummaryPath}`);
+  console.log(`Commercial pilot report: ${paths.commercialPath}`);
+  console.log(`Pilot recap template: ${paths.recapPath}`);
+  console.log(`Proof card: ${paths.proofCardPath}`);
+  if (result.summary.failures > 0) {
+    console.log(`Regression draft: ${paths.regressionDraftPath}`);
+    console.log(`Failure clusters: ${paths.failureClustersPath}`);
+  }
+  console.log(`${suite.name}: ${result.passed ? "passed" : "failed"} (${result.summary.failures} failures, ${result.summary.assertions} assertions)`);
+
+  if (args.failOnSeverity) {
+    const gatedFailures = countFailuresAtOrAboveSeverity(result, args.failOnSeverity);
+    console.log(
+      `Severity gate: ${gatedFailures === 0 ? "passed" : "failed"} (${gatedFailures} failures at or above ${
+        args.failOnSeverity
+      })`,
+    );
+    return gatedFailures === 0 ? 0 : 1;
+  }
+
+  return 0;
+}
+
+function transcriptTrialPaths(outDir: string): {
+  suitePath: string;
+  merchantPath: string;
+  intakeSummaryPath: string;
+  reportJsonPath: string;
+  reportHtmlPath: string;
+  runSummaryPath: string;
+  junitPath: string;
+  commercialPath: string;
+  recapPath: string;
+  proofCardPath: string;
+  regressionDraftPath: string;
+  failureClustersPath: string;
+} {
+  return {
+    suitePath: path.join(outDir, "suite.json"),
+    merchantPath: path.join(outDir, "merchant.json"),
+    intakeSummaryPath: path.join(outDir, "intake-summary.md"),
+    reportJsonPath: path.join(outDir, "report.json"),
+    reportHtmlPath: path.join(outDir, "report.html"),
+    runSummaryPath: path.join(outDir, "summary.md"),
+    junitPath: path.join(outDir, "junit.xml"),
+    commercialPath: path.join(outDir, "commercial-report.md"),
+    recapPath: path.join(outDir, "pilot-recap.md"),
+    proofCardPath: path.join(outDir, "proof-card.md"),
+    regressionDraftPath: path.join(outDir, "regression-draft.json"),
+    failureClustersPath: path.join(outDir, "failure-clusters.md"),
+  };
+}
+
 function parseTranscriptIntakeArgs(argv: string[]): TranscriptIntakeArgs {
   const values = new Map<string, string>();
   const flags = new Set<string>();
@@ -872,6 +1071,90 @@ function parseTranscriptIntakeArgs(argv: string[]): TranscriptIntakeArgs {
   };
 }
 
+function parseTranscriptTrialArgs(argv: string[]): TranscriptTrialArgs {
+  const values = new Map<string, string>();
+  const flags = new Set<string>();
+  const knownValues = new Set([
+    "transcript",
+    "input",
+    "out-dir",
+    "merchant",
+    "merchant-name",
+    "industry",
+    "name",
+    "scenario-id",
+    "scenario-title",
+    "source",
+    "intake",
+    "customer",
+    "period",
+    "proof-url",
+    "fail-on-severity",
+  ]);
+
+  for (let index = 0; index < argv.length; index += 1) {
+    const arg = argv[index];
+    if (!arg.startsWith("--")) {
+      throw new Error(`Unexpected argument: ${arg}`);
+    }
+
+    const name = arg.slice(2);
+    if (name === "stdin") {
+      flags.add(name);
+      continue;
+    }
+    if (!knownValues.has(name)) {
+      throw new Error(`Unknown transcript-trial option: --${name}`);
+    }
+
+    const value = argv[index + 1];
+    if (!value || value.startsWith("--")) {
+      throw new Error(`${arg} requires a value`);
+    }
+
+    values.set(name, value);
+    index += 1;
+  }
+
+  const readFromStdin = flags.has("stdin");
+  const transcriptPath = values.get("transcript") ?? values.get("input");
+  if (readFromStdin && transcriptPath) {
+    throw new Error("--stdin cannot be combined with --transcript or --input");
+  }
+  if (!readFromStdin && !transcriptPath) {
+    throw new Error("--transcript, --input, or --stdin is required");
+  }
+
+  const intake = values.get("intake");
+  const failOnSeverity = values.get("fail-on-severity");
+  if (
+    failOnSeverity !== undefined &&
+    failOnSeverity !== "critical" &&
+    failOnSeverity !== "major" &&
+    failOnSeverity !== "minor"
+  ) {
+    throw new Error("--fail-on-severity must be critical, major, or minor");
+  }
+
+  return {
+    transcriptPath,
+    readFromStdin,
+    outDir: values.get("out-dir") ?? ".voice-testops/transcript-trial",
+    merchantPath: values.get("merchant"),
+    merchantName: values.get("merchant-name"),
+    industry: values.has("industry") ? industrySchema.parse(values.get("industry")) : undefined,
+    name: values.get("name"),
+    scenarioId: values.get("scenario-id"),
+    scenarioTitle: values.get("scenario-title"),
+    source: leadSourceSchema.parse(values.get("source") ?? "website"),
+    intake: intake ? parseTranscriptIntakePreset(intake) : undefined,
+    customerName: values.get("customer"),
+    period: values.get("period"),
+    proofUrl: values.get("proof-url"),
+    failOnSeverity,
+  };
+}
+
 function parsePilotReportArgs(argv: string[]): PilotReportArgs {
   const values = parseKeyValueArgs(argv);
 
@@ -904,6 +1187,37 @@ function parsePilotReportArgs(argv: string[]): PilotReportArgs {
     recapPath,
     customerName: values.get("customer"),
     period: values.get("period"),
+  };
+}
+
+function parseProofCardArgs(argv: string[]): ProofCardArgs {
+  const values = parseKeyValueArgs(argv);
+
+  for (const option of values.keys()) {
+    if (
+      option !== "report" &&
+      option !== "out" &&
+      option !== "customer" &&
+      option !== "period" &&
+      option !== "proof-url" &&
+      option !== "next-ask"
+    ) {
+      throw new Error(`Unknown proof-card option: --${option}`);
+    }
+  }
+
+  const reportPath = values.get("report");
+  if (!reportPath) {
+    throw new Error("--report is required");
+  }
+
+  return {
+    reportPath,
+    outPath: values.get("out"),
+    customerName: values.get("customer"),
+    period: values.get("period"),
+    proofUrl: values.get("proof-url"),
+    nextAsk: values.get("next-ask"),
   };
 }
 
