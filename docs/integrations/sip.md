@@ -19,6 +19,26 @@ npm run voice-test -- \
   --junit .voice-testops/junit.xml
 ```
 
+For a local macOS smoke test with a real SIP account, use the bundled Baresip driver. It uses `say` for TTS, `ffmpeg` for audio conversion/metrics, `baresip` for SIP registration and calling, and optional `whisper-cli` for local ASR:
+
+```bash
+brew install baresip whisper-cpp
+
+export VOICE_TESTOPS_SIP_USERNAME="1001"
+export VOICE_TESTOPS_SIP_PASSWORD="replace-with-private-password"
+export VOICE_TESTOPS_SIP_SERVER="sip.example.com:5060"
+export VOICE_TESTOPS_WHISPER_MODEL=".voice-testops/sip-private/models/ggml-base.bin"
+export VOICE_TESTOPS_BARESIP_CALL_SECONDS="35"
+
+npx voice-agent-testops run \
+  --suite voice-testops/suite.json \
+  --agent sip \
+  --sip-uri "sip:2000@sip.example.com:5060" \
+  --sip-driver-command "node examples/sip-driver/baresip-driver.mjs" \
+  --sip-media-dir .voice-testops/sip-private/media \
+  --sip-call-timeout-ms 90000
+```
+
 For a real bot, replace the driver command with a script that calls your SIP target:
 
 ```bash
@@ -42,7 +62,10 @@ export VOICE_TESTOPS_SIP_PROXY="sip:10.0.0.8:5060"
 export VOICE_TESTOPS_SIP_FROM="sip:testops@10.0.0.9"
 export VOICE_TESTOPS_SIP_MEDIA_DIR=".voice-testops/sip-media"
 export VOICE_TESTOPS_SIP_CALL_TIMEOUT_MS="120000"
+export VOICE_TESTOPS_BARESIP_CALL_SECONDS="35"
 ```
+
+Keep these variables in an ignored local file such as `.voice-testops/sip-private/real-sip.env`; do not commit SIP usernames, passwords, call recordings, or private transcripts.
 
 ## Driver Input
 
@@ -125,3 +148,5 @@ A production driver usually does this:
 6. Return timing metrics and the replay URL so reviewers can listen to failures.
 
 For deterministic CI, keep the driver narrow: no raw private recordings in committed artifacts, no phone numbers in public reports, and no credentials in suite JSON.
+
+The bundled `examples/sip-driver/baresip-driver.mjs` is a reference implementation for this shape. It is useful for local proof-of-connectivity and first pilot calls, but production teams should usually swap in their own SIP gateway, TTS, ASR, and recording storage.

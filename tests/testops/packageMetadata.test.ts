@@ -47,6 +47,7 @@ describe("package metadata", () => {
     expect(packageJson.scripts?.["transcript:intake"]).toContain("transcript-intake");
     expect(packageJson.scripts?.["transcript:trial"]).toContain("transcript-trial");
     expect(packageJson.scripts?.["example:sip-driver"]).toContain("examples/sip-driver/mock-driver.mjs");
+    expect(readFileSync("examples/sip-driver/baresip-driver.mjs", "utf8")).toContain("VOICE_TESTOPS_SIP_USERNAME");
     expect(lockRoot.packages[""].dependencies).toHaveProperty("tsx");
     expect(lockRoot.packages[""].dependencies).toHaveProperty("zod");
     expect(lockRoot.packages[""].dependencies).not.toHaveProperty("next");

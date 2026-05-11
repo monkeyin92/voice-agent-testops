@@ -279,7 +279,7 @@ npm run voice-test -- \
   --sip-media-dir .voice-testops/sip-media
 ```
 
-The bundled mock driver does not dial; it verifies the adapter contract. Replace it with your SIPp, Asterisk, baresip, LiveKit SIP, Twilio, or internal dialer script for real E2E voice tests. See [SIP Voice Agents](docs/integrations/sip.md).
+The bundled mock driver does not dial; it verifies the adapter contract. For a real local SIP smoke test, use `node examples/sip-driver/baresip-driver.mjs` with private SIP credentials in environment variables. Replace either driver with your SIPp, Asterisk, baresip, LiveKit SIP, Twilio, or internal dialer script for production E2E voice tests. See [SIP Voice Agents](docs/integrations/sip.md).
 
 ## Integration Guides
 

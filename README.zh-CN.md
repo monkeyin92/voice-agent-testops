@@ -217,7 +217,7 @@ npm run voice-test -- \
   --sip-media-dir .voice-testops/sip-media
 ```
 
-内置 mock driver 不会真的拨号，只用来验证 adapter 合同。真实拨测时，把 `--sip-driver-command` 换成你的 SIPp、Asterisk、baresip、LiveKit SIP、Twilio 或内部拨号脚本。详细合同见 [SIP Voice Agents](docs/integrations/sip.md)。
+内置 mock driver 不会真的拨号，只用来验证 adapter 合同。本地真实 SIP smoke test 可以用 `node examples/sip-driver/baresip-driver.mjs`，账号密码只放在环境变量里。生产拨测时，把 `--sip-driver-command` 换成你的 SIPp、Asterisk、baresip、LiveKit SIP、Twilio 或内部拨号脚本。详细合同见 [SIP Voice Agents](docs/integrations/sip.md)。
 
 ## 集成文档
 

@@ -75,6 +75,8 @@ const integrationDocs = [
       "--sip-uri",
       "--sip-driver-command",
       "examples/sip-driver/mock-driver.mjs",
+      "examples/sip-driver/baresip-driver.mjs",
+      "VOICE_TESTOPS_SIP_USERNAME",
       "driver contract",
       "spoken",
       "audio",
