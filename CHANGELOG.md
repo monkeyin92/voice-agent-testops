@@ -1,5 +1,14 @@
 # Changelog
 
+## 0.1.22 - 2026-05-11
+
+### Features
+- Add a bundled Baresip SIP driver for real local voice-call smoke tests.
+- Support macOS `say` TTS, `ffmpeg` audio conversion/metrics, Baresip call recording, and optional `whisper-cli` ASR in the reference SIP driver.
+
+### Documentation
+- Document private SIP credential handling, local Baresip prerequisites, and real-driver usage without committing secrets.
+
 ## 0.1.21 - 2026-05-11
 
 ### Features
