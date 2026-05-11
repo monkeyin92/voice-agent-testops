@@ -1,5 +1,17 @@
 # Changelog
 
+## 0.1.20 - 2026-05-11
+
+### Features
+- Add `transcript-trial` for endpoint-free sanitized transcript trials that generate reports, pilot artifacts, proof cards, and regression drafts.
+- Add `proof-card` for short GitHub, email, or Discord follow-up summaries from JSON reports.
+- Add transcript replay support for evaluating assistant turns from sanitized transcript-only trials.
+
+### Documentation
+- Add committed public-safe demo report artifacts for outbound recording-derived seeds.
+- Add a public proof gallery and no-reply growth plan for proof-led outreach.
+- Update outreach tracking with warm-line follow-up timing and cold-line stop rules.
+
 ## 0.1.19 - 2026-05-09
 
 ### Features
