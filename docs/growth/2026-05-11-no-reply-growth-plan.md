@@ -25,6 +25,12 @@ Context: recent GitHub issue outreach produced two warm signals and many zero-re
 | 2026-05-16 | Dormant review | All no-reply issues | Mark dormant unless a maintainer replied |
 | 2026-05-18 | Channel shift | Discord, Discussions, email, LinkedIn | Lead with proof gallery, not another GitHub issue |
 
+## 2026-05-12 heartbeat check
+
+- `streamcoreai/streamcore-server#4`: no new maintainer reply since 2026-05-09. Posted the planned warm follow-up asking for a scriptable HTTP/WebSocket route behind `streamcore.ai`, or one sanitized transcript: https://github.com/streamcoreai/streamcore-server/issues/4#issuecomment-4426759426
+- `codewithmuh/ai-voice-agent#2`: no new data yet; keep waiting until the 2026-05-14 check-in window because the maintainer said they would get back this week.
+- `blackdwarftech/siphon#19`: new collaborator reply says a sanitized transcript-based example and minimal Siphon agent flow demo would be valuable. Promote this from cold close-the-loop to a demo-prep opportunity.
+
 ## Warm follow-up drafts
 
 ### Streamcore
