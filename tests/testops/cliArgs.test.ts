@@ -37,6 +37,7 @@ describe("parseCliArgs", () => {
       endpoint: undefined,
       apiKey: undefined,
       openClawMode: "custom",
+      transcriptPath: undefined,
       sipDriverCommand: undefined,
       sipUri: undefined,
       sipProxy: undefined,
@@ -106,6 +107,28 @@ describe("parseCliArgs", () => {
     expect(() =>
       parseCliArgs(["--suite", "suite.json", "--agent", "sip", "--sip-driver-command", "node sip-driver.mjs"]),
     ).toThrow("--sip-uri is required for --agent sip");
+  });
+
+  it("parses transcript replay agent settings", () => {
+    expect(
+      parseCliArgs([
+        "--suite",
+        "suite.json",
+        "--agent",
+        "transcript",
+        "--transcript",
+        ".voice-testops/transcripts/call.txt",
+      ]),
+    ).toMatchObject({
+      agent: "transcript",
+      transcriptPath: ".voice-testops/transcripts/call.txt",
+    });
+  });
+
+  it("requires a transcript file for transcript replay agents", () => {
+    expect(() => parseCliArgs(["--suite", "suite.json", "--agent", "transcript"])).toThrow(
+      "--transcript or --input is required for --agent transcript",
+    );
   });
 
   it("parses SIP agent settings", () => {

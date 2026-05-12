@@ -10,7 +10,8 @@ This page only links public-safe evidence. It does not include private recording
 
 | Proof | Source | What it demonstrates | Result | Boundary |
 |---|---|---|---|---|
-| [Public demo report gallery](../demo-reports/README.md) | Committed public-safe HTML/Markdown artifacts | A maintainer can inspect report output without installing the CLI | Passed demo report available as HTML, summary, commercial report, and proof card | Uses synthetic/public-safe examples only |
+| [Public demo report gallery](../demo-reports/README.md) | Committed public-safe HTML/Markdown artifacts | A maintainer can inspect report output without installing the CLI | Passed demo reports available as HTML, summaries, commercial reports, and proof cards | Uses synthetic/public-safe examples only |
+| [Siphon dental transcript replay](../demo-reports/siphon-dental-transcript/README.md) | Synthetic Siphon-style dental receptionist transcript | A saved transcript can be replayed against a reviewed suite before a live endpoint exists | Passed: 1 scenario, 3 turns, 10 assertions, 0 failures | Not a Siphon live endpoint benchmark; no patient data, recordings, or credentials |
 | [Public outbound leadgen demo report](2026-05-08-public-outbound-leadgen-demo-report.md) | Synthetic merchant facts and synthetic customer turns | A model-backed HTTP outbound agent can pass opt-out, pricing, availability, WeChat preference, and lead-capture checks | Passed: 5 scenarios, 25 assertions, 0 failures | Not a live dialer, CRM, or production conversion benchmark |
 | [Outbound leadgen HTTP bridge demo](2026-05-09-outbound-leadgen-http-bridge-demo.md) | Example HTTP agent endpoint | The `POST /test-turn` contract is enough to run an outbound suite through `doctor` and `run` | Passed: 1 scenario, 10 assertions, 0 failures | Uses the local example bridge, not a third-party platform |
 | [Public recording-derived outbound seeds](2026-05-09-public-recording-derived-outbound-seeds.md) | Private 50-recording review distilled into public synthetic seed turns | Private call review can become reusable public regressions without exposing recordings or customer data | Passed: 1 scenario, 5 turns, 11 assertions, 0 failures | Does not publish raw audio, filenames, phone numbers, or transcript excerpts |
@@ -61,7 +62,7 @@ Use one proof link per message, not all of them. Match the proof to the other pr
 |---|---|---|
 | Outbound leadgen, real estate, health campaign, Vapi outbound | [Public recording-derived outbound seeds](2026-05-09-public-recording-derived-outbound-seeds.md) | One dev endpoint or one sanitized outbound transcript |
 | Generic HTTP / platform / bridge projects | [Outbound leadgen HTTP bridge demo](2026-05-09-outbound-leadgen-http-bridge-demo.md) | A scriptable `POST /test-turn` or WebSocket equivalent |
-| Restaurant or receptionist projects | [Public outbound leadgen demo report](2026-05-08-public-outbound-leadgen-demo-report.md) | A booking, missed-call, or handoff transcript |
+| Restaurant, dental, or receptionist projects | [Siphon dental transcript replay](../demo-reports/siphon-dental-transcript/README.md) | A booking, missed-call, or handoff transcript |
 | Regulated support / insurance / identity verification | [Kevin Hu public sample dry run](2026-05-07-kev-hu-public-sample-dry-run.md) | One sanitized boundary transcript or permission to use public samples only |
 
 If a maintainer can share a transcript but not an endpoint, run `transcript-trial` and send back `proof-card.md` first. Do not lead with the full commercial report unless they ask for more detail.
@@ -74,6 +75,9 @@ https://github.com/monkeyin92/voice-agent-testops/blob/main/docs/growth/public-p
 
 There is also a committed demo HTML report here:
 https://github.com/monkeyin92/voice-agent-testops/blob/main/docs/demo-reports/outbound-recording-seeds/report.html
+
+For transcript-first receptionist examples, this Siphon-style demo is closer:
+https://github.com/monkeyin92/voice-agent-testops/blob/main/docs/demo-reports/siphon-dental-transcript/report.html
 
 The shortest useful trial is still just one dev/test endpoint that returns `{ "spoken": string, "summary"?: object }`, or one sanitized transcript with names, phone numbers, private URLs, and IDs replaced by placeholders.
 ```

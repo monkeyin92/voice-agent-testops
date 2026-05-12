@@ -338,7 +338,7 @@ function parseValidateArgs(argv: string[]): { suitePath: string } {
 async function runSuite(argv: string[]): Promise<number> {
   const args = parseCliArgs(argv);
   const suite = await loadVoiceTestSuite(args.suitePath);
-  const agent = createAgentFromArgs(args);
+  const agent = await createAgentFromArgs(args);
 
   const result = await runVoiceTestSuite(suite, agent, {
     onProgress: (event) => {
@@ -1392,7 +1392,7 @@ function parseCompareArgs(argv: string[]): CompareArgs {
   };
 }
 
-function createAgentFromArgs(args: ReturnType<typeof parseCliArgs>) {
+async function createAgentFromArgs(args: ReturnType<typeof parseCliArgs>) {
   if (args.agent === "http") {
     return createHttpAgent({ endpoint: args.endpoint ?? "" });
   }
@@ -1411,6 +1411,11 @@ function createAgentFromArgs(args: ReturnType<typeof parseCliArgs>) {
       driverRetries: args.sipDriverRetries,
       mediaDir: args.sipMediaDir,
     });
+  }
+
+  if (args.agent === "transcript") {
+    const transcript = await readFile(await resolveReadablePath(args.transcriptPath ?? ""), "utf8");
+    return createTranscriptReplayAgent({ transcript });
   }
 
   return createLocalReceptionistAgent();

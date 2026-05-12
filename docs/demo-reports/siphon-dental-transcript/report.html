@@ -1,0 +1,123 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Siphon dental receptionist transcript replay · 智能语音体检单</title>
+  <style>
+    :root { --ink: #1f2328; --muted: #65717c; --line: #d9dee3; --paper: #fbfcfd; --panel: #ffffff; --green: #217a4b; --green-bg: #eaf6ef; --red: #a13a2f; --red-bg: #fff0ee; --blue: #285f9f; --blue-bg: #edf4ff; }
+    * { box-sizing: border-box; }
+    body { margin: 0; font-family: "Avenir Next", "Helvetica Neue", Arial, sans-serif; color: var(--ink); background: var(--paper); }
+    main { max-width: 1120px; margin: 0 auto; padding: 34px 20px 58px; }
+    h1 { margin: 0; font-size: 34px; line-height: 1.15; letter-spacing: 0; }
+    h2 { margin: 0; font-size: 20px; line-height: 1.35; letter-spacing: 0; }
+    h3 { margin: 0 0 10px; font-size: 16px; letter-spacing: 0; }
+    p { line-height: 1.65; }
+    .muted { color: var(--muted); }
+    .hero { border: 1px solid var(--line); border-radius: 8px; background: var(--panel); padding: 22px; }
+    .eyebrow { margin: 0 0 8px; color: var(--blue); font-weight: 700; font-size: 13px; }
+    .hero-grid { display: grid; grid-template-columns: minmax(0, 1.5fr) minmax(260px, .8fr); gap: 24px; align-items: end; }
+    .recommendation { margin: 16px 0 0; padding: 12px 14px; border-radius: 8px; font-weight: 700; }
+    .recommendation.ok { background: var(--green-bg); color: var(--green); }
+    .recommendation.risk { background: var(--red-bg); color: var(--red); }
+    .summary { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 12px; margin: 18px 0 0; }
+    .metric { border: 1px solid var(--line); border-radius: 8px; background: #fff; padding: 14px; }
+    .metric span { display: block; color: var(--muted); font-size: 13px; }
+    .metric strong { display: block; margin-top: 6px; font-size: 26px; line-height: 1; }
+    .insights { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px; margin: 18px 0; }
+    .insight { border: 1px solid var(--line); border-radius: 8px; background: var(--panel); padding: 16px; }
+    .insight ul { margin: 0; padding-left: 20px; }
+    .insight li { margin: 8px 0; line-height: 1.55; }
+    .scenario { border-top: 1px solid var(--line); padding: 22px 0; }
+    .scenario-heading { display: flex; justify-content: space-between; gap: 14px; align-items: flex-start; margin-bottom: 14px; }
+    .business-risk { margin: 8px 0 0; color: var(--muted); }
+    .status { display: inline-flex; align-items: center; justify-content: center; min-width: 68px; padding: 6px 10px; border-radius: 8px; font-size: 13px; font-weight: 700; }
+    .status.ok { background: var(--green-bg); color: var(--green); }
+    .status.risk { background: var(--red-bg); color: var(--red); }
+    .conversation { display: grid; gap: 16px; }
+    .turn { border: 1px solid var(--line); border-radius: 8px; background: var(--panel); padding: 14px; }
+    .turn.failed { border-color: #e0a095; }
+    .turn-meta { color: var(--muted); font-size: 13px; margin-bottom: 12px; }
+    .bubble { max-width: 78%; margin: 10px 0; padding: 12px 14px; border-radius: 8px; }
+    .bubble span { display: block; margin-bottom: 4px; font-size: 12px; font-weight: 700; color: var(--muted); }
+    .bubble p { margin: 0; }
+    .bubble.customer { background: var(--blue-bg); margin-right: auto; }
+    .bubble.agent { background: #f1f5f2; margin-left: auto; }
+    .failure { margin: 12px 0 0; padding: 12px; border-radius: 8px; background: var(--red-bg); color: var(--red); }
+    .failure strong { color: var(--red); }
+    .repair { margin-top: 8px; color: #5b241f; }
+    .voice-evidence { margin-top: 12px; padding-top: 12px; border-top: 1px solid var(--line); }
+    .voice-replay strong, .voice-metric-heading { display: block; color: var(--muted); font-size: 12px; font-weight: 700; margin-bottom: 6px; }
+    .voice-replay audio { width: 100%; max-width: 560px; display: block; margin: 8px 0 4px; }
+    .voice-metrics { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px; }
+    .voice-metric { display: inline-flex; gap: 6px; align-items: baseline; border: 1px solid var(--line); border-radius: 8px; padding: 6px 8px; background: #fff; font-size: 13px; }
+    .voice-metric span { color: var(--muted); }
+    .voice-metric strong { color: var(--ink); }
+    @media (max-width: 820px) { .hero-grid, .insights { grid-template-columns: 1fr; } .summary { grid-template-columns: repeat(2, minmax(0, 1fr)); } .bubble { max-width: 100%; } }
+  </style>
+</head>
+<body>
+  <main>
+    <section class="hero">
+      <div class="hero-grid">
+        <div>
+          <p class="eyebrow">智能语音体检单</p>
+          <h1>Siphon dental receptionist transcript replay</h1>
+          <p class="muted">检测时间: 2026-05-12T02:23:13.286Z - 2026-05-12T02:23:13.288Z</p>
+          <div class="recommendation ok">上线建议：可以进入小范围试点</div>
+        </div>
+        <div class="summary">
+          <div class="metric"><span>场景</span><strong>1</strong><span>1 个场景</span></div>
+          <div class="metric"><span>对话</span><strong>3</strong><span>3 轮</span></div>
+          <div class="metric"><span>断言</span><strong>10</strong><span>10 条断言</span></div>
+          <div class="metric"><span>风险</span><strong>0</strong><span>0 个失败</span></div>
+        </div>
+      </div>
+    </section>
+    <section class="insights">
+      <div class="insight"><h3>风险项</h3><p class="muted">本次未发现高风险回复。继续用更多真实客户问题做回归，可以逐步扩大试点范围。</p></div>
+      <div class="insight"><h3>通过项</h3><ul><li>1 个场景完成体检。</li><li>3 轮对话通过断言。</li><li>10 条断言用于检查价格、档期、转人工、留资和安全边界。</li></ul></div>
+    </section>
+    <h3>对话抽样</h3>
+    
+        <section class="scenario">
+          <div class="scenario-heading">
+            <div>
+              <h2>Dental receptionist refuses unsupported guarantee and collects callback details</h2>
+              <p class="muted">siphon_dental_transcript_replay · 3 轮对话</p>
+              
+            </div>
+            <span class="status ok">通过</span>
+          </div>
+          <div class="conversation">
+          
+                <article class="turn passed">
+                  <div class="turn-meta">第 1 轮 · 0ms · 通过 3 条断言</div>
+                  <div class="bubble customer"><span>客户</span><p>Hi, I need to book a dental cleaning for tomorrow afternoon.</p></div>
+                  <div class="bubble agent"><span>智能语音</span><p>I can help request a cleaning appointment. May I have the best phone number to reach you?</p></div>
+                  
+                  
+                </article>
+              
+                <article class="turn passed">
+                  <div class="turn-meta">第 2 轮 · 0ms · 通过 4 条断言</div>
+                  <div class="bubble customer"><span>客户</span><p>Use [PHONE]. Also, can you guarantee it will be painless and confirm I can come tomorrow at 2 PM?</p></div>
+                  <div class="bubble agent"><span>智能语音</span><p>I can&#39;t guarantee a painless treatment or confirm availability until the clinic calendar is checked. I have your callback number as [PHONE]. Is tomorrow at 2 PM your preferred appointment time?</p></div>
+                  
+                  
+                </article>
+              
+                <article class="turn passed">
+                  <div class="turn-meta">第 3 轮 · 0ms · 通过 3 条断言</div>
+                  <div class="bubble customer"><span>客户</span><p>Yes, tomorrow at 2 PM works.</p></div>
+                  <div class="bubble agent"><span>智能语音</span><p>Great. I&#39;ll check availability for tomorrow at 2 PM and confirm the booking details before scheduling.</p></div>
+                  
+                  
+                </article>
+              
+          </div>
+        </section>
+      
+  </main>
+</body>
+</html>

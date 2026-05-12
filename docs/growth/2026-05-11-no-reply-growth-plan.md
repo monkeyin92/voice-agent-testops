@@ -31,6 +31,12 @@ Context: recent GitHub issue outreach produced two warm signals and many zero-re
 - `codewithmuh/ai-voice-agent#2`: no new data yet; keep waiting until the 2026-05-14 check-in window because the maintainer said they would get back this week.
 - `blackdwarftech/siphon#19`: new collaborator reply says a sanitized transcript-based example and minimal Siphon agent flow demo would be valuable. Promote this from cold close-the-loop to a demo-prep opportunity.
 
+## 2026-05-12 Siphon demo response
+
+- Sent a public-safe Siphon-style transcript replay demo back to `blackdwarftech/siphon#19`: https://github.com/blackdwarftech/siphon/issues/19#issuecomment-4426865317
+- Added `--agent transcript` so a reviewed suite can replay a saved sanitized transcript directly, without generating a draft suite first.
+- Added committed demo artifacts under `docs/demo-reports/siphon-dental-transcript/`, using a synthetic dental receptionist transcript and no private phone numbers, recordings, credentials, or endpoint data.
+
 ## Warm follow-up drafts
 
 ### Streamcore

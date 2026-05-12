@@ -231,6 +231,7 @@ npm run voice-test -- \
 - [LiveKit Agents](docs/integrations/livekit.md)：把实时房间背后的决策层接入 CI
 - [Pipecat](docs/integrations/pipecat.md)：把 pipeline 的业务回复层变成可重复测试的 HTTP bridge
 - [SIP Voice Agents](docs/integrations/sip.md)：通过 driver command 对只支持 SIP 呼入的机器人做真实语音 E2E 测试
+- [Siphon](docs/integrations/siphon.md)：先用保存的脱敏 transcript 回放，再逐步接 HTTP test route
 
 ## 把真实失败对话变成回归测试
 
@@ -246,6 +247,15 @@ pbpaste | npx voice-agent-testops transcript-trial \
 ```
 
 `transcript-trial` 是没有 endpoint 时的最低摩擦路径。它会把脱敏 transcript 当作 replay source，生成 suite、商家草稿、intake summary、JSON/HTML/Markdown/JUnit 报告、`commercial-report.md`、`pilot-recap.md` 和 `proof-card.md`。如果 replay 后的 transcript 没过生成的断言，还会写出 `regression-draft.json` 和 `failure-clusters.md`。
+
+如果已经有人工审核过的 suite，只想回放一条保存好的脱敏 transcript，可以直接用 transcript agent：
+
+```bash
+npx voice-agent-testops run \
+  --suite voice-testops/suite.json \
+  --agent transcript \
+  --transcript .voice-testops/transcripts/sanitized-call.txt
+```
 
 如果只想做 triage，不生成 replay report，用 `transcript-intake`：
 

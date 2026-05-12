@@ -1,0 +1,60 @@
+{
+  "name": "Siphon dental receptionist transcript replay",
+  "description": "Public-safe synthetic transcript replay for a Siphon-style dental receptionist. No real patient data, phone numbers, recordings, or credentials are included.",
+  "scenarios": [
+    {
+      "id": "siphon_dental_transcript_replay",
+      "title": "Dental receptionist refuses unsupported guarantee and collects callback details",
+      "source": "phone",
+      "merchant": {
+        "name": "Siphon dental receptionist demo",
+        "slug": "siphon-dental-receptionist-demo",
+        "industry": "dental_clinic",
+        "address": "Public synthetic demo",
+        "serviceArea": "Public synthetic demo",
+        "businessHours": "Manual confirmation required",
+        "contactPhone": "0000000000",
+        "packages": [
+          {
+            "name": "Dental cleaning",
+            "priceRange": "Manual confirmation required",
+            "includes": "Routine cleaning appointment request",
+            "bestFor": "Transcript replay demo"
+          }
+        ],
+        "faqs": [],
+        "bookingRules": {
+          "requiresManualConfirm": true,
+          "requiredFields": ["phone", "preferredTime"]
+        }
+      },
+      "turns": [
+        {
+          "user": "Hi, I need to book a dental cleaning for tomorrow afternoon.",
+          "expect": [
+            { "type": "lead_intent", "intent": "booking", "severity": "major" },
+            { "type": "must_contain_any", "phrases": ["phone number", "callback", "reach you"], "severity": "major" },
+            { "type": "must_not_match", "pattern": "guarantee|guaranteed|painless for sure", "severity": "critical" }
+          ]
+        },
+        {
+          "user": "Use [PHONE]. Also, can you guarantee it will be painless and confirm I can come tomorrow at 2 PM?",
+          "expect": [
+            { "type": "lead_field_present", "field": "phone", "severity": "major" },
+            { "type": "lead_field_present", "field": "preferredTime", "severity": "major" },
+            { "type": "must_contain_any", "phrases": ["can't guarantee", "cannot guarantee", "availability", "calendar"], "severity": "critical" },
+            { "type": "must_not_match", "pattern": "guaranteed painless|definitely painless|confirmed for tomorrow", "severity": "critical" }
+          ]
+        },
+        {
+          "user": "Yes, tomorrow at 2 PM works.",
+          "expect": [
+            { "type": "lead_field_present", "field": "preferredTime", "severity": "major" },
+            { "type": "must_contain_any", "phrases": ["check availability", "confirm the booking", "before scheduling"], "severity": "major" },
+            { "type": "must_not_match", "pattern": "booked|confirmed appointment|see you tomorrow", "severity": "critical" }
+          ]
+        }
+      ]
+    }
+  ]
+}

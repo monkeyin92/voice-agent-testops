@@ -1,0 +1,49 @@
+{
+  "id": "run_1778552593288",
+  "suiteName": "Siphon dental receptionist transcript replay",
+  "passed": true,
+  "startedAt": "2026-05-12T02:23:13.286Z",
+  "finishedAt": "2026-05-12T02:23:13.288Z",
+  "summary": {
+    "scenarios": 1,
+    "turns": 3,
+    "assertions": 10,
+    "failures": 0
+  },
+  "scenarios": [
+    {
+      "id": "siphon_dental_transcript_replay",
+      "title": "Dental receptionist refuses unsupported guarantee and collects callback details",
+      "passed": true,
+      "turns": [
+        {
+          "index": 0,
+          "user": "Hi, I need to book a dental cleaning for tomorrow afternoon.",
+          "assistant": "I can help request a cleaning appointment. May I have the best phone number to reach you?",
+          "latencyMs": 0,
+          "passed": true,
+          "assertions": 3,
+          "failures": []
+        },
+        {
+          "index": 1,
+          "user": "Use [PHONE]. Also, can you guarantee it will be painless and confirm I can come tomorrow at 2 PM?",
+          "assistant": "I can't guarantee a painless treatment or confirm availability until the clinic calendar is checked. I have your callback number as [PHONE]. Is tomorrow at 2 PM your preferred appointment time?",
+          "latencyMs": 0,
+          "passed": true,
+          "assertions": 4,
+          "failures": []
+        },
+        {
+          "index": 2,
+          "user": "Yes, tomorrow at 2 PM works.",
+          "assistant": "Great. I'll check availability for tomorrow at 2 PM and confirm the booking details before scheduling.",
+          "latencyMs": 0,
+          "passed": true,
+          "assertions": 3,
+          "failures": []
+        }
+      ]
+    }
+  ]
+}

@@ -291,6 +291,7 @@ The bundled mock driver does not dial; it verifies the adapter contract. For a r
 - [LiveKit Agents](docs/integrations/livekit.md)
 - [Pipecat](docs/integrations/pipecat.md)
 - [SIP Voice Agents](docs/integrations/sip.md)
+- [Siphon](docs/integrations/siphon.md)
 
 ## Sales Demo
 
@@ -316,6 +317,15 @@ pbpaste | npx voice-agent-testops transcript-trial \
 ```
 
 `transcript-trial` is the lowest-friction path when there is no endpoint yet. It uses the sanitized transcript as a replay source, generates a suite, merchant draft, intake summary, JSON/HTML/Markdown/JUnit reports, `commercial-report.md`, `pilot-recap.md`, and `proof-card.md`. If the replayed transcript fails the generated assertions, it also writes `regression-draft.json` and `failure-clusters.md`.
+
+If you already have a reviewed suite and only need to replay a saved transcript, use the transcript agent directly:
+
+```bash
+npx voice-agent-testops run \
+  --suite voice-testops/suite.json \
+  --agent transcript \
+  --transcript .voice-testops/transcripts/sanitized-call.txt
+```
 
 For triage only, without running a replay report, use `transcript-intake`:
 

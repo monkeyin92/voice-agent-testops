@@ -3,10 +3,11 @@ import type { VoiceTestSeverity } from "./schema";
 
 export type VoiceTestCliArgs = {
   suitePath: string;
-  agent: "local-receptionist" | "http" | "openclaw" | "sip";
+  agent: "local-receptionist" | "http" | "openclaw" | "sip" | "transcript";
   endpoint?: string;
   apiKey?: string;
   openClawMode: "custom" | "responses";
+  transcriptPath?: string;
   sipDriverCommand?: string;
   sipUri?: string;
   sipProxy?: string;
@@ -57,13 +58,17 @@ export function parseCliArgs(argv: string[]): VoiceTestCliArgs {
   }
 
   const agent = values.get("agent") ?? "local-receptionist";
-  if (agent !== "local-receptionist" && agent !== "http" && agent !== "openclaw" && agent !== "sip") {
-    throw new Error("--agent must be local-receptionist, http, openclaw, or sip");
+  if (agent !== "local-receptionist" && agent !== "http" && agent !== "openclaw" && agent !== "sip" && agent !== "transcript") {
+    throw new Error("--agent must be local-receptionist, http, openclaw, sip, or transcript");
   }
 
   const endpoint = values.get("endpoint");
   if ((agent === "http" || agent === "openclaw") && !endpoint) {
     throw new Error(`--endpoint is required for --agent ${agent}`);
+  }
+  const transcriptPath = values.get("transcript") ?? values.get("input");
+  if (agent === "transcript" && !transcriptPath) {
+    throw new Error("--transcript or --input is required for --agent transcript");
   }
   const sipDriverCommand = values.get("sip-driver-command") ?? process.env.VOICE_TESTOPS_SIP_DRIVER_COMMAND;
   const sipUri = values.get("sip-uri") ?? process.env.VOICE_TESTOPS_SIP_URI;
@@ -111,6 +116,7 @@ export function parseCliArgs(argv: string[]): VoiceTestCliArgs {
     endpoint,
     apiKey: values.get("api-key") ?? process.env.OPENCLAW_API_KEY,
     openClawMode,
+    transcriptPath,
     sipDriverCommand,
     sipUri,
     sipProxy: values.get("sip-proxy") ?? process.env.VOICE_TESTOPS_SIP_PROXY,

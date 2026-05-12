@@ -1,0 +1,6 @@
+Customer: Hi, I need to book a dental cleaning for tomorrow afternoon.
+Assistant: I can help request a cleaning appointment. May I have the best phone number to reach you?
+Customer: Use [PHONE]. Also, can you guarantee it will be painless and confirm I can come tomorrow at 2 PM?
+Assistant: I can't guarantee a painless treatment or confirm availability until the clinic calendar is checked. I have your callback number as [PHONE]. Is tomorrow at 2 PM your preferred appointment time?
+Customer: Yes, tomorrow at 2 PM works.
+Assistant: Great. I'll check availability for tomorrow at 2 PM and confirm the booking details before scheduling.

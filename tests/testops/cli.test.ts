@@ -125,6 +125,42 @@ describe("voice-test CLI", () => {
     expect(report.scenarios[0].turns[0].voiceMetrics?.turnLatencyMs).toBe(4200);
   });
 
+  it("runs a custom suite by replaying a transcript file", async () => {
+    const tempDir = await mkdtemp(path.join(tmpdir(), "voice-testops-cli-"));
+    const suitePath = await writeTranscriptReplaySuite(tempDir);
+    const transcriptPath = path.join(tempDir, "call.txt");
+    const reportPath = path.join(tempDir, "report.json");
+    await writeFile(
+      transcriptPath,
+      [
+        "Customer: I need a dental cleaning tomorrow afternoon.",
+        "Assistant: I can help request a cleaning appointment. May I have the best phone number to reach you?",
+      ].join("\n"),
+      "utf8",
+    );
+
+    const result = await runCli([
+      "--suite",
+      suitePath,
+      "--agent",
+      "transcript",
+      "--transcript",
+      transcriptPath,
+      "--json",
+      reportPath,
+    ]);
+
+    const report = JSON.parse(await readFile(reportPath, "utf8")) as {
+      summary: { failures: number };
+      scenarios: Array<{ turns: Array<{ assistant: string }> }>;
+    };
+
+    expect(result.code).toBe(0);
+    expect(result.stdout).toContain("Transcript replay dental demo: passed");
+    expect(report.summary.failures).toBe(0);
+    expect(report.scenarios[0].turns[0].assistant).toContain("phone number");
+  });
+
   it("writes a Markdown diff against a baseline JSON report", async () => {
     const tempDir = await mkdtemp(path.join(tmpdir(), "voice-testops-cli-"));
     const suitePath = await writeMinorFailureSuite(tempDir);
@@ -1872,6 +1908,52 @@ async function writeSipHandoffSuite(tempDir: string): Promise<string> {
                   { type: "must_contain_any", phrases: ["人工客服", "转人工"], severity: "critical" },
                   { type: "audio_replay_present", severity: "major" },
                   { type: "voice_metric_max", metric: "turnLatencyMs", value: 6000, severity: "major" },
+                ],
+              },
+            ],
+          },
+        ],
+      },
+      null,
+      2,
+    ),
+    "utf8",
+  );
+
+  return suitePath;
+}
+
+async function writeTranscriptReplaySuite(tempDir: string): Promise<string> {
+  const suitePath = path.join(tempDir, "transcript-replay-suite.json");
+  await writeFile(
+    suitePath,
+    JSON.stringify(
+      {
+        name: "Transcript replay dental demo",
+        scenarios: [
+          {
+            id: "transcript_replay_dental",
+            title: "Transcript replay dental",
+            source: "phone",
+            merchant: {
+              ...merchant,
+              industry: "dental_clinic",
+              packages: [
+                {
+                  name: "Dental cleaning",
+                  priceRange: "Manual confirmation",
+                  includes: "Cleaning appointment",
+                  bestFor: "Routine care",
+                },
+              ],
+            },
+            turns: [
+              {
+                user: "I need a dental cleaning tomorrow afternoon.",
+                expect: [
+                  { type: "must_contain_any", phrases: ["phone number", "contact"], severity: "major" },
+                  { type: "lead_intent", intent: "booking", severity: "major" },
+                  { type: "must_not_match", pattern: "guaranteed|painless", severity: "critical" },
                 ],
               },
             ],

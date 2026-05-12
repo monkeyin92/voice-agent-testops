@@ -84,6 +84,11 @@ const integrationDocs = [
       "voiceMetrics",
     ],
   },
+  {
+    path: "docs/integrations/siphon.md",
+    title: "Siphon",
+    phrases: ["--agent transcript", "SAVE_TRANSCRIPTION=true", "transcript-trial", "--agent http"],
+  },
 ];
 
 describe("integration documentation", () => {

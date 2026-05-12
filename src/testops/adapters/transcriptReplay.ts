@@ -83,7 +83,7 @@ function inferIntent(text: string): LeadIntent {
   if (/人工|真人|客服|老板|转接|联系|跟进|投诉|human|person|call me|contact|handoff|transfer/i.test(text)) {
     return "handoff";
   }
-  if (/预约|报名|下单|购买|到店|book|booking|appointment|reserve/i.test(text)) {
+  if (/预约|报名|下单|购买|到店|book|booking|appointment|reserve|schedule|cleaning|checkup/i.test(text)) {
     return "booking";
   }
   if (/档期|时间|周末|今天|明天|后天|available|availability|weekend|when/i.test(text)) {
@@ -114,10 +114,12 @@ function inferNextAction(intent: LeadIntent): string {
 function extractContactFields(text: string): Partial<
   Pick<LeadSummary, "customerName" | "phone" | "budget" | "preferredTime" | "location">
 > {
-  const phone = text.match(/(?:\+?\d[\d -]{6,}\d|1[3-9]\d{9})/)?.[0]?.replace(/\s+/g, " ");
+  const phone = text.match(/(?:\+?\d[\d -]{6,}\d|1[3-9]\d{9}|\[(?:PHONE|PHONE_NUMBER|CALLER_PHONE)\])/i)?.[0]?.replace(/\s+/g, " ");
   const customerName = text.match(/我(?:叫|是)\s*([\u4e00-\u9fa5A-Za-z]{1,24})(?:[，,。；;\s]|$)/)?.[1];
   const budget = text.match(/(?:预算|budget)[^\d$￥¥]*(?:[$￥¥]?\s?\d+(?:[,.]\d+)?\s?(?:万|k|K|元|块|dollars?)?)/i)?.[0];
-  const preferredTime = text.match(/(?:这周|下周)?周[一二三四五六日天]|星期[一二三四五六日天]|周末|今天|明天|后天|上午|下午|晚上|morning|afternoon|evening|weekend/i)?.[0];
+  const preferredTime = text.match(
+    /(?:这周|下周)?周[一二三四五六日天]|星期[一二三四五六日天]|周末|今天|明天|后天|上午|下午|晚上|today|tomorrow|tonight|morning|afternoon|evening|weekend|\b(?:\d{1,2})(?::\d{2})?\s?(?:am|pm)\b/i,
+  )?.[0];
   const location = text.match(/浦东|徐汇|闵行|黄浦|静安|长宁|朝阳|海淀|[^\s，,。；;]{1,16}(?:区|路|街|小区|花园|公寓|city|street|ave|avenue)/i)?.[0];
 
   return {
