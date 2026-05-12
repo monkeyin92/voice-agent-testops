@@ -1,5 +1,15 @@
 # Changelog
 
+## 0.1.25 - 2026-05-12
+
+### Features
+- Add `--agent transcript` so reviewed suites can replay sanitized saved transcripts directly.
+- Improve transcript replay summary extraction for sanitized `[PHONE]` placeholders and English appointment times.
+- Add a public-safe Siphon dental receptionist transcript replay demo with report, proof card, suite, transcript, and integration guide.
+
+### Documentation
+- Link the Siphon integration guide and transcript replay workflow from the README and public proof gallery.
+
 ## 0.1.24 - 2026-05-11
 
 ### Features
