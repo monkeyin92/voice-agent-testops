@@ -38,7 +38,7 @@
 
 | 日期 | 对象 | 入口 | 行业 starter | 接入方式 | 数据授权 | 当前状态 | 下一步动作 |
 |---|---|---|---|---|---|---|---|
-| 2026-05-06 | Streamcore server | https://github.com/streamcoreai/streamcore-server/issues/4 | custom platform / realtime voice agent | HTTP / WebSocket / Transcript import | 未确认 | pr_pending_review | 2026-06-01 已在 PR https://github.com/streamcoreai/streamcore-server/pull/5 发最后一次轻量 follow-up；若 2026-06-07 前无 review / merge / requested changes，不再顶帖，转渠道获取新试点 |
+| 2026-05-06 | Streamcore server | https://github.com/streamcoreai/streamcore-server/issues/4 | custom platform / realtime voice agent | HTTP / WebSocket / Transcript import | 未确认 | pr_pending_review | 2026-06-01 已在 PR https://github.com/streamcoreai/streamcore-server/pull/5 发最后一次轻量 follow-up；issue / PR 后续不再主动顶帖，等 review / merge / requested changes，再走 Discord / 直连维护者渠道 |
 | 2026-05-08 | Awaisali36 outbound real-estate Vapi agent | https://github.com/Awaisali36/Outbound-Real-State-Voice-AI-Agent-/issues/6 | real_estate / outbound_leadgen | Vapi / Transcript import | 未确认 | dormant | 2026-05-16 dormant review：无 maintainer 回复；不再顶帖，后续仅在对方主动回复时重开 |
 | 2026-05-08 | santmun Sofia voice agent | https://github.com/santmun/sofia-voice-agent/issues/2 | real_estate | Retell / Twilio / Transcript import | 未确认 | dormant | 2026-05-16 dormant review：无 maintainer 回复；不再顶帖，后续仅在对方主动回复时重开 |
 | 2026-05-08 | askjohngeorge Pipecat lead qualifier | https://github.com/askjohngeorge/pipecat-lead-qualifier/issues/1 | outbound_leadgen | Pipecat / HTTP | 未确认 | dormant | 2026-05-16 dormant review：无 maintainer 回复；不再顶帖，后续仅在对方主动回复时重开 |
@@ -48,11 +48,18 @@
 | 2026-05-08 | blackdwarftech siphon | https://github.com/blackdwarftech/siphon/issues/19 | dental_clinic / framework adapter | Transcript import / HTTP | 未确认 | demo_validated | 2026-05-13 对方认可 transcript-centric、provider-agnostic、public-safe 的轻量集成方向；继续保持 transcript replay 示例，不推进 runtime adapter |
 | 2026-05-08 | intellwe AI calling agent | https://github.com/intellwe/ai-calling-agent/issues/2 | outbound_leadgen | Twilio / HTTP | 未确认 | dormant | 2026-05-16 dormant review：无 maintainer 回复；不再顶帖，后续仅在对方主动回复时重开 |
 | 2026-05-09 | videosdk WhatsApp AI calling agent | https://github.com/videosdk-community/videosdk-whatsapp-ai-calling-agent/issues/2 | outbound_leadgen / custom channel | WhatsApp / Twilio / VideoSDK / Transcript import | 未确认 | dormant | 2026-05-16 dormant review：0.1.19 comment 后仍无 maintainer 回复；不再顶帖，后续仅在对方主动回复时重开 |
-| 2026-05-09 | VoiceBlender | https://github.com/VoiceBlender/voiceblender/issues/28 | outbound_leadgen / platform adapter | REST / Webhook / WebSocket adapter | 未确认 | pr_pending_review | 2026-06-01 PR https://github.com/VoiceBlender/voiceblender/pull/37 已从 draft 转 ready for review 并留言；若 2026-06-07 前无 review / merge / requested changes，不再顶帖，转渠道获取新试点 |
+| 2026-05-09 | VoiceBlender | https://github.com/VoiceBlender/voiceblender/issues/28 | outbound_leadgen / platform adapter | REST / Webhook / WebSocket adapter | 未确认 | pr_pending_review | 2026-06-01 PR https://github.com/VoiceBlender/voiceblender/pull/37 已从 draft 转 ready for review，并把后续沟通迁到 Discussions https://github.com/VoiceBlender/voiceblender/discussions/46；issue #28 不再顶帖 |
 | 2026-05-09 | theaifutureguy LiveKit voice agent | https://github.com/theaifutureguy/livekit-voice-agent/issues/6 | outbound_leadgen / receptionist | LiveKit / Telephony / HTTP | 未确认 | dormant | 2026-05-16 dormant review：0.1.19 comment 后仍无 maintainer 回复；不再顶帖，后续仅在对方主动回复时重开 |
 | 2026-05-09 | codewithmuh AI voice receptionist | https://github.com/codewithmuh/ai-voice-agent/issues/2 | restaurant / custom receptionist | Vapi / HTTP / Transcript import | 未确认 | closed_lost | 2026-05-13 对方说明团队暂不开放外部协作；已礼貌收束，不再等待 endpoint 或 transcript |
 | 2026-05-09 | Teleglobals voicebot calling agent | https://github.com/Teleglobals-org/voicebot-calling-agent/issues/1 | real_estate | Twilio / AWS / HTTP / Transcript import | 未确认 | dormant | 2026-05-16 dormant review：无 maintainer 回复；不再顶帖，后续仅在对方主动回复时重开 |
 | 2026-05-09 | frejun Teler Vapi bridge | https://github.com/frejun-tech/teler-vapi-bridge/issues/6 | outbound_leadgen / platform bridge | Vapi bridge / HTTP / WebSocket | 未确认 | dormant | 2026-05-16 dormant review：无 maintainer 回复；不再顶帖，后续仅在对方主动回复时重开 |
+
+## 2026-06-01 渠道切换记录
+
+- VoiceBlender：issue #28 的公开沟通已迁到 Discussions #46，PR #37 保持 ready for review；后续只在出现 review / merge / requested changes 时再做窄动作。
+- Streamcore：PR #5 已完成最后一次轻量 follow-up；后续不再在 issue / PR 线程顶帖，等 maintainer review，再按反馈走 Discord / 直连维护者渠道。
+- Siphon：继续维持 transcript-centric、public-safe 的 demo_validated 方向，不再主动推进 runtime adapter。
+- 冷线对象：按 2026-05-16 的 dormant 规则保留，不再做 GitHub issue 冷启动。
 
 ## 字段字典
 

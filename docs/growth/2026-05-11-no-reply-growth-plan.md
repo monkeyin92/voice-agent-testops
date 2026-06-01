@@ -25,6 +25,13 @@ Context: recent GitHub issue outreach produced two warm signals and many zero-re
 | 2026-05-16 | Dormant review | All no-reply issues | Mark dormant unless a maintainer replied |
 | 2026-05-18 | Channel shift | Discord, Discussions, email, LinkedIn | Lead with proof gallery, not another GitHub issue |
 
+## 2026-06-01 channel shift executed
+
+- VoiceBlender：把后续公开沟通转到 Discussions #46，PR #37 继续作为可 review 的公共示例；issue #28 不再加评论。
+- Streamcore：PR #5 已发最后一次轻量 follow-up，后续不再用 issue / PR 反复顶帖；只在 maintainer review 时按反馈做窄动作。
+- Siphon：保持 transcript-centric、public-safe 的 demo_validated 路线，不再主动推动 runtime adapter。
+- 新触达默认走 Discussions、Discord、email、LinkedIn；GitHub issue 只保留已有信号，不再做冷启动追问。
+
 ## 2026-05-12 heartbeat check
 
 - `streamcoreai/streamcore-server#4`: no new maintainer reply since 2026-05-09. Posted the planned warm follow-up asking for a scriptable HTTP/WebSocket route behind `streamcore.ai`, or one sanitized transcript: https://github.com/streamcoreai/streamcore-server/issues/4#issuecomment-4426759426

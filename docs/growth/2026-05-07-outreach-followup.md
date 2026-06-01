@@ -97,3 +97,10 @@ Issue：[kev-hu/vapi-voice-agent#1](https://github.com/kev-hu/vapi-voice-agent/i
 2. 2026-05-14 若 `codewithmuh/ai-voice-agent#2` 仍未给 endpoint/transcript，再发一次短 check-in。
 3. 2026-05-13 到 2026-05-15 对 2026-05-08 零回复批次最多发一次 close-the-loop；之后标记 dormant。
 4. 2026-05-18 起把新增触达转向 Discussions、Discord、email、LinkedIn，不继续依赖 GitHub issue 冷启动。
+
+## 2026-06-01 channel shift
+
+- `VoiceBlender/voiceblender#28`：公开沟通已迁到 Discussions #46，PR #37 作为 review 入口保留，issue 不再加评论。
+- `streamcoreai/streamcore-server#4`：只保留 PR #5 的最后一次轻量 follow-up，后续不再在 GitHub issue / PR 线程顶帖。
+- `blackdwarftech/siphon#19`：继续 transcript-centric、public-safe 的 demo_validated 路线，不再主动推进 runtime adapter。
+- 新触达优先级：Discussions > Discord > email > LinkedIn；没有已登录可发消息的 Discord 入口时，先用 Discussions 和直连联系方式。
